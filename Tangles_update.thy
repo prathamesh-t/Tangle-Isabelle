@@ -8,46 +8,100 @@ begin
 (3) e3 is the bottom facing cus
 (4) e4 is the positive cross
 (5) e5 is the negative cross*)
+ 
+datatype brick = a1
+                |a2
+                |a3
+                |a4
+                |a5
 
+datatype block = cement brick
+                 |cons brick block  (infixr "#" 60)              
 
-
-datatype block = e1
-                |e2
-                |e3
-                |e4
-                |e5
-                |Cons block block              (infixr "⊗" 65)
+primrec bricklength::"brick ⇒ nat"
+where
+"bricklength a1 = 1"|
+"bricklength a2 =  1"|
+"bricklength a3 =  1"|
+"bricklength a4 =  1"|
+"bricklength a5 =  1"
 
 primrec length::"block ⇒ nat"
 where
-"length e1 = 1"|
-"length e2 =  1"|
-"length e3 =  1"|
-"length e4 =  1"|
-"length e5 =  1"|
-"length (Cons x y) = length x + length y"
+"length (cement x) = bricklength x"|
+"length (cons x y) = (bricklength x) + (length y)"
 
 
-
-
+definition e1::block where "e1 ≡ (cement a1)"
+definition e2::block where "e2 ≡ (cement a2)"
+definition e3::block where "e3 ≡ (cement a3)"
+definition e4::block where "e4 ≡ (cement a4)"
+definition e5::block where "e5 ≡ (cement a5)"
 
 
 (*count tells us the number of incoming and outgoing strangs of each block*)
+
+primrec brickcount::"brick ⇒ int × int "
+where
+"brickcount a1 = (1,1)"|
+"brickcount a2 = (0,2)"|
+"brickcount a3 = (2,0)"|
+"brickcount a4 = (2,2)"|
+"brickcount a5 = (2,2)"
+
+
 primrec count::"block ⇒ int × int "
 where
-"count e1 = (1,1)"|
-"count e2 = (0,2)"|
-"count e3 = (2,0)"|
-"count e4 = (2,2)"|
-"count e5 = (2,2)"|
-"count (Cons x y) = (fst (count x) + fst (count y), snd (count x) + snd (count y))"
+"count (cement x) = (brickcount x)"
+|"count (cons x y) = (fst (brickcount x) + fst (count y), snd (brickcount x) + snd (count y))"
+
+lemma brickcount_nonnegative: "fst (brickcount x) ≥ 0" 
+by 
+(metis Nat_Transfer.transfer_nat_int_function_closures(6) brick.exhaust brick.simps(26)
+ brick.simps(27) brick.simps(28) brick.simps(29) brick.simps(30) brickcount.simps(4) 
+dbl_def dbl_simps(3) fst_conv less_imp_le one_plus_BitM order_refl semiring_norm(26) 
+zero_less_numeral brickcount_def)
 
 lemma count_nonnegative: "fst (count x) ≥ 0" 
 apply(induct_tac x)
 apply(auto)
+apply(simp add:brickcount_nonnegative)
+apply(simp add:count_def)
+apply (metis (lifting) add_increasing brickcount_nonnegative)
+done
+
+primrec append :: "block => block => block" (infixr "⊗" 65) where
+append_Nil: "(cement x) ⊗ ys = cons x ys" |
+append_Cons: "((x#xs)⊗ys) = x#(xs⊗ys)"
+
+lemma leftright_associativity: "(x⊗y)⊗z = x⊗(y⊗z)"
+apply(induct_tac x)
+apply(auto)
+done
+
+lemma left_associativity: "(x⊗y)⊗z = x⊗y⊗z"
+apply(induct_tac x)
+apply(auto)
+done
+
+lemma right_associativity: "x⊗(y⊗z) =x ⊗ y ⊗z"
+apply(auto)
 done
 
 
+lemma count_positive: "((fst (count (cement x)) > 0) ∨ (fst (count y) > 0)) ⟹ (fst (count (x#y)) > 0)" 
+proof-
+assume hypothesis: "((fst (count (cement x)) > 0) ∨ (fst (count y) > 0))"
+have "fst (count (x#y)) =  (fst (brickcount x) + fst (count y))" using count_def by auto
+also have " (fst (brickcount x)) = fst (count (cement x))" using count_def by auto
+then have "((fst (count (cement x))) > 0) = ((fst (brickcount x)) > 0)" using count_def by auto
+then have "((fst (brickcount x) > 0) ∨ (fst (count y) > 0)) ⟹ (fst (brickcount x) + fst (count y))>0"
+using count_nonnegative add_nonneg_pos add_pos_nonneg brickcount_nonnegative by metis
+from this  show  "((fst (count (cement x)) > 0) ∨ (fst (count y) > 0)) 
+⟹ (fst (count (x#y)) > 0)" by auto
+qed
+  
+(*
 lemma count_positive: "((fst (count x) > 0) ∨ (fst (count y) > 0)) ⟹ (fst (count (x⊗y)) > 0)" 
 proof-
 have "fst (count (x⊗y)) = (fst (count x) + fst (count y))" using count_def by auto
@@ -55,23 +109,27 @@ also have "((fst (count x) > 0) ∨ (fst (count y) > 0)) ⟹ (fst (count x) + fs
 using count_nonnegative add_nonneg_pos add_pos_nonneg by metis
 then show  "((fst (count x) > 0) ∨ (fst (count y) > 0)) ⟹ (fst (count (x⊗y)) > 0)" by auto
 qed  
+*)
 
-
-lemma trivial: " count (e1 ⊗ e2) = (1,3)"
-apply(auto)
+lemma trivial: "(count (a1 # e2)) = (1,3)"
+apply (simp add: e2_def)
 done
-
 
 (*cusp is defined*)
 
+primrec brick_cusp::"brick ⇒ bool"
+where
+"brick_cusp a1 = False"|
+"brick_cusp a2 = True"|
+"brick_cusp a3 = False"|
+"brick_cusp a4 = False"|
+"brick_cusp a5 = False"
+
+
 primrec cusp::"block ⇒ bool"
 where
-"cusp e1 = False"|
-"cusp e2 = True"|
-"cusp e3 = False"|
-"cusp e4 = False"|
-"cusp e5 = False"|
-"cusp (x⊗y) = (if (x= e1) then (cusp y) else (cusp x)∧(cusp y))"
+"cusp (cement x) = brick_cusp x"|
+"cusp (x#y) = (if (x= a1) then (cusp y) else (brick_cusp x)∧(cusp y))"
 
 
 lemma cusp_basic: "((cusp x) = False) ⟹ 
@@ -107,18 +165,25 @@ where
 (*walls are tangle diagrams obtained by placing a horizontal blocks a top each other*)
 
 datatype walls = basic block
-                |prod walls walls  (infixr "∘" 66)
+                |prod block  walls  (infixr "*" 66)
+
+primrec compose :: "walls => walls => walls" (infixr "∘" 66) where
+append_Nil: "(basic x) ∘ ys = prod x ys" |
+append_Cons: "((x*xs)∘ys) = x*(xs∘ys)"
+
+lemma compose_associativity: " (x∘y∘z) = (x∘y∘z)"
+
 
 primrec wall_count:: "walls => int × int" where
 "wall_count (basic x) = count x"
-|"wall_count (prod x y) = (fst (wall_count x),snd (wall_count y))"
+|"wall_count (prod x y) = (fst (count x),snd (wall_count y))"
 
 definition abs::"int ⇒ int" where
 "abs x ≡ if (x≥0) then x else (0-x)" 
 
 primrec wall_list:: "walls ⇒ int list" where
 "wall_list (basic x) = []"|
-"wall_list (x ∘ y) =  (abs (fst(wall_count y) - snd(wall_count x)))#(wall_list y)"
+"wall_list (x * y) =  (abs (fst(wall_count y) - snd(count x)))#(wall_list y)"
 (*test exercises*)
 lemma trivial2: "wall_list (basic e1) = []"
 apply(auto)
@@ -126,11 +191,11 @@ done
 
 
 lemma trivial3: "fst(wall_count (basic e3))- snd(wall_count (basic e1)) = 1"
-apply(auto)
+apply(simp add:e3_def e1_def)
 done
 
 lemma trivial4: "wall_list ((basic e3)∘(basic e1)∘(basic e1)) = [1,0]"
-apply(auto)
+apply(simp add: e3_def e1_def)
 apply(simp add:abs_def)
 apply(simp add:abs_def)
 done
@@ -1539,6 +1604,11 @@ where
 ∧((snd (count w1)) = (fst (count w2)))
 ∧((fst (count A)) = 0))
 ∧(strands B)" 
+
+lemma P_tanglerel: 
+" tanglerel_compbelow_centerright x y 
+≡ ∃y1.∃w1.∃w2.∃A.∃B.∃y2.(P_compress_rightcenter y1 w1 w2 A B y2)" 
+using  tanglerel_compbelow_centerright_def P_compress_rightcenter_def sorry
 
 theorem metaequivalence_left: 
 "((strands z2) ∧ (strands z3))∧((snd (count y1))>1)∧(tanglerel_equiv (Abs_diagram (x1∘(basic y1)∘z1))  

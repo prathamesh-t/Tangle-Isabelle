@@ -160,7 +160,7 @@ apply(auto)
 primrec makestrand:: "nat ⇒ block"
 where
 "makestrand 0 = e1"
-|"makestrand (Suc n) = e1⊗(makestrand n)"
+|"makestrand (Suc n) = a1#(makestrand n)"
 
 (*walls are tangle diagrams obtained by placing a horizontal blocks a top each other*)
 
@@ -168,15 +168,23 @@ datatype walls = basic block
                 |prod block  walls  (infixr "*" 66)
 
 primrec compose :: "walls => walls => walls" (infixr "∘" 66) where
-append_Nil: "(basic x) ∘ ys = prod x ys" |
-append_Cons: "((x*xs)∘ys) = x*(xs∘ys)"
+compose_Nil: "(basic x) ∘ ys =  prod x ys" |
+compose_Cons: "((prod x xs)∘ys) = prod x (xs∘ys)"
 
-lemma compose_associativity: " (x∘y∘z) = (x∘y∘z)"
+lemma compose_leftassociativity: "(((x::walls) ∘ y) ∘ z) = (x∘y ∘z)"
+apply(induct_tac x)
+apply(auto)
+done
+
+lemma compose_rightassociativity: "(x::walls) ∘ (y ∘ z) = (x∘y ∘z)"
+apply(induct_tac x)
+apply(auto)
+done
 
 
-primrec wall_count:: "walls => int × int" where
-"wall_count (basic x) = count x"
-|"wall_count (prod x y) = (fst (count x),snd (wall_count y))"
+primrec wall_count:: "walls ⇒ int × int" where
+"wall_count (basic x) = count x"                                               
+|"wall_count (x*ys) = (fst (count x),snd (wall_count ys))"
 
 definition abs::"int ⇒ int" where
 "abs x ≡ if (x≥0) then x else (0-x)" 
@@ -184,6 +192,12 @@ definition abs::"int ⇒ int" where
 primrec wall_list:: "walls ⇒ int list" where
 "wall_list (basic x) = []"|
 "wall_list (x * y) =  (abs (fst(wall_count y) - snd(count x)))#(wall_list y)"
+
+lemma wall_count_compose: "wall_count (xs∘ys) = (fst (wall_count (xs)), snd(wall_count (ys)))"
+apply(induct_tac xs)
+apply(auto)
+done 
+
 (*test exercises*)
 lemma trivial2: "wall_list (basic e1) = []"
 apply(auto)
@@ -197,8 +211,8 @@ done
 lemma trivial4: "wall_list ((basic e3)∘(basic e1)∘(basic e1)) = [1,0]"
 apply(simp add: e3_def e1_def)
 apply(simp add:abs_def)
-apply(simp add:abs_def)
 done
+
 
 (*end of test exercises*)
 
@@ -211,16 +225,10 @@ where
 
 typedef diagram = "{(x::walls).  (list_sum (wall_list x)+(abs(fst(wall_count x))
 + abs(snd(wall_count x)))) = 0}"
-apply (rule_tac x = "prod (basic e2) (basic e3)" in exI)
+apply (rule_tac x = "prod e2 (basic e3)" in exI)
 apply(auto)
-apply(simp add:abs_def)
+apply(simp add:abs_def e2_def e3_def)
 done
-
-definition a::diagram where "a ≡ Abs_diagram (basic e1)"
-definition b::diagram where "b ≡ Abs_diagram (basic e2)"
-definition c::diagram where "c ≡ Abs_diagram (basic e3)"
-definition d::diagram where "d  ≡ Abs_diagram (basic e4)"
-definition e::diagram where "e ≡ Abs_diagram (basic e5)"
 
 (*tangle relations are being defined here. Tangle equivalence is broken into many equivalances each 
 of which is defined as a disjunction of many functions.*)
@@ -934,25 +942,26 @@ where
 (*rotate ends*)
 (*stranded operations begin*)
 
+primrec brickstrand::"brick ⇒ bool"
+where
+"brickstrand a1 = True"|
+"brickstrand a2 = False"|
+"brickstrand a3 = False"|
+"brickstrand a4 = False"|
+"brickstrand a5 = False"
+
 primrec strands::"block ⇒ bool"
 where
-"strands e1 = True"|
-"strands e2 = False"|
-"strands e3 = False"|
-"strands e4 = False"|
-"strands e5 = False"|
-"strands (x⊗y) = (if (x= e1) then (strands y) else ((strands x)∧(strands y)))"
+"strands (cement x) = brickstrand x"|
+"strands (x#ys) = (if (x= a1) then (strands ys) else False)"
 
-primrec cup::"block ⇒ bool"
-where
-"cup e1 = False"|
-"cup e2 = True"|
-"cup e3 = False"|
-"cup e4 = False"|
-"cup e5 = False"|
-"cup (x⊗y) = (if (x= e2) then (cup y) else (cup x)∧(cup y))"
 
-lemma trivial5: "strands (e1⊗e2⊗e1⊗e1) = False" by auto
+lemma strands_test: "strands (a1#a2#a1#e1) = False" using e1_def strands_def brickstrand_def
+compose_def by auto
+(*
+lemma strands_test: "strands (e1⊗e2⊗e1⊗e1) = False" using e1_def e2_def strands_def brickstrand_def
+compose_def by auto
+*)
 
 (*Compress -  Compress has two levels of equivalences. It is a composition of Compress_null, compbelow
 and compabove. compbelow and compabove are further written as disjunction of many other relations.
@@ -1560,9 +1569,12 @@ qed
 lemma strand_makestrand: " strands (makestrand n)" 
 apply(induct_tac n)
 apply(auto)
+apply(simp add:e1_def)
 done
 
-lemma test_0: "(makestrand (n+1)) = e1⊗(makestrand n)" by auto
+lemma test_00: "(makestrand (n+1)) = a1#(makestrand n)" by auto
+
+lemma test_0: "(makestrand (n+1)) = e1⊗(makestrand n)" using e1_def test_00 append_Nil by metis
 
 type_synonym convert = "block => nat"
 
@@ -1574,12 +1586,13 @@ definition sndcount:: convert  where "(sndcount x) = (nat (snd (count x)))"
 lemma makestrand_fstequality:"(fst (count (makestrand n))) = (int n)+1" 
 apply (induct_tac n)
 apply(auto)
+apply(simp add: e1_def)
 done
-
 
 lemma makestrand_sndequality:"(snd (count (makestrand n))) = (int n)+1" 
 apply (induct_tac n)
 apply(auto)
+apply(simp add: e1_def)
 done
 
 lemma makestrand_fstsndequality:"(fst (count (makestrand n))) = (snd (count (makestrand n)))" 
@@ -1595,7 +1608,7 @@ by auto
 lemma strands_even: "((a = Abs_diagram (x ∘(basic y)∘ z)) ∧ (strands y)) ⟹ (length y) > 1"
 proof-
 oops
-
+(*
 definition P_compress_rightcenter::"walls=>block=>block=>block=>block=>walls=>bool"
 where
 "P_compress_rightcenter y1 w1 w2 A B y2 ≡ ((a = Abs_diagram
@@ -1608,74 +1621,85 @@ where
 lemma P_tanglerel: 
 " tanglerel_compbelow_centerright x y 
 ≡ ∃y1.∃w1.∃w2.∃A.∃B.∃y2.(P_compress_rightcenter y1 w1 w2 A B y2)" 
-using  tanglerel_compbelow_centerright_def P_compress_rightcenter_def sorry
-
+using  tanglerel_compbelow_centerright_def P_compress_rightcenter_def 
+*)
 theorem metaequivalence_left: 
 "((strands z2) ∧ (strands z3))∧((snd (count y1))>1)∧(tanglerel_equiv (Abs_diagram (x1∘(basic y1)∘z1))  
 (Abs_diagram ((x1)∘(basic (e2⊗y1))∘
 (basic z2)∘(basic (e1⊗e3⊗z3))∘z1)))"
+
 proof-
 
-assume C: "snd (count y1) >1" 
-have preliminary_result1:"((snd (count y1))+(-1))>0" using C by auto
-have preliminary_result2:"((snd (count y1))+(-2))≥0" using C by auto
-assume O: "k = nat ((snd (count y1)) + (-2))" 
-assume A: " (z4 = makestrand (k+1))"
-assume B:  "strands z3"
-assume D: "x2 = x1 ∘(basic y1)"
-have subresult0: "strands z4" using A strand_makestrand by auto
+assume A: "snd (count y1) >1" 
+assume B: "k = nat ((snd (count y1)) + (-2))" 
+assume C: " (z4 = makestrand (k+1))"
+assume D:  "strands z3"
+assume E: "x2 = x1 ∘ (basic y1)"
 
-have subresult1: "snd (wall_count x2) = snd (count y1)" using wall_count_def D by auto
 
-have subresult2: "snd (wall_count x2) > 0" using subresult1 C by auto
+have preliminary_result1:"((snd (count y1))+(-1))>0" using A by auto
+have preliminary_result2:"((snd (count y1))+(-2))≥0" using A by auto
 
-have subresult3: "fst (count (z4)) = fst (count (makestrand (k+1)))"  using A makestrand_fstequality
+have subresult: "strands z4" using C strand_makestrand by auto
+have subresult0: "snd (wall_count x2) = snd (wall_count (basic y1))" using wall_count_compose E 
 by auto
-
+have subresult1: "snd (wall_count x2) = snd (count y1)" using wall_count_compose E
+by auto
+have subresult2: "snd (wall_count x2) > 0" using subresult1 A by auto
+have subresult3: "fst (count (z4)) = fst (count (makestrand (k+1)))"  using C makestrand_fstequality
+by auto
 have subresult4: "fst (count (makestrand (k+1))) = int(k+1)+1"  using makestrand_fstequality
 by auto
-
 have subresult5:"fst (count (z4)) =  int(k)+2" using subresult3 subresult4 by auto
-
 have subresult6: "int (nat (snd (count y1) + -2)) = (snd (count y1)) + -2" 
         using int_nat_eq preliminary_result2
                              by auto
-have subresult7: "snd (count y1) = int(k)+2" using O subresult6 by auto
-
+have subresult7: "snd (count y1) = int(k)+2" using B subresult6 by auto
 have subresult8: "fst (count (z4)) = (snd (count y1))" using subresult5 subresult7 by auto
 
 have subresult_main1: "(tanglerel_compress_null ((Abs_diagram (x2∘(basic z4)∘z1))) 
-(Abs_diagram (x2∘z1)))" using subresult2 C A tanglerel_compress_null_def subresult0 by metis
-assume E: "x3 = x2 ∘ basic z4" 
+(Abs_diagram (x2∘z1)))" using tanglerel_compress_null_def subresult0 subresult subresult2
+by metis
+
+assume F: "x3 = x2 ∘ basic z4" 
 
 have subresult_tanglerel1: " tanglerel_equiv (Abs_diagram (x2∘z1)) ((Abs_diagram (x2∘(basic z4)∘z1))) "
 using tanglerel_equiv_def tanglerel_def tanglerel_compress_def subresult_main1 
 by (metis (full_types) r_into_rtranclp)
 
-have subresult_tanglerel1_mod:  " tanglerel_equiv (Abs_diagram (x2∘z1)) ((Abs_diagram (x3∘z1))) "
-using subresult_tanglerel1 by (simp add: subst E)
-have subresult3: "(snd (wall_count x3)) = (snd (wall_count (basic z4)))" using wall_count_def E by auto
+have subresult_tanglerel1_mod:  
+" tanglerel_equiv (Abs_diagram (x2∘z1)) ((Abs_diagram (x3∘z1))) "
+            using subresult_tanglerel1 compose_leftassociativity F by auto
+
+have subresult3: "(snd (wall_count x3)) = (snd (wall_count (basic z4)))" 
+           using wall_count_compose F
+                  by auto
 have subresult4: "(snd (wall_count (basic z4))) = (snd (count z4))" using wall_count_def by auto
-have subresult5: "(snd (count z4)) = (fst (count z4))" using A makestrand_fstsndequality by auto
-have subresult6: "(snd (wall_count x3))>0" using A subresult3 subresult4 subresult5 
-makestrands_positivelength by metis
+have subresult5: "(snd (count z4)) = (fst (count z4))" 
+               using C makestrand_fstsndequality by auto
+have subresult6: "(snd (wall_count x3))>0" 
+               using C subresult3 subresult4 subresult5 
+               makestrands_positivelength by metis
 
 have subresult_main2:"(tanglerel_compress_null ((Abs_diagram (x3∘(basic z4)∘z1))) 
-(Abs_diagram (x3∘z1)))" using  subresult2 C tanglerel_compress_null_def subresult0 subresult6 by auto
+(Abs_diagram (x3∘z1)))" 
+   using  subresult subresult2 F tanglerel_compress_null_def subresult0 subresult6 
+           by auto
 
 have subresult_tanglerel2:"(tanglerel_equiv (Abs_diagram (x3∘z1))
  (Abs_diagram (x3∘(basic z4)∘z1))) " using tanglerel_def tanglerel_compress_def subresult_main2 tanglerel_equiv_def
 by (metis (full_types) r_into_rtranclp)
 
-have subresult_main3:"tanglerel_equiv (Abs_diagram (x2∘z1)) (Abs_diagram (x3∘(basic z4)∘z1)) "
+have subresult_main3:
+"tanglerel_equiv (Abs_diagram (x2∘z1)) (Abs_diagram (x3∘(basic z4)∘z1)) "
 using subresult_tanglerel1_mod subresult_tanglerel2 rtranclp_trans E by (metis Tangle.abs_eq_iff)
 
 (*step 2 - inducing cusp*)
 
 have step2_subresult0: "(makestrand (k+1)) = (e1⊗(makestrand k))" 
- apply(induct_tac k)
- apply(auto)
+ apply(simp add: e1_def)
  done
+
 have step2_subresult1:"z4 = e1⊗(makestrand k)" using O A step2_subresult0 by metis
 
 assume w_subst: "w4 = (makestrand k)"

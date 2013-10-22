@@ -58,7 +58,7 @@ where
 lemma brickcount_nonnegative: "fst (brickcount x) ≥ 0" 
 by 
 (metis Nat_Transfer.transfer_nat_int_function_closures(6) brick.exhaust brick.simps(26)
- brick.simps(27) brick.simps(28) brick.simps(29) brick.simps(30) brickcount.simps(4) 
+ brick.simps(27) brick.simps(28) brick.simps(30) brickcount.simps(4) 
 dbl_def dbl_simps(3) fst_conv less_imp_le one_plus_BitM order_refl semiring_norm(26) 
 zero_less_numeral brickcount_def)
 
@@ -89,9 +89,9 @@ apply(auto)
 done
 
 
-lemma count_positive: "((fst (count (cement x)) > 0) ∨ (fst (count y) > 0)) ⟹ (fst (count (x#y)) > 0)" 
+lemma count_positive: "((fst (count (cement x)) > 0) ∨ (fst (count y) > 0)) 
+⟹ (fst (count (x#y)) > 0)" 
 proof-
-assume hypothesis: "((fst (count (cement x)) > 0) ∨ (fst (count y) > 0))"
 have "fst (count (x#y)) =  (fst (brickcount x) + fst (count y))" using count_def by auto
 also have " (fst (brickcount x)) = fst (count (cement x))" using count_def by auto
 then have "((fst (count (cement x))) > 0) = ((fst (brickcount x)) > 0)" using count_def by auto
@@ -129,7 +129,7 @@ where
 primrec cusp::"block ⇒ bool"
 where
 "cusp (cement x) = brick_cusp x"|
-"cusp (x#y) = (if (x= a1) then (cusp y) else (brick_cusp x)∧(cusp y))"
+"cusp (x#y) = (if (x= a2) then (cusp y) else False)"
 
 
 lemma cusp_basic: "((cusp x) = False) ⟹ 
@@ -137,23 +137,30 @@ lemma cusp_basic: "((cusp x) = False) ⟹
 ((y1=e1)∨(y1=e3)∨(y1=e4)∨(y1=e5))∨(y2=e1)∨(y2=e3)∨(y2=e4)∨(y2=e5))∨((y3=e1)∨(y3=e3)∨(y3=e4)∨(y3=e5)))"
 by metis
 
-(*
-lemma cusp_basic: "(fst (count x) = 0) ⟹ (cusp x)"
-proof-
-assume A: "fst (count x) = 0"
-assume B: "(cusp x) = False"
-have C:"((x=e1)∨(x=e3)∨(x=e4)∨(x=e5))∨(∃y1.∃y2.∃y3.(x=(y1⊗y2⊗y3)∧ 
-((y1=e1)∨(y1=e3)∨(y1=e4)∨(y1=e5))∨(y2=e1)∨(y2=e3)∨(y2=e4)∨(y2=e5))∨((y3=e1)∨(y3=e3)∨(y3=e4)∨(y3=e5)))"
-by auto
-moreover have "((x=e1)∨(x=e3)∨(x=e4)∨(x=e5)) ⟹(fst (count x)) ≠ 0" unfolding count_def by auto
-then have "((x=(y1⊗y2))∧ ((y1=e1)∨(y1=e3)∨(y1=e4)∨(y1=e5)))
-⟹ (fst (count x)) = (fst (count y1) + fst (count y2))" by auto
-then have "((x=(y1⊗y2))∧ ((y1=e1)∨(y1=e3)∨(y1=e4)∨(y1=e5))) ⟹ 
-((fst (count y1)) + (fst (count y2)) > 0)" using count_positive  sledgehammer
+
+lemma brickcount_zero_implies_a2:"(fst (brickcount x)= 0) ⟹ (x = a2)"
+apply(case_tac "brickcount x")
 apply(auto)
+apply(case_tac "x")
+apply(auto)
+done
 
-*)
+lemma brickcount_zero_implies_brick_cusp:"(fst (brickcount x)= 0) ⟹ (brick_cusp x)"
+apply(case_tac "brick_cusp x")
+apply(simp add: brickcount_zero_implies_a2)
+apply(auto)
+apply(case_tac "x")
+apply(auto)
+done
 
+lemma count_zero_implies_cusp:"(fst (count x)= 0) ⟹ (cusp x)"
+apply(case_tac "count x")
+apply(simp add: brickcount_zero_implies_brick_cusp)
+apply(auto)
+apply(case_tac "x")
+apply (metis brick_cusp.simps(2) brickcount_zero_implies_a2 count.simps(1) cusp.simps(1) fst_conv)
+apply(case_tac "cusp x")
+oops
 
 (*cusp ends*)
 
@@ -1639,37 +1646,55 @@ assume E: "x2 = x1 ∘ (basic y1)"
 
 have preliminary_result1:"((snd (count y1))+(-1))>0" using A by auto
 have preliminary_result2:"((snd (count y1))+(-2))≥0" using A by auto
+have preliminary_result3: "strands z4" using C strand_makestrand by auto
 
-have subresult: "strands z4" using C strand_makestrand by auto
-have subresult0: "snd (wall_count x2) = snd (wall_count (basic y1))" using wall_count_compose E 
-by auto
-have subresult1: "snd (wall_count x2) = snd (count y1)" using wall_count_compose E
-by auto
-have subresult2: "snd (wall_count x2) > 0" using subresult1 A by auto
-have subresult3: "fst (count (z4)) = fst (count (makestrand (k+1)))"  using C makestrand_fstequality
-by auto
-have subresult4: "fst (count (makestrand (k+1))) = int(k+1)+1"  using makestrand_fstequality
-by auto
-have subresult5:"fst (count (z4)) =  int(k)+2" using subresult3 subresult4 by auto
+have subresult0: "snd (wall_count x2) = snd (wall_count (basic y1))" 
+           using wall_count_compose E 
+             by auto
+have subresult1: "... = snd (count y1)" using wall_count_compose E
+            by auto
+have subresult2: "snd (wall_count x2) > 0"
+            using subresult1 A less_trans subresult0 zero_less_one 
+            by auto
+have subresult3: "fst (count (z4)) = fst (count (makestrand (k+1)))"  
+            using C makestrand_fstequality
+            by auto
+have subresult4: "fst (count (makestrand (k+1))) = int(k+1)+1"  
+            using makestrand_fstequality
+            by auto
+have subresult5:"fst (count (z4)) =  int(k)+2" 
+           using subresult3 subresult4 
+           by auto
 have subresult6: "int (nat (snd (count y1) + -2)) = (snd (count y1)) + -2" 
-        using int_nat_eq preliminary_result2
-                             by auto
-have subresult7: "snd (count y1) = int(k)+2" using B subresult6 by auto
-have subresult8: "fst (count (z4)) = (snd (count y1))" using subresult5 subresult7 by auto
+           using int_nat_eq preliminary_result2
+           by auto
+have subresult7: "snd (count y1) = int(k)+2" 
+           using B subresult6 
+           by auto
+have subresult8: "fst (count (z4)) = (snd (count y1))" 
+           using subresult5 subresult7 
+           by auto
+(*
+have subresult_main1: 
+"(tanglerel_compress_null ((Abs_diagram (x2∘(basic z4)∘z1))) (Abs_diagram (x2∘z1)))" 
+           using tanglerel_compress_null_def preliminary_result3 subresult0 subresult2
+           by metis
 
-have subresult_main1: "(tanglerel_compress_null ((Abs_diagram (x2∘(basic z4)∘z1))) 
-(Abs_diagram (x2∘z1)))" using tanglerel_compress_null_def subresult0 subresult subresult2
-by metis
-
+have subresult_main2: 
+"tanglerel_equiv (Abs_diagram (x2∘z1)) ((Abs_diagram (x2∘basic z4∘z1))) "
+          using tanglerel_equiv_def tanglerel_def tanglerel_compress_def subresult_main1 
+r_into_rtranclp
+          by (metis (full_types)
+)
 assume F: "x3 = x2 ∘ basic z4" 
 
-have subresult_tanglerel1: " tanglerel_equiv (Abs_diagram (x2∘z1)) ((Abs_diagram (x2∘(basic z4)∘z1))) "
-using tanglerel_equiv_def tanglerel_def tanglerel_compress_def subresult_main1 
-by (metis (full_types) r_into_rtranclp)
-
+have subresult_main3: "tanglerel_equiv (Abs_diagram (x2∘z1)) ((Abs_diagram (x3∘z1))) "
+          using subresult_main2  compose_leftassociativity F 
+          by auto
+*)
+(*
 have subresult_tanglerel1_mod:  
-" tanglerel_equiv (Abs_diagram (x2∘z1)) ((Abs_diagram (x3∘z1))) "
-            using subresult_tanglerel1 compose_leftassociativity F by auto
+
 
 have subresult3: "(snd (wall_count x3)) = (snd (wall_count (basic z4)))" 
            using wall_count_compose F
@@ -1693,7 +1718,7 @@ by (metis (full_types) r_into_rtranclp)
 have subresult_main3:
 "tanglerel_equiv (Abs_diagram (x2∘z1)) (Abs_diagram (x3∘(basic z4)∘z1)) "
 using subresult_tanglerel1_mod subresult_tanglerel2 rtranclp_trans E by (metis Tangle.abs_eq_iff)
-
+*)
 (*step 2 - inducing cusp*)
 
 have step2_subresult0: "(makestrand (k+1)) = (e1⊗(makestrand k))" 

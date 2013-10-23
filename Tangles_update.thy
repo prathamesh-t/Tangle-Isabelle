@@ -1618,157 +1618,185 @@ oops
 
 
 theorem metaequivalence_left: 
-"((strands z2) ∧ (strands z3))∧((snd (count y1))>1)∧(tanglerel_equiv (Abs_diagram (x1∘(basic y1)∘z1))  
-(Abs_diagram ((x1)∘(basic (e2⊗y1))∘
-(basic z2)∘(basic (e1⊗e3⊗z3))∘z1)))"
-
+assumes "(snd (count y1))>1" and "(z4 = makestrand (nat ((snd (count y1)) + (-2))+1))"
+and "w4 = makestrand  (nat ((snd (count y1)) + (-2)))"
+shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e2⊗y1))∘(basic (e1⊗e1⊗z4))∘(basic (e1⊗e3⊗w4))∘z1))
+             (Abs_diagram (x1 ∘ basic y1 ∘z1))" 
 proof-
-
+(*
 assume A: "snd (count y1) >1" 
-assume B: "k = nat ((snd (count y1)) + (-2))" 
-assume C: " (z4 = makestrand (k+1))"
-assume D:  "strands z3"
-assume E: "x2 = x1 ∘ (basic y1)"
+*)
+let ?k = " (nat ((snd (count y1))+ (-2) ))" 
+
+have C: " (z4 = makestrand (?k+1))" using assms by auto
+let ?x2 = "x1 ∘ (basic y1)"
 
 
-have preliminary_result1:"((snd (count y1))+(-1))>0" using A by auto
-have preliminary_result2:"((snd (count y1))+(-2))≥0" using A by auto
+have preliminary_result1:"((snd (count y1))+(-1))>0" using assms by auto
+have preliminary_result2:"((snd (count y1))+(-2))≥0" using assms by auto
 have preliminary_result3: "strands z4" using C strand_makestrand by auto
 
-have subresult0: "snd (wall_count x2) = snd (wall_count (basic y1))" 
-           using wall_count_compose E 
+have subresult0: "snd (wall_count ?x2) = snd (wall_count (basic y1))" 
+           using wall_count_compose 
              by auto
-have subresult1: "... = snd (count y1)" using wall_count_compose E
+have subresult1: "... = snd (count y1)" using wall_count_compose 
             by auto
-have subresult2: "snd (wall_count x2) > 0"
-            using subresult1 A less_trans subresult0 zero_less_one 
+have subresult2: "snd (wall_count ?x2) > 0"
+            using subresult1 assms less_trans subresult0 zero_less_one 
             by auto
-have subresult3: "fst (count (z4)) = fst (count (makestrand (k+1)))"  
+have subresult3: "fst (count (z4)) = fst (count (makestrand (?k+1)))"  
             using C makestrand_fstequality
             by auto
-have subresult4: "fst (count (makestrand (k+1))) = int(k+1)+1"  
+have subresult4: "fst (count (makestrand (?k+1))) = int(?k+1)+1"  
             using makestrand_fstequality
             by auto
-have subresult5:"fst (count (z4)) =  int(k)+2" 
+have subresult5:"fst (count (z4)) =  int(?k)+2" 
            using subresult3 subresult4 
            by auto
 have subresult6: "int (nat (snd (count y1) + -2)) = (snd (count y1)) + -2" 
            using int_nat_eq preliminary_result2
            by auto
-have subresult7: "snd (count y1) = int(k)+2" 
-           using B subresult6 
+have subresult7: "snd (count y1) = int(?k)+2" 
+           using subresult6 
            by auto
 have subresult8: "fst (count (z4)) = (snd (count y1))" 
            using subresult5 subresult7 
            by auto
 have subresult_compress1: 
-"(tanglerel_compress_null ((Abs_diagram (x2∘(basic z4)∘z1))) (Abs_diagram (x2∘z1)))" 
+"(tanglerel_compress_null ((Abs_diagram (?x2∘(basic z4)∘z1))) (Abs_diagram (?x2∘z1)))" 
            using tanglerel_compress_null_def
            preliminary_result3 subresult0 subresult2
              by metis
 have subresult_equiv1: 
-"(tanglerel_equiv ((Abs_diagram (x2∘(basic z4)∘z1))) (Abs_diagram (x2∘z1)))" 
+"(tanglerel_equiv ((Abs_diagram (?x2∘(basic z4)∘z1))) (Abs_diagram (?x2∘z1)))" 
            using r_into_rtranclp subresult_compress1 tanglerel_equiv_def tanglerel_def  
            tanglerel_compress_def
                      by (metis)
 have subresult_compress2: 
-"(tanglerel_compress_null ((Abs_diagram ((x2 ∘ basic z4)∘(basic z4)∘z1))) 
-                            (Abs_diagram ((x2 ∘ basic z4)∘z1)))" 
+"(tanglerel_compress_null ((Abs_diagram ((?x2 ∘ basic z4)∘(basic z4)∘z1))) 
+                            (Abs_diagram ((?x2 ∘ basic z4)∘z1)))" 
                using tanglerel_compress_null_def preliminary_result3 subresult0 subresult2   
                compose_leftassociativity
-                    by (fastforce)
+                    by (metis)
 have subresult_equiv2: 
-"(tanglerel_equiv ((Abs_diagram ((x2 ∘ basic z4)∘(basic z4)∘z1))) 
-                            (Abs_diagram ((x2 ∘ basic z4)∘z1)))" 
+"(tanglerel_equiv ((Abs_diagram ((?x2 ∘ basic z4)∘(basic z4)∘z1))) 
+                            (Abs_diagram ((?x2 ∘ basic z4)∘z1)))" 
                using tanglerel_compress_def tanglerel_def tanglerel_equiv_def
                r_into_rtranclp subresult_compress2   
                     by (metis)
 have subresult_equiv3: 
-"tanglerel_equiv ((Abs_diagram ((x2 ∘ basic z4)∘(basic z4)∘z1))) 
-                            (Abs_diagram ((x2 ∘z1)))" 
+"tanglerel_equiv ((Abs_diagram ((?x2 ∘ basic z4)∘(basic z4)∘z1))) 
+                            (Abs_diagram ((?x2 ∘z1)))" 
                using tanglerel_equiv_def rtranclp_trans subresult_equiv1 subresult_equiv2 
                compose_leftassociativity
                             by (metis) 
 have step1: 
 "tanglerel_equiv (Abs_diagram (x1 ∘ basic y1 ∘ basic z4∘basic z4∘z1)) 
                             (Abs_diagram (x1 ∘ basic y1 ∘z1))" 
-               using compose_leftassociativity subresult_equiv3 E
+               using compose_leftassociativity subresult_equiv3 
                by auto
 (*step 2 - inducing cusp*)
 
-assume w_subst: "w4 = (makestrand k)"
+have w_subst: "w4 = (makestrand ?k)" using assms by auto
 
-have step2_subresult0: "(makestrand (k+1)) = (e1⊗(makestrand k))" 
+have step2_subresult0: "(makestrand (?k+1)) = (e1⊗(makestrand ?k))" 
  apply(simp add: e1_def)
  done
 
-have step2_subresult1:"z4 = e1⊗(makestrand k)" using A C step2_subresult0 by auto
+have step2_subresult1:"z4 = e1⊗(makestrand ?k)" using C step2_subresult0 by auto
 
-have step2_subresult2: "(Abs_diagram (x2 ∘ (basic z4) ∘(basic z4)∘z1)) =
-(Abs_diagram (x2  ∘ (basic (e1⊗w4))∘ (basic (e1 ⊗w4))∘z1))" 
+have step2_subresult2: "(Abs_diagram (?x2 ∘ (basic z4) ∘(basic z4)∘z1)) =
+(Abs_diagram (?x2  ∘ (basic (e1⊗w4))∘ (basic (e1 ⊗w4))∘z1))" 
                         using w_subst step2_subresult1 by auto
 
 have step2_subresult3: "(snd (count w4)) = (fst (count w4))" using makestrand_fstsndequality w_subst
 by auto
 
-assume temp_a: "x = (Abs_diagram (x2 ∘(basic (e2⊗e1⊗w4))∘(basic (e1⊗e3⊗w4))∘z1))"
-assume temp_b: "y = (Abs_diagram (x2 ∘(basic (e1⊗w4))∘(basic (e1⊗w4))∘z1))"
+let ?x = "(Abs_diagram (?x2 ∘(basic (e2⊗e1⊗w4))∘(basic (e1⊗e3⊗w4))∘z1))"
+let ?y = "(Abs_diagram (?x2 ∘(basic (e1⊗w4))∘(basic (e1⊗w4))∘z1))"
 
 have step2_subresult4:
-"∃y1.∃y2.∃w1.∃w2.(x = Abs_diagram (y1 ∘ (basic (e2 ⊗ e1 ⊗ w1)) ∘ (basic (e1 ⊗ e3 ⊗ w2)) ∘ y2))"
-  using temp_a exI by auto
+"∃y1.∃y2.∃w1.∃w2.(?x = Abs_diagram (y1 ∘ (basic (e2 ⊗ e1 ⊗ w1)) ∘ (basic (e1 ⊗ e3 ⊗ w2)) ∘ y2))"
+  using exI by auto
  
 have step2_subresult5:
-"∃y1.∃y2.∃w1.∃w2.(y = Abs_diagram (y1 ∘ (basic (e1 ⊗ w1)) ∘ (basic (e1 ⊗ w2)) ∘ y2))"
- using temp_b exI by auto
+"∃y1.∃y2.∃w1.∃w2.(?y = Abs_diagram (y1 ∘ (basic (e1 ⊗ w1)) ∘ (basic (e1 ⊗ w2)) ∘ y2))"
+ using exI by auto
 
 have step2_subresult6: 
-" (∃y1.∃w1.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e2⊗e1⊗w1)∘(basic (e1⊗e3⊗w2)))∘(y2)))∧(y = Abs_diagram
+" (∃y1.∃w1.∃w2.∃y2.((?x = Abs_diagram ((y1)
+∘(basic (e2⊗e1⊗w1)∘(basic (e1⊗e3⊗w2)))∘(y2)))∧(?y = Abs_diagram
  ((y1)
 ∘(basic (e1⊗w1))∘(basic (e1⊗w2))∘(y2))))
  ∧ ((snd (count w1)) = (fst (count w2))))"
-using temp_a temp_b step2_subresult3 exI by auto
+using  step2_subresult3 exI by auto
 
 have step2_subresult7:
-" tanglerel_straighten_rightdowntop x y"
+" tanglerel_straighten_rightdowntop ?x ?y"
 using tanglerel_straighten_rightdowntop_def step2_subresult6 by auto
 
-have step2_subresult8:"tanglerel x y" 
+have step2_subresult8:"tanglerel ?x ?y" 
 using tanglerel_def tanglerel_straighten_def step2_subresult7 by auto
 
-have step2_subresult9: "tanglerel (Abs_diagram (x2 ∘(basic (e2⊗e1⊗w4))∘(basic (e1⊗e3⊗w4))∘z1)) 
-              (Abs_diagram (x2 ∘(basic (e1⊗w4))∘(basic (e1⊗w4))∘z1))"
-               using temp_a temp_b step2_subresult8 by auto
+have step2_subresult9: "tanglerel (Abs_diagram ((?x2) ∘(basic (e2⊗e1⊗w4))∘(basic (e1⊗e3⊗w4))∘z1)) 
+              (Abs_diagram ((?x2) ∘(basic (e1⊗w4))∘(basic (e1⊗w4))∘z1))"
+               using step2_subresult8 by auto 
 
 have step2_equiv1: "tanglerel_equiv (Abs_diagram (x1∘basic y1∘(basic (e2⊗e1⊗w4))∘(basic (e1⊗e3⊗w4))∘z1)) 
               (Abs_diagram (x1∘basic y1 ∘(basic (e1⊗w4))∘(basic (e1⊗w4))∘z1))"
-               using temp_a temp_b E step2_subresult9 compose_leftassociativity r_into_rtranclp 
+               using step2_subresult9 compose_leftassociativity r_into_rtranclp 
                tanglerel_equiv_def
                      by metis
 
 have step2: "tanglerel_equiv (Abs_diagram (x1∘basic y1∘(basic (e2⊗z4))∘(basic (e1⊗e3⊗w4))∘z1)) 
               (Abs_diagram (x1∘basic y1 ∘(basic z4)∘(basic (z4))∘z1))"
-               using temp_a temp_b E step2_subresult9 compose_leftassociativity r_into_rtranclp 
+               using  step2_subresult9 compose_leftassociativity r_into_rtranclp 
                tanglerel_equiv_def step2_subresult1 w_subst
                      by (metis)
 (*step 3*)
 
 have step3_preliminary1: "fst (count (v⊗w)) = fst (count (a2#(v⊗w)))" using count_def brickcount_def
 by auto
-have step3_subresult0 : "fst (count (a2#(e2⊗w4))) = (fst (brickcount (a2))) +(fst (count (e1⊗w4)))"
-using count_def append_def sorry
+have step3_preliminary2 : 
+"count ((a2)#(e2⊗w4)) = (fst (brickcount (a2)) + fst (count (e2⊗w4)),
+ snd (brickcount (a2)) + snd (count (e2⊗w4)))"
+using count_def e2_def by auto
+have step3_preliminary3: 
+"(e2⊗(e1⊗w4)) = a2#(e1⊗w4)" using e2_def append_Nil by metis
+have step3_subresult0 : 
+"fst (count ((a2)#(e2⊗w4))) =  (fst (brickcount (a2)) + fst (count (e2⊗w4)))"
+using count_def e2_def brickcount_def by auto
+have step3_preliminary4 : 
+"(fst (brickcount (a2)) + fst (count (e2⊗w4))) = fst (count (e2⊗w4))"
+using brickcount_def by auto
 
-have step3_subresult1 :"fst (wall_count (basic (e1⊗w4))) = fst (wall_count (basic (e2⊗e1⊗w4)))" 
-using wall_count_def sorry
+have step3_preliminary5:
+"fst (count (a2#(e2⊗w4))) =  fst (count (e2⊗w4))"
+using  step3_preliminary4 step3_subresult0 by auto
+
+have step3_preliminary6:
+"fst (count ((e2)⊗(e2⊗w4))) =  fst (count (a2#(e2⊗w4)))"
+using step3_preliminary3 
+by (metis Tangles_update.append.append_Nil e2_def)
+
+have step3_preliminary7:
+"fst (count ((e2)⊗(e2⊗w4))) =  fst (count (e2⊗w4))"
+using step3_preliminary5  step3_preliminary6 
+by auto
+
+have step3_subresult1 :"fst (wall_count (basic (e2⊗e1⊗w4))) = fst (wall_count (basic (e1⊗w4))) " 
+using wall_count_def step3_preliminary7
+ by (metis Tangles_update.append.append_Nil add_diff_cancel 
+comm_monoid_add_class.add.left_neutral count.simps(2) e2_def fst_conv wall_count.simps(1))
+
 have step3_subresult2: "fst (wall_count (basic (e1⊗w4))) = snd (count y1)" 
                using w_subst step2_subresult1 subresult8 by auto
 have step3_subresult3: "fst (wall_count (basic (e2⊗e1⊗w4))) = snd (count y1)" 
                using step3_subresult1 step3_subresult2 by auto 
-have step3_subresult4: "fst (wall_count (basic (e1⊗w4))) = snd (wall_count x2)" 
+have step3_subresult4: "fst (wall_count (basic (e1⊗w4))) = snd (wall_count ?x2)" 
                using step3_subresult3 subresult0 wall_count_def step3_subresult2 subresult1 by auto 
 have step3_subresult5: "fst (wall_count (basic (e1⊗w4))) = snd (wall_count (x1∘(basic y1)))" 
-               using step3_subresult4 E  wall_count_def by auto
+               using step3_subresult4  wall_count_def by auto
 have step3_subresult6: "fst (brickcount a2) =  0" using brickcount_def by auto
 have step3_subresult7: "fst (count e2) =  0" using e2_def count_def step3_subresult6 
 by (metis count.simps(1))
@@ -1779,51 +1807,59 @@ have step3_subresult9: "(a1#e1) = (e1⊗e1)" using append_Nil e1_def
                         by metis
 have step3_subresult10: "strands (e1⊗e1)" using step3_subresult8 step3_subresult9
                         by auto
-assume temp: " a0 = (basic (e1⊗e3⊗w4))∘z1"
-assume temp_w: "b0 = e1⊗e1"
-assume temp_x:  "a =  Abs_diagram ((x1)∘(basic (e2⊗y1))∘(basic (b0⊗(e1⊗w4)))∘a0)"
-assume temp_y: "b = Abs_diagram (((x1)∘(basic y1))∘(basic (e2 ⊗ (e1 ⊗ w4)))∘ a0)"
+let ?a0 = "(basic (e1⊗e3⊗w4))∘z1"
+let ?b0 = "(e1⊗e1)"
+let  ?a = "Abs_diagram ((x1)∘(basic (e2⊗y1))∘(basic (?b0⊗(e1⊗w4)))∘((basic (e1⊗e3⊗w4))∘z1))"
+(*check b*)
+let ?b = "Abs_diagram ((x1)∘(basic y1)∘(basic (e2 ⊗ (e1 ⊗ w4)))∘((basic (e1⊗e3⊗w4))∘z1))"
 
-have step3_subresult11: "  ∃y1.∃w1.∃w2.∃A.∃B.∃y2.(a = Abs_diagram
+have step3_subresult11: "  ∃y1.∃w1.∃w2.∃A.∃B.∃y2.(?a = Abs_diagram
  ((y1)∘(basic (A⊗w1))∘(basic (B⊗w2))∘(y2)))"
-using temp_x exI by metis
+using exI by metis
 
-have step3_subresult12: " ∃y1.∃w1.∃w2.∃A.∃B.∃y2.(b = Abs_diagram
- ((y1)∘(basic (w1))∘(basic (A⊗w2))∘(y2)))"
-using temp_y temp exI 
+have step3_subresult12: " ∃y1.∃w1.∃w2.∃A.∃B.∃y2.(
+?b =
+(Abs_diagram
+ ((y1)∘(basic (w1))∘(basic (A⊗w2))∘(y2))))"
+using exI 
 by metis
 
-have step3_subresult13: "  ∃y1.∃w1.∃w2.∃A.∃B.∃y2.(a = Abs_diagram
- ((y1)∘(basic (A⊗w1))∘(basic (B⊗w2))∘(y2)) ∧
- (b = Abs_diagram
+have step3_subresult13: "  ∃y1.∃w1.∃w2.∃A.∃B.∃y2.((?a = Abs_diagram
+ ((y1)∘(basic (A⊗w1))∘(basic (B⊗w2))∘(y2))) ∧
+ (?b = Abs_diagram
  ((y1)∘(basic (w1))∘(basic (A⊗w2))∘(y2)))
 ∧((snd (count w1)) = (fst (count w2)))
 ∧((fst (count A)) = 0)
 ∧(strands B))" 
-using temp_w temp_x temp_y 
+using
 step3_subresult11 step3_subresult12
 compose_leftassociativity step2_subresult1 subresult8 w_subst
-step3_subresult5 step3_subresult7 step3_subresult10 exI
+step3_subresult5 step3_subresult7 step3_subresult10 exI assms
+leftright_associativity step2_subresult4 step2_subresult6
 by (metis)
-have step3_subresult14: "tanglerel_compbelow_centerright a b" using step3_subresult13 
+
+have step3_subresult14: "tanglerel_compbelow_centerright ?a ?b" using step3_subresult13 
 tanglerel_compbelow_centerright_def by auto
-have step3_subresult15: "tanglerel_compress a b" using step3_subresult14 tanglerel_compress_def 
+have step3_subresult15: "tanglerel_compress ?a ?b" using step3_subresult14 tanglerel_compress_def 
 tanglerel_compbelow_def by auto
-have step3_subresult16: "tanglerel a b" using step3_subresult15 tanglerel_def by auto
-have step3_subresult17: "tanglerel_equiv a b"
+have step3_subresult16: "tanglerel ?a ?b" using step3_subresult15 tanglerel_def by auto
+
+have step3_subresult17: "tanglerel_equiv ?a ?b"
     using step3_subresult16 tanglerel_equiv_def r_into_rtranclp
        by (metis (full_types) r_into_rtranclp)
 
-have step3_subresult18: "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e2⊗y1))∘(basic (b0⊗(e1⊗w4)))∘
-a0))
- (Abs_diagram (((x1)∘(basic y1))∘(basic (e2 ⊗ (e1 ⊗ w4)))∘ a0))" using temp_x temp_y step3_subresult17
- by auto
+have step3_subresult18: "tanglerel_equiv 
+(Abs_diagram ((x1)∘(basic (e2⊗y1))∘(basic ((e1⊗e1)⊗(e1⊗w4)))∘((basic (e1⊗e3⊗w4))∘z1)))
+(Abs_diagram ((x1)∘(basic y1)∘(basic (e2 ⊗ (e1 ⊗ w4)))∘((basic (e1⊗e3⊗w4))∘z1)))"
+ using step3_subresult17
+by metis
 
 have step3: 
 "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e2⊗y1))∘(basic (e1⊗e1⊗e1⊗w4))∘(basic (e1⊗e3⊗w4))∘z1))
  (Abs_diagram (((x1)∘(basic y1))∘(basic (e2 ⊗ z4))∘ (basic (e1⊗e3⊗w4))∘z1))" 
-using temp temp_w step3_subresult18 leftright_associativity w_subst step2_subresult1 
- by auto
+using step3_subresult18 leftright_associativity w_subst step2_subresult1 left_associativity
+ compose_leftassociativity
+by auto
 
 (*combining steps*)
                       
@@ -1835,8 +1871,10 @@ have combine1:
 have combine2:"tanglerel_equiv (Abs_diagram ((x1)∘(basic (e2⊗y1))∘(basic (e1⊗e1⊗z4))∘(basic (e1⊗e3⊗w4))∘z1))
              (Abs_diagram (x1 ∘ basic y1 ∘z1))" 
                using step3 combine1 tanglerel_equiv_def rtranclp_trans
-               E compose_leftassociativity leftright_associativity 
+                compose_leftassociativity leftright_associativity 
                step2 step2_subresult1 step2_subresult2 step3_subresult17 subresult_equiv3 
-               temp temp_b temp_w temp_x temp_y w_subst
+               w_subst
                by (metis) 
+from combine2 show ?thesis by auto
+qed
 

@@ -1588,7 +1588,7 @@ lemma test_1: "(makestrand (n+1)) = (makestrand n)⊗e_vert"
 apply(induct_tac n)
 apply(auto)
 apply(simp add:e_vert_def)
-apply (metis Tangles_update.append.append_Nil leftright_associativity)
+apply (metis Tangles.append.append_Nil leftright_associativity)
 done
 
 type_synonym convert = "block => nat"
@@ -1864,7 +1864,7 @@ using  step3_preliminary4 step3_subresult0 by auto
 have step3_preliminary6:
 "fst (count ((e_cup)⊗(e_cup⊗w4))) =  fst (count (cup#(e_cup⊗w4)))"
 using step3_preliminary3 
-by (metis Tangles_update.append.append_Nil e_cup_def)
+by (metis Tangles.append.append_Nil e_cup_def)
 
 have step3_preliminary7:
 "fst (count ((e_cup)⊗(e_cup⊗w4))) =  fst (count (e_cup⊗w4))"
@@ -1873,7 +1873,7 @@ by auto
 
 have step3_subresult1 :"fst (wall_count (basic (e_cup⊗e_vert⊗w4))) = fst (wall_count (basic (e_vert⊗w4))) " 
 using wall_count_def step3_preliminary7
- by (metis Tangles_update.append.append_Nil add_diff_cancel 
+ by (metis Tangles.append.append_Nil add_diff_cancel 
 comm_monoid_add_class.add.left_neutral count.simps(2) e_cup_def fst_conv wall_count.simps(1))
 
 have step3_subresult2: "fst (wall_count (basic (e_vert⊗w4))) = snd (count y1)" 
@@ -1964,8 +1964,24 @@ have combine_cup:"tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(b
                by (metis) 
 from combine_cup show ?thesis by auto
 qed
+(*Theorem ends*)
+(*some lemmas used in the next theorem*)
 
+lemma count_rightcompose:" count(v⊗w) = (fst (count v) + fst (count w), snd (count v)+snd (count w))"
+apply (induct_tac v)
+apply (metis append.append_Nil count.simps(1) count.simps(2))
+apply(auto)
+done
 
+lemma count_cup_rightcompose:" count(v⊗e_cup) = (fst (count v), snd (count v)+2)"
+apply (simp add:count_rightcompose e_cup_def)
+done
+
+lemma fstcount_cup_rightcompose:" fst (count(v⊗e_cup)) = fst (count v)"
+apply (simp add: count_cup_rightcompose)
+done
+
+(*theorem begins*)
 theorem metaequivalence_right: 
 assumes "(snd (count y1))>1" and "(z4 = makestrand (nat ((snd (count y1)) + (-2))+1))"
 and "w4 = makestrand  (nat ((snd (count y1)) + (-2)))"
@@ -2108,45 +2124,31 @@ have step2: "tanglerel_equiv (Abs_diagram (x1∘basic y1∘(basic (z4⊗e_cup))�
 
 have step3_preliminary1: "fst (count (v⊗w)) = fst (count (cup#(v⊗w)))" using count_def brickcount_def
 by auto
+
 have step3_preliminary2 : 
-"count ((e_cup⊗w4)) = (fst (brickcount (cup)) + fst (count (e_cup⊗w4)),
- snd (brickcount (cup)) + snd (count (e_cup⊗w4)))"
-using count_def e_cup_def by auto
-have step3_preliminary3: 
-"(e_cup⊗(e_vert⊗w4)) = cup#(e_vert⊗w4)" using e_cup_def append_Nil by metis
-have step3_subresult0 : 
-"fst (count ((cup)#(e_cup⊗w4))) =  (fst (brickcount (cup)) + fst (count (e_cup⊗w4)))"
-using count_def e_cup_def brickcount_def by auto
-have step3_preliminary4 : 
-"(fst (brickcount (cup)) + fst (count (e_cup⊗w4))) = fst (count (e_cup⊗w4))"
-using brickcount_def by auto
+"count ((w4⊗e_vert)⊗e_cup) = ((fst (count (w4⊗e_vert))), (snd (count (w4⊗e_vert))+2))"
+using fstcount_cup_rightcompose  count_cup_rightcompose
+by (metis) 
 
-have step3_preliminary5:
-"fst (count (cup#(e_cup⊗w4))) =  fst (count (e_cup⊗w4))"
-using  step3_preliminary4 step3_subresult0 by auto
-
-have step3_preliminary6:
-"fst (count ((e_cup)⊗(e_cup⊗w4))) =  fst (count (cup#(e_cup⊗w4)))"
-using step3_preliminary3 
-by (metis Tangles_update.append.append_Nil e_cup_def)
-
-have step3_preliminary7:
-"fst (count ((e_cup)⊗(e_cup⊗w4))) =  fst (count (e_cup⊗w4))"
-using step3_preliminary5  step3_preliminary6 
+have step3_preliminary3 : 
+"fst (count ((w4⊗e_vert)⊗e_cup)) = (fst (count (w4⊗e_vert)))"
+using step3_preliminary2
 by auto
 
-have step3_subresult1 :"fst (wall_count (basic (e_cup⊗e_vert⊗w4))) = fst (wall_count (basic (e_vert⊗w4))) " 
-using wall_count_def step3_preliminary7
- by (metis Tangles_update.append.append_Nil add_diff_cancel 
+have step3_subresult1 :
+"fst (wall_count (basic ((w4⊗e_vert)⊗e_cup))) = fst (wall_count (basic (w4⊗e_vert))) " 
+using wall_count_def step3_preliminary3
+ by (metis Tangles.append.append_Nil add_diff_cancel 
 comm_monoid_add_class.add.left_neutral count.simps(2) e_cup_def fst_conv wall_count.simps(1))
 
-have step3_subresult2: "fst (wall_count (basic (e_vert⊗w4))) = snd (count y1)" 
+have step3_subresult2: "fst (wall_count (basic (w4⊗e_vert))) = snd (count y1)" 
                using w_subst step2_subresult1 subresult8 by auto
-have step3_subresult3: "fst (wall_count (basic (e_cup⊗e_vert⊗w4))) = snd (count y1)" 
-               using step3_subresult1 step3_subresult2 by auto 
-have step3_subresult4: "fst (wall_count (basic (e_vert⊗w4))) = snd (wall_count ?x2)" 
+have step3_subresult3: "fst (wall_count (basic ((w4⊗e_vert⊗e_cup)))) = snd (count y1)" 
+               using step3_subresult1 step3_subresult2 leftright_associativity
+               by (auto)
+have step3_subresult4: "fst (wall_count (basic (w4⊗e_vert))) = snd (wall_count ?x2)" 
                using step3_subresult3 subresult0 wall_count_def step3_subresult2 subresult1 by auto 
-have step3_subresult5: "fst (wall_count (basic (e_vert⊗w4))) = snd (wall_count (x1∘(basic y1)))" 
+have step3_subresult5: "fst (wall_count (basic (w4⊗e_vert))) = snd (wall_count (x1∘(basic y1)))" 
                using step3_subresult4  wall_count_def by auto
 have step3_subresult6: "fst (brickcount cup) =  0" using brickcount_def by auto
 have step3_subresult7: "fst (count e_cup) =  0" using e_cup_def count_def step3_subresult6 
@@ -2158,27 +2160,30 @@ have step3_subresult9: "(vert#e_vert) = (e_vert⊗e_vert)" using append_Nil e_ve
                         by metis
 have step3_subresult10: "strands (e_vert⊗e_vert)" using step3_subresult8 step3_subresult9
                         by auto
-let ?a0 = "(basic (e_vert⊗e_cap⊗w4))∘z1"
+
+(*need to edit from here*)
+let ?a0 = "(basic (w4⊗e_vert⊗e_cup))∘z1"
 let ?b0 = "(e_vert⊗e_vert)"
-let  ?a = "Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (?b0⊗(e_vert⊗w4)))∘((basic (e_vert⊗e_cap⊗w4))∘z1))"
+let  ?a = "Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (?b0⊗(w4⊗e_vert)))∘((basic (w4⊗e_vert⊗e_cup))∘z1))"
 (*check b*)
-let ?b = "Abs_diagram ((x1)∘(basic y1)∘(basic (e_cup ⊗ (e_vert ⊗ w4)))∘((basic (e_vert⊗e_cap⊗w4))∘z1))"
+let ?b = "Abs_diagram ((x1)∘(basic y1)∘(basic ((w4⊗e_vert ⊗ e_cup)))∘((basic (w4⊗e_vert⊗e_cap))∘z1))"
 
 have step3_subresult11: "  ∃y1.∃w1.∃w2.∃A.∃B.∃y2.(?a = Abs_diagram
- ((y1)∘(basic (A⊗w1))∘(basic (B⊗w2))∘(y2)))"
+ ((y1)∘(basic (w1 ⊗A))∘(basic (w2⊗B))∘(y2)))"
 using exI by metis
 
 have step3_subresult12: " ∃y1.∃w1.∃w2.∃A.∃B.∃y2.(
 ?b =
 (Abs_diagram
- ((y1)∘(basic (w1))∘(basic (A⊗w2))∘(y2))))"
+ ((y1)∘(basic (w1))∘(basic (w2⊗A))∘(y2))))"
 using exI 
 by metis
+(*check relations*)
 
 have step3_subresult13: "  ∃y1.∃w1.∃w2.∃A.∃B.∃y2.((?a = Abs_diagram
- ((y1)∘(basic (A⊗w1))∘(basic (B⊗w2))∘(y2))) ∧
+ ((y1)∘(basic (w1⊗A))∘(basic (w2⊗B))∘(y2))) ∧
  (?b = Abs_diagram
- ((y1)∘(basic (w1))∘(basic (A⊗w2))∘(y2)))
+ ((y1)∘(basic (w1))∘(basic (w2⊗A))∘(y2)))
 ∧((snd (count w1)) = (fst (count w2)))
 ∧((fst (count A)) = 0)
 ∧(strands B))" 
@@ -2187,7 +2192,7 @@ step3_subresult11 step3_subresult12
 compose_leftassociativity step2_subresult1 subresult8 w_subst
 step3_subresult5 step3_subresult7 step3_subresult10 exI assms
 leftright_associativity step2_subresult4 step2_subresult6
-by (metis)
+sledgehammer
 
 have step3_subresult14: "tanglerel_compbelow_centerright ?a ?b" using step3_subresult13 
 tanglerel_compbelow_centerright_def by auto

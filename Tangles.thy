@@ -3267,3 +3267,25 @@ from this have  " tanglerel_equiv (Abs_diagram (((x1)∘(basic (y1⊗e_cup)))∘
               by (metis compose_Nil metaequivalence_right test_0 walls.distinct(1))
 from this show  ?thesis using compose_leftassociativity by auto
 qed
+
+
+
+theorem metaequivalence_both_doubledrop: 
+assumes "(snd (count y2))>1" and "(z4 = makestrand (nat ((snd (count y2)) + (-2))+1))"
+and "w4 = makestrand  (nat ((snd (count y2)) + (-2)))" and "fst (count y2) = snd (count y1)"
+shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1⊗e_cup))∘(basic (e_vert⊗e_vert⊗y2⊗e_vert⊗e_vert))∘
+(basic (e_vert⊗e_cap⊗ w4⊗e_cap⊗e_vert))∘z1))
+             (Abs_diagram (x1 ∘ (basic y1)∘ (basic y2)∘z1))" 
+ 
+proof-
+
+have subresult1: "tanglerel_equiv (Abs_diagram ((x1)∘(basic (y1⊗e_cup))∘(basic (y2⊗e_vert⊗e_vert))∘
+(basic (w4⊗e_cap⊗e_vert))∘z1))
+             (Abs_diagram (x1 ∘ (basic y1)∘ (basic y2)∘z1))" using assms metaequivalence_right_doubledrop
+             by auto
+
+have subresult2: "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1⊗e_cup))∘(basic (e_vert⊗e_vert⊗y2⊗e_vert⊗e_vert))∘
+(basic (e_vert⊗e_cap⊗w4⊗e_cap⊗e_vert))∘z1)) 
+                    (Abs_diagram ((x1)∘(basic (y1⊗e_cup))∘(basic (y2⊗e_vert⊗e_vert))∘
+(basic (w4⊗e_cap⊗e_vert))∘z1))"
+ using assms metaequivalence_left_doubledrop

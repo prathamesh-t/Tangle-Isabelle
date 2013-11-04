@@ -1750,6 +1750,7 @@ lemma strands_even: "((a = Abs_diagram (x ∘(basic y)∘ z)) ∧ (strands y)) �
 proof-
 oops
 
+(*general theorems*)
 
 theorem tanglerel_doublecompress_top: 
 assumes "(snd (count y1))>1" and "(z4 = makestrand (nat ((snd (count y1)) + (-2))+1))"
@@ -1930,13 +1931,13 @@ qed
 theorem metaequivalence_left: 
 assumes "(snd (count y1))>1" and "(z4 = makestrand (nat ((snd (count y1)) + (-2))+1))"
 and "w4 = makestrand  (nat ((snd (count y1)) + (-2)))"
-shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗z4))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
              (Abs_diagram (x1 ∘ basic y1 ∘z1))" 
 proof-
 (*
 assume A: "snd (count y1) >1" 
 *)
-
+                                                                                              
 
 let ?k = " (nat ((snd (count y1))+ (-2) ))" 
 
@@ -2173,6 +2174,83 @@ using step3_subresult18 leftright_associativity w_subst step2_subresult1 left_as
  compose_leftassociativity
 by auto
 
+(*step 4*)
+
+let ?p = "(x1)∘(basic (e_cup⊗y1))"
+let ?q = "(basic (e_vert⊗e_cap⊗w4))∘z1"
+let ?r = " basic (e_vert ⊗ e_vert ⊗ e_vert ⊗ w4)"
+
+have step4_subresult1: "strands (e_vert ⊗ e_vert ⊗ e_vert ⊗ w4)"
+using assms  Tangles.append.append_Nil e_vert_def preliminary_result3 step2_subresult1 strands.simps(2)
+by metis
+
+have step4_subresult2: "snd (count (e_cup⊗y1)) =  snd (count (cup#y1))" 
+using Tangles.append.append_Nil count_def e_cup_def by (metis)
+
+have step4_subresult3: " snd (count (cup#y1)) =  2+ snd (count (y1))"
+using step4_subresult2 count_def brickcount_def by auto
+
+have step4_subresult4: "snd (count (e_cup⊗y1)) > snd (count (y1))"
+using step4_subresult2 step4_subresult3 add_strict_increasing dbl_def 
+dbl_simps(3) order_refl zero_less_two
+by auto
+
+have step4_subresult5: "snd (count (e_cup⊗y1)) > 1"
+using step4_subresult4 assms
+by auto
+
+have step4_subresult6: "snd (wall_count ?p) = (snd (count (e_cup⊗y1)))"
+using wall_count_def  snd_conv wall_count.simps(1) wall_count_compose
+by auto
+
+
+have step4_subresult7: "snd (wall_count ?p) > 0"
+using step4_subresult5 step4_subresult6 assms
+by auto
+
+
+have step4_subresult8: 
+"tanglerel_compress_null 
+(Abs_diagram (?p∘(basic (e_vert ⊗ e_vert ⊗ e_vert ⊗ w4))∘?q))
+ (Abs_diagram (?p∘?q))"
+using step4_subresult1 step4_subresult7 tanglerel_compress_null_def
+by auto
+
+have step4_subresult9: 
+"tanglerel_compress
+(Abs_diagram (?p∘(basic (e_vert ⊗ e_vert ⊗ e_vert ⊗ w4))∘?q))
+ (Abs_diagram (?p∘?q))"
+using step4_subresult8 tanglerel_compress_def
+by auto
+
+
+have step4_subresult10: 
+"tanglerel
+ (Abs_diagram (?p∘?q))
+(Abs_diagram (?p∘(basic (e_vert ⊗ e_vert ⊗ e_vert ⊗ w4))∘?q))
+"
+using step4_subresult9 step4_subresult8 tanglerel_def
+by auto
+
+
+have step4_subresult11: 
+"tanglerel_equiv
+ (Abs_diagram (?p∘?q))
+(Abs_diagram (?p∘(basic (e_vert ⊗ e_vert ⊗ e_vert ⊗ w4))∘?q))
+"
+using step4_subresult10 tanglerel_equiv_def compose_leftassociativity 
+leftright_associativity r_into_rtranclp step3_subresult11 step3_subresult13
+by metis
+
+have step4: 
+"tanglerel_equiv
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+(Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert ⊗ e_vert ⊗ e_vert ⊗ w4))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+"
+using step4_subresult10 tanglerel_equiv_def compose_leftassociativity 
+leftright_associativity r_into_rtranclp step3_subresult11 step3_subresult13
+by metis
+
 (*combining steps*)
                       
 have combine_vert: 
@@ -2187,7 +2265,18 @@ have combine_cup:"tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(b
                step2 step2_subresult1 step2_subresult2 step3_subresult17 subresult_equiv3 
                w_subst
                by (metis) 
-from combine_cup show ?thesis by auto
+
+have combine_compress:"tanglerel_equiv
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+             (Abs_diagram (x1 ∘ basic y1 ∘z1))" 
+using combine_cup step4 
+combine_vert tanglerel_equiv_def rtranclp_trans
+                compose_leftassociativity leftright_associativity 
+               step2 step2_subresult1 step2_subresult2 step3_subresult17 subresult_equiv3 
+               w_subst
+by metis
+
+from this show ?thesis by auto
 qed
 (*Theorem ends*)
 (*some lemmas used in the next theorem*)
@@ -2389,10 +2478,6 @@ have step3_subresult10: "strands (e_vert⊗e_vert)" using step3_subresult8 step3
 
 (*need to edit from here*)
 
-(*ref- 
-have step2: "tanglerel_equiv (Abs_diagram (x1∘basic y1∘(basic (z4⊗e_cup))∘(basic (w4⊗e_cap⊗e_vert))∘z1)) 
-              (Abs_diagram (x1∘basic y1 ∘(basic z4)∘(basic (z4))∘z1))"*)
-
 let  ?a = "Abs_diagram ((x1)∘(basic (y1 ⊗ e_cup))∘(basic (z4⊗e_vert⊗e_vert))∘((basic (w4⊗e_cap⊗e_vert))∘z1))"
 (*check b*)
 let ?b = "Abs_diagram ((x1)∘(basic y1)∘(basic ((w4⊗e_vert) ⊗ e_cup))∘((basic (w4⊗e_cap⊗e_vert))∘z1))"
@@ -2452,6 +2537,8 @@ have step3: "tanglerel_equiv
 using step3_subresult18 leftright_associativity w_subst step2_subresult1 left_associativity
  compose_leftassociativity
 by auto
+
+
 
 (*combining steps*)
                       
@@ -2968,7 +3055,116 @@ have combine_cup:
                step2 step2_subresult1 step2_subresult2  subresult_equiv3 
                w_subst
                by (metis) 
-
 from combine_cup show ?thesis by (simp add: compose_leftassociativity)
+qed
 
+
+theorem metaequivalence_left_two: 
+assumes "(snd (count y2))>1" and "(z4 = makestrand (nat ((snd (count y2)) + (-2))+1))"
+and "w4 = makestrand  (nat ((snd (count y2)) + (-2)))" and "fst (count y2) = snd (count y1)"
+shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+             (Abs_diagram (x1 ∘ basic y1∘ basic y2∘z1))" 
+proof-
+let ?x = "x1 ∘ (basic y1)"
+have subresult1: "tanglerel_equiv 
+   (Abs_diagram ((x1 ∘ (basic y1)) ∘(basic (e_cup⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+           (Abs_diagram ((x1 ∘ (basic y1)) ∘ basic y2 ∘z1))"  using assms metaequivalence_left 
+             by auto
+
+have "fst (brickcount cup) = 0" using brickcount_def by auto
+from this have subresult2:"fst (count (e_cup)) = 0" using count_def e_cup_def count.simps(1) 
+by (metis)
+
+have subresult3: " strands (e_vert⊗e_vert)" using e_vert_def append_Nil strands_def 
+by (metis brickstrand.simps(1) strands.simps(1) strands.simps(2))
+
+let ?a = "(Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+"
+let ?b = "(Abs_diagram ((x1 ∘ (basic y1)) ∘(basic (e_cup⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))"
+ 
+
+have subresult4: "  ∃y1.∃w1.∃w2.∃A.∃B.∃y2.((?a = Abs_diagram
+ ((y1)∘(basic (A⊗w1))∘(basic (B⊗w2))∘(y2))) ∧
+ (?b = Abs_diagram
+ ((y1)∘(basic (w1))∘(basic (A⊗w2))∘(y2)))
+∧((snd (count w1)) = (fst (count w2)))
+∧((fst (count A)) = 0)
+∧(strands B))" 
+using assms subresult2 subresult3 by (metis compose_leftassociativity leftright_associativity) 
+
+from this have "tanglerel_compbelow_centerright ?a ?b" using tanglerel_compbelow_centerright_def
+by auto
+
+from this have "tanglerel_compbelow ?a ?b" using tanglerel_compbelow_def by auto
+
+from this have "tanglerel_compress ?a ?b" using tanglerel_compress_def by auto
+then have " tanglerel ?a ?b" using tanglerel_def by auto
+then have "tanglerel_equiv ?a ?b" using tanglerel_equiv_def  r_into_rtranclp by (metis)
+then have subresult5: "tanglerel_equiv  
+(Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+(Abs_diagram ((x1 ∘ (basic y1)) ∘(basic (e_cup⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))"
+by auto
+then have "tanglerel_equiv 
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+           (Abs_diagram (x1 ∘ (basic y1) ∘ basic y2 ∘z1))"  using subresult1 subresult5 rtranclp_trans
+           Tangle.abs_eq_iff compose_leftassociativity
+by (metis)
+
+from this show  ?thesis by simp
+qed
+
+
+theorem metaequivalence_right_two: 
+assumes "(snd (count y2))>1" and "(z4 = makestrand (nat ((snd (count y2)) + (-2))+1))"
+and "w4 = makestrand  (nat ((snd (count y2)) + (-2)))" and "fst (count y2) = snd (count y1)"
+shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (y1⊗e_cup))∘(basic (y2⊗e_vert⊗e_vert))∘
+(basic (w4⊗e_cap⊗e_vert))∘z1))
+             (Abs_diagram (x1 ∘ (basic y1)∘ (basic y2)∘z1))" 
+proof-
+let ?x = "x1 ∘ (basic y1)"
+have subresult1: "tanglerel_equiv 
+   (Abs_diagram ((x1 ∘ (basic y1)) ∘(basic (e_cup⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+           (Abs_diagram ((x1 ∘ (basic y1)) ∘ basic y2 ∘z1))"  using assms metaequivalence_left 
+             by auto
+
+have "fst (brickcount cup) = 0" using brickcount_def by auto
+from this have subresult2:"fst (count (e_cup)) = 0" using count_def e_cup_def count.simps(1) 
+by (metis)
+
+have subresult3: " strands (e_vert⊗e_vert)" using e_vert_def append_Nil strands_def 
+by (metis brickstrand.simps(1) strands.simps(1) strands.simps(2))
+
+let ?a = "(Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+"
+let ?b = "(Abs_diagram ((x1 ∘ (basic y1)) ∘(basic (e_cup⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))"
+ 
+
+have subresult4: "  ∃y1.∃w1.∃w2.∃A.∃B.∃y2.((?a = Abs_diagram
+ ((y1)∘(basic (A⊗w1))∘(basic (B⊗w2))∘(y2))) ∧
+ (?b = Abs_diagram
+ ((y1)∘(basic (w1))∘(basic (A⊗w2))∘(y2)))
+∧((snd (count w1)) = (fst (count w2)))
+∧((fst (count A)) = 0)
+∧(strands B))" 
+using assms subresult2 subresult3 by (metis compose_leftassociativity leftright_associativity) 
+
+from this have "tanglerel_compbelow_centerright ?a ?b" using tanglerel_compbelow_centerright_def
+by auto
+
+from this have "tanglerel_compbelow ?a ?b" using tanglerel_compbelow_def by auto
+
+from this have "tanglerel_compress ?a ?b" using tanglerel_compress_def by auto
+then have " tanglerel ?a ?b" using tanglerel_def by auto
+then have "tanglerel_equiv ?a ?b" using tanglerel_equiv_def  r_into_rtranclp by (metis)
+then have subresult5: "tanglerel_equiv  
+(Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+(Abs_diagram ((x1 ∘ (basic y1)) ∘(basic (e_cup⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))"
+by auto
+then have "tanglerel_equiv 
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+           (Abs_diagram (x1 ∘ (basic y1) ∘ basic y2 ∘z1))"  using subresult1 subresult5 rtranclp_trans
+           Tangle.abs_eq_iff compose_leftassociativity
+by (metis)
+
+from this show  ?thesis by simp
 qed

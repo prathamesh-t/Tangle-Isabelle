@@ -5,7 +5,7 @@ begin
 (*each  block is a horizontal block built by putting basic tangle bricks next to each other.
 (1) e_vert is the straight line
 (2) e_cup is the up facing cusp
-(3) e_cap is the bottom facing cus
+(3) e_cap is the bottom facing cusp
 (4) e_over is the positive cross
 (5) e_under is the negative cross*)
  
@@ -404,82 +404,12 @@ where
 (fst (count z2)))∧((snd (count z2)) = (fst (count z3))) ∧ ((snd (count w1)) = (fst
 (count w2)))∧((snd (count w2)) = (fst (count w3))))"
 
-(*right positive moves- these are redundant cases but need to be proved formally*)
-definition tanglerel_uncross_rightpositiveflip::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_uncross_rightpositiveflip x y ≡ (∃y1.∃w1.∃w2.∃w3.∃y2.(x = Abs_diagram ((y1)
-∘(basic (e_vert⊗e_cup⊗w1)∘(basic (e_over⊗e_vert⊗w2))∘(basic (e_vert⊗e_cap⊗w3))∘(y2))))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_cup⊗e_vert⊗w1))∘(basic (e_vert⊗e_over⊗w2))∘(basic (e_cap⊗e_vert⊗w3))∘(y2)))∧((snd (count w1)) = (fst
-(count w2)))∧((snd (count w2)) = (fst (count w3))))"
-
-definition tanglerel_uncross_rightpositivestraighten::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_uncross_rightpositivestraighten x y ≡ (∃y1.∃w1.∃w2.∃w3.∃y2.(x = Abs_diagram ((y1)
-∘(basic (e_cup⊗e_vert⊗w1)∘(basic (e_vert⊗e_over⊗w2))∘(basic (e_cap⊗e_vert⊗w3))∘(y2))))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗w1))∘(basic (e_vert⊗w2))∘(basic (e_vert⊗w3))∘(y2)))∧((snd (count w1)) = (fst
-(count w2)))∧((snd (count w2)) = (fst (count w3))))"
-
-definition tanglerel_uncross_rightnegativeflip::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_uncross_rightnegativeflip x y ≡ (∃y1.∃w1.∃w2.∃w3.∃y2.(x = Abs_diagram ((y1)
-∘(basic (e_vert⊗e_cup⊗w1)∘(basic (e_under⊗e_vert⊗w2))∘(basic (e_vert⊗e_cap⊗w3))∘(y2))))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_cup⊗e_vert⊗w1))∘(basic (e_vert⊗e_under⊗w2))∘(basic (e_cap⊗e_vert⊗w3))∘(y2)))∧  ((snd (count w1)) = (fst
-(count w2)))∧((snd (count w2)) = (fst (count w3))))"
-
-definition tanglerel_uncross_rightnegativestraighten::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_uncross_rightnegativestraighten x y ≡ (∃y1.∃w1.∃w2.∃w3.∃y2.(x = Abs_diagram ((y1)
-∘(basic (e_cup⊗e_vert⊗w1)∘(basic (e_vert⊗e_under⊗w2))∘(basic (e_cap⊗e_vert⊗w3))∘(y2))))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗w1))∘(basic (e_vert⊗w2))∘(basic (e_vert⊗w3))∘(y2)))∧ ((snd (count w1)) = (fst
-(count w2)))∧((snd (count w2)) = (fst (count w3))))"
-
-definition tanglerel_uncross_leftpositiveflip::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_uncross_leftpositiveflip x y ≡ (∃y1.∃z1.∃z2.∃z3.∃y2.(x = Abs_diagram ((y1)
-∘(basic (z1⊗e_vert⊗e_cup)∘(basic (z2⊗e_over⊗e_vert))∘(basic (z3⊗e_vert⊗e_cap))∘(y2))))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_cup⊗e_vert))∘(basic (z2⊗e_vert⊗e_over))∘(basic (z3⊗e_cap⊗e_vert))∘(y2)))∧((snd (count z1)) = 
-(fst (count z2)))∧((snd (count z2)) = (fst (count z3))))"
-
-definition tanglerel_uncross_leftpositivestraighten::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_uncross_leftpositivestraighten x y ≡ (∃y1.∃z1.∃z2.∃z3.∃y2.(x = Abs_diagram ((y1)
-∘(basic (z1⊗e_cup⊗e_vert)∘(basic (z2⊗e_vert⊗e_over))∘(basic (z3⊗e_cap⊗e_vert))∘(y2))))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert))∘(basic (z2⊗e_vert))∘(basic (z3⊗e_vert))∘(y2)))∧((snd (count z1)) = 
-(fst (count z2)))∧((snd (count z2)) = (fst (count z3))))"
-
-definition tanglerel_uncross_leftnegativeflip::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_uncross_leftnegativeflip x y ≡ (∃y1.∃z1.∃z2.∃z3.∃y2.(x = Abs_diagram ((y1)
-∘(basic (z1⊗e_vert⊗e_cup)∘(basic (z2⊗e_under⊗e_vert))∘(basic (z3⊗e_vert⊗e_cap))∘(y2))))∧(y = Abs_diagram
- ((y1)
-∘(basic e_vert)∘(basic e_vert)∘(basic e_vert)∘(y2)))∧((snd (count z1)) = 
-(fst (count z2)))∧((snd (count z2)) = (fst (count z3))))"
-
-definition tanglerel_uncross_leftnegativestraighten::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_uncross_leftnegativestraighten x y ≡ (∃y1.∃z1.∃z2.∃z3.∃y2.(x = Abs_diagram ((y1)
-∘(basic (z1⊗e_cup⊗e_vert)∘(basic (z2⊗e_vert⊗e_under))∘(basic (z3⊗e_cap⊗e_vert))∘(y2))))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert))∘(basic (z2⊗e_vert))∘(basic (z3⊗e_vert))∘(y2)))∧((snd (count z1)) = 
-(fst (count z2)))∧((snd (count z2)) = (fst (count z3))))"
-
 (*tangle_uncross definition*)
 definition tanglerel_uncross::"diagram ⇒ diagram ⇒ bool"
 where
 "tanglerel_uncross x y ≡ 
 ((tanglerel_uncross_positiveflip x y)∨(tanglerel_uncross_positivestraighten x y)
-∨(tanglerel_uncross_negativeflip x y)∨(tanglerel_uncross_negativestraighten x y)
-∨(tanglerel_uncross_leftpositiveflip x y)∨(tanglerel_uncross_leftpositivestraighten x y)
-∨(tanglerel_uncross_leftnegativeflip x y)∨(tanglerel_uncross_leftnegativestraighten x y)
-∨(tanglerel_uncross_rightpositiveflip x y)∨(tanglerel_uncross_rightpositivestraighten x y)
-∨(tanglerel_uncross_rightnegativeflip x y)∨(tanglerel_uncross_rightnegativestraighten x y))
-"
+∨(tanglerel_uncross_negativeflip x y)∨(tanglerel_uncross_negativestraighten x y))"
 (*tangle_uncross ends*)
 (*tangle_pull begins*)
 
@@ -502,322 +432,10 @@ where
 ∧((snd (count z1)) = (fst (count z2)))
 ∧((snd (count w1)) = (fst (count w2))))"
 
-(*above cases are redundant*)  
-(*null*)
-definition tanglerel_pull_nullposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_nullposneg x y ≡  ∃y1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_over)∘(basic (e_under)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert))∘(basic (e_vert⊗e_vert))∘(y2))))"
-
-
-definition tanglerel_pull_nullnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_nullnegpos x y ≡  ∃y1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_under)∘(basic (e_over)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert))∘(basic (e_vert⊗e_vert))∘(y2))))"
-
-(*following cases are redundant, infact all of them can be deduced from the nullcases*)
-(*bottom right*)
-definition tanglerel_pull_botrightposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_botrightposneg x y ≡  ∃y1.∃z2.∃w1.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_over⊗w1)∘(basic (z2⊗e_under⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)∘(basic (e_vert⊗e_vert⊗w1))∘(basic (z2⊗e_vert⊗e_vert⊗w2))∘(y2)))
-∧((snd (count w1)) = (fst (count w2)))
-∧((fst (count z2)) = 0))
-"
-
-
-definition tanglerel_pull_botrightnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_botrightnegpos x y ≡  ∃y1.∃z2.∃w1.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_under⊗w1)∘(basic (z2⊗e_over⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert⊗w1))∘(basic (z2⊗e_vert⊗e_vert⊗w2))∘(y2)))
-∧((fst (count z2)) = 0)
-∧((snd (count w1)) = (fst (count w2))))"
-
-(*bottom left*)
-definition tanglerel_pull_botleftposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_botleftposneg x y ≡  ∃y1.∃z1.∃z2.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_over)∘(basic (z2⊗e_under⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert))∘(basic (z2⊗e_vert⊗e_vert⊗w2))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧((fst (count w2)) = 0))"
-
-
-definition tanglerel_pull_botleftnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_botleftnegpos x y ≡  ∃y1.∃z1.∃z2.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_under)∘(basic (z2⊗e_over⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert))∘(basic (z2⊗e_vert⊗e_vert⊗w2))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧((fst (count w2)) = 0))"
-   
-(*top right*)
-
-definition tanglerel_pull_toprightposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_toprightposneg x y ≡  ∃y1.∃z1.∃w1.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_over⊗w1)∘(basic (e_under⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert⊗w1))∘(basic (e_vert⊗e_vert⊗w2))∘(y2)))
-∧((snd (count z1)) = 0)
-∧((snd (count w1)) = (fst (count w2))))"
-
-
-definition tanglerel_pull_toprightnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_toprightnegpos x y ≡  ∃y1.∃z1.∃w1.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_under⊗w1)∘(basic (e_over⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert⊗w1))∘(basic (e_vert⊗e_vert⊗w2))∘(y2)))
-∧((snd (count z1)) = 0)
-∧((snd (count w1)) = (fst (count w2))))"
-  
-(*top left*)
-
-definition tanglerel_pull_topleftposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_topleftposneg x y ≡  ∃y1.∃z1.∃z2.∃w1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_over⊗w1)∘(basic (z2⊗e_under)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert⊗w1))∘(basic (z2⊗e_vert⊗e_vert))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧((snd (count w1)) = 0))"
-
-
-definition tanglerel_pull_topleftnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_topleftnegpos x y ≡  ∃y1.∃z1.∃z2.∃w1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_under⊗w1)∘(basic (z2⊗e_over)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert⊗w1))∘(basic (z2⊗e_vert⊗e_vert))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧((snd (count w1)) = 0))"
-
-
-(*top*)
-definition tanglerel_pull_topposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_topposneg x y ≡  ∃y1.∃z1.∃w1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_over⊗w1)∘(basic (e_under)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert⊗w1))∘(basic (e_vert⊗e_vert))∘(y2)))
-∧((snd (count z1)) = 0)
-∧((snd (count w1)) = 0))"
-
-
-definition tanglerel_pull_topnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_topnegpos x y ≡  ∃y1.∃z1.∃w1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_under⊗w1)∘(basic (e_over)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert⊗w1))∘(basic (e_vert⊗e_vert))∘(y2)))
-∧((snd (count z1)) = 0)
-∧((snd (count w1)) = 0))"
-  
-(*bottom*)
-
-definition tanglerel_pull_botposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_botposneg x y ≡  ∃y1.∃z2.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_over)∘(basic (z2⊗e_under⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert))∘(basic (z2⊗e_vert⊗e_vert⊗w2))∘(y2)))
-∧(0 = (fst (count z2)))
-∧(0 = (fst (count w2))))"
-
-
-definition tanglerel_pull_botnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_botnegpos x y ≡  ∃y1.∃z1.∃w1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_under⊗w1)∘(basic (e_over)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert⊗w1))∘(basic (e_vert⊗e_vert))∘(y2)))
-∧((snd (count z1)) = 0)
-∧((snd (count w1)) = 0))"
-
-(*right*)
-definition tanglerel_pull_rightposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_rightposneg x y ≡  ∃y1.∃w1.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_over⊗w1)∘(basic (e_under⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert⊗w1))∘(basic (e_vert⊗e_vert⊗w2))∘(y2)))
-∧((snd (count w1)) = (fst (count w2))))"
-
-
-definition tanglerel_pull_rightnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_rightnegpos x y ≡  ∃y1.∃w1.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_under⊗w1)∘(basic (e_over⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert⊗w1))∘(basic (e_vert⊗e_vert⊗w2))∘(y2)))
-∧((snd (count w1)) = (fst (count w2))))"
-
-(*left*)
-definition tanglerel_pull_leftposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_leftposneg x y ≡  ∃y1.∃z1.∃z2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_over)∘(basic (z2⊗e_under)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert))∘(basic (z2⊗e_vert⊗e_vert))∘(y2)))
-∧((snd (count z1)) = (fst (count z2))))"
-
-definition tanglerel_pull_leftnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_leftnegpos x y ≡  ∃y1.∃z1.∃z2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_under)∘(basic (z2⊗e_over)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert))∘(basic (z2⊗e_vert⊗e_vert))∘(y2)))
-∧((snd (count z1)) = (fst (count z2))))"
-  
-  
-(*leftcross*)
-
-definition tanglerel_pull_leftcrossposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_leftcrossposneg x y ≡  ∃y1.∃z2.∃w1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_over⊗w1)∘(basic (z2⊗e_under)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert⊗w1))∘(basic (z2⊗e_vert⊗e_vert))∘(y2)))
-∧(0 = (fst (count z2)))
-∧((snd (count w1)) = 0))"
-
-
-definition tanglerel_pull_leftcrossnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_leftcrossnegpos x y ≡  ∃y1.∃z2.∃w1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_under⊗w1)∘(basic (z2⊗e_over)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert⊗w1))∘(basic (z2⊗e_vert⊗e_vert))∘(y2)))
-∧(0 = (fst (count z2)))
-∧((snd (count w1)) = 0))"
-  
-(*right cross*)
-
-definition tanglerel_pull_rightcrossposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_rightcrossposneg x y ≡  ∃y1.∃z1.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_over)∘(basic (e_under⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_vert⊗w2))∘(y2)))
-∧((snd (count z1)) = 0)
-∧(0 = (fst (count w2))))"
-
-
-definition tanglerel_pull_rightcrossnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_rightcrossnegpos x y ≡  ∃y1.∃z1.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_under)∘(basic (e_over⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_vert⊗w2))∘(y2)))
-∧((snd (count z1)) = 0)
-∧(0 = (fst (count w2))))"
-  
-(*null leftbottom- denoted lb*)
-
-definition tanglerel_pull_lbposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_lbposneg x y ≡  ∃y1.∃z1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_over)∘(basic (e_under)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_vert))∘(y2)))
-∧((snd (count z1)) = 0))"
-
-
-definition tanglerel_pull_lbnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_lbnegpos x y ≡  ∃y1.∃z1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_under)∘(basic (e_over)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_vert))∘(y2)))
-∧((snd (count z1)) = 0))"
-  
-(*null right bottom - denoted rb*)
-
-definition tanglerel_pull_rbposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_rbposneg x y ≡  ∃y1.∃w1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_over⊗w1)∘(basic (e_under)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert⊗w1))∘(basic (e_vert⊗e_vert))∘(y2)))
-∧((snd (count w1)) = 0))"
-
-
-definition tanglerel_pull_rbnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_rbnegpos x y ≡  ∃y1.∃w1.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_under⊗w1)∘(basic (e_over)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert⊗w1))∘(basic (e_vert⊗e_vert))∘(y2)))
-∧((snd (count w1)) = 0))"
-  
-(*null left top - denoted lt*)
-
-definition tanglerel_pull_ltposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_ltposneg x y ≡  ∃y1.∃z2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_over)∘(basic (z2⊗e_under)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert))∘(basic (z2⊗e_vert⊗e_vert))∘(y2)))
-∧(0 = (fst (count z2))))"
-
-
-definition tanglerel_pull_ltnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_ltnegpos x y ≡  ∃y1.∃z2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_under)∘(basic (z2⊗e_over)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert))∘(basic (z2⊗e_vert⊗e_vert))∘(y2)))
-∧(0 = (fst (count z2))))"
-  
-
-(*null right top - denoted rt*)
-
-definition tanglerel_pull_rtposneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_rtposneg x y ≡  ∃y1.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_over)∘(basic (e_under⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert))∘(basic (e_vert⊗e_vert⊗w2))∘(y2)))
-∧(0 = (fst (count w2))))"
-
-
-definition tanglerel_pull_rtnegpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_pull_rtnegpos x y ≡  ∃y1.∃w2.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_under)∘(basic (e_over⊗w2)))∘(y2)))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_vert))∘(basic (e_vert⊗e_vert⊗w2))∘(y2)))
-∧(0 = (fst (count w2))))"
-  
-
 (*tanglerel_pull definition*)
 definition tanglerel_pull::"diagram ⇒ diagram ⇒ bool"
 where
-"tanglerel_pull x y ≡ ((tanglerel_pull_posneg x y) ∨ (tanglerel_pull_negpos x y)
-∨ (tanglerel_pull_nullposneg x y) ∨ (tanglerel_pull_nullnegpos x y))
-∨ (tanglerel_pull_rightposneg x y) ∨ (tanglerel_pull_rightnegpos x y)
-∨ (tanglerel_pull_leftposneg x y) ∨ (tanglerel_pull_leftnegpos x y)
-∨  (tanglerel_pull_toprightposneg x y) ∨ (tanglerel_pull_toprightnegpos x y)
-∨ (tanglerel_pull_topleftposneg x y) ∨ (tanglerel_pull_topleftnegpos x y)
-∨ (tanglerel_pull_botrightposneg x y) ∨ (tanglerel_pull_botrightnegpos x y)
-∨ (tanglerel_pull_botleftposneg x y) ∨ (tanglerel_pull_botleftnegpos x y)
-∨ (tanglerel_pull_rightcrossposneg x y) ∨ (tanglerel_pull_rightcrossnegpos x y)
-∨ (tanglerel_pull_leftcrossposneg x y) ∨ (tanglerel_pull_leftcrossnegpos x y)
-∨ (tanglerel_pull_rtposneg x y) ∨ (tanglerel_pull_rtnegpos x y)
-∨ (tanglerel_pull_ltposneg x y) ∨ (tanglerel_pull_ltnegpos x y)
-∨ (tanglerel_pull_rbposneg x y) ∨ (tanglerel_pull_rbnegpos x y)
-∨ (tanglerel_pull_lbposneg x y) ∨ (tanglerel_pull_lbnegpos x y)
-"                              
+"tanglerel_pull x y ≡ ((tanglerel_pull_posneg x y) ∨ (tanglerel_pull_negpos x y))"                   
 
 (*tanglerel_pull ends*)    
 (*tanglerel_straighten*)
@@ -1073,6 +691,7 @@ where
 ∨ (tanglerel_rotate_leftdownpos x y) ∨ (tanglerel_rotate_leftdownneg x y))"
 
 (*rotate ends*)
+
 (*stranded operations begin*)
 
 primrec brickstrand::"brick ⇒ bool"
@@ -1091,10 +710,6 @@ where
 
 lemma strands_test: "strands (vert#cup#vert#e_vert) = False" using e_vert_def strands_def brickstrand_def
 compose_def by auto
-(*
-lemma strands_test: "strands (e_vert⊗e_cup⊗e_vert⊗e_vert) = False" using e_vert_def e_cup_def strands_def brickstrand_def
-compose_def by auto
-*)
 
 (*Compress -  Compress has two levels of equivalences. It is a composition of Compress_null, compbelow
 and compabove. compbelow and compabove are further written as disjunction of many other relations.
@@ -3144,16 +2759,12 @@ proof-
 have "fst (brickcount cup) = 0" using brickcount_def by auto
 from this have subresult2:"fst (count (e_cup)) = 0" using count_def e_cup_def count.simps(1) 
 by (metis)
-
 have subresult3: " strands (e_vert⊗e_vert)" using e_vert_def append_Nil strands_def 
 by (metis brickstrand.simps(1) strands.simps(1) strands.simps(2))
-
-let ?a = "(Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
-"
+let ?a = "(Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2))
+∘(basic (e_vert⊗e_cap⊗w4))∘z1))"
 let ?b = "(Abs_diagram ((x1 ∘ (basic y1)) ∘(basic (e_cup⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))"
- 
-
-have subresult4: "  ∃y1.∃w1.∃w2.∃A.∃B.∃y2.((?a = Abs_diagram
+ have subresult4: "  ∃y1.∃w1.∃w2.∃A.∃B.∃y2.((?a = Abs_diagram
  ((y1)∘(basic (A⊗w1))∘(basic (B⊗w2))∘(y2))) ∧
  (?b = Abs_diagram
  ((y1)∘(basic (w1))∘(basic (A⊗w2))∘(y2)))
@@ -3161,12 +2772,9 @@ have subresult4: "  ∃y1.∃w1.∃w2.∃A.∃B.∃y2.((?a = Abs_diagram
 ∧((fst (count A)) = 0)
 ∧(strands B))" 
 using assms subresult2 subresult3 by (metis compose_leftassociativity leftright_associativity) 
-
 from this have "tanglerel_compbelow_centerright ?a ?b" using tanglerel_compbelow_centerright_def
 by auto
-
 from this have "tanglerel_compbelow ?a ?b" using tanglerel_compbelow_def by auto
-
 from this have "tanglerel_compress ?a ?b" using tanglerel_compress_def by auto
 then have " tanglerel ?a ?b" using tanglerel_def by auto
 then have "tanglerel_equiv ?a ?b" using tanglerel_equiv_def  r_into_rtranclp by (metis)
@@ -3178,9 +2786,10 @@ then show ?thesis by (simp add: compose_leftassociativity)
 qed
 
 theorem metaequivalence_left_doubledrop: 
-assumes "(snd (count y2))>1" and "(z4 = makestrand (nat ((snd (count y2)) + (-2))+1))"
+assumes "(snd (count y2))>1"
 and "w4 = makestrand  (nat ((snd (count y2)) + (-2)))" and "fst (count y2) = snd (count y1)"
-shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2))
+            ∘(basic (e_vert⊗e_cap⊗w4))∘z1))
              (Abs_diagram (x1 ∘ basic y1∘ basic y2∘z1))" 
 proof-
 let ?x = "x1 ∘ (basic y1)"
@@ -3202,10 +2811,19 @@ then have "tanglerel_equiv
 
 from this show  ?thesis by simp
 qed
+lemma metaequivalence_left_doubledrop_condition:"(
+((snd (count y2))>1) 
+∧(w4 = makestrand  (nat ((snd (count y2)) + (-2))))
+∧(fst (count y2) = snd (count y1)))
+⟹
+(tanglerel_equiv 
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2))∘(basic (e_vert⊗e_cap⊗w4))∘z1))
+           (Abs_diagram (x1 ∘ (basic y1) ∘ basic y2 ∘z1)))"
+using metaequivalence_left_doubledrop by auto
 
 theorem metaequivalence_right_drop: 
 
-assumes "(snd (count y2))>1" and "(z4 = makestrand (nat ((snd (count y2)) + (-2))+1))"
+assumes "(snd (count y2))>1" 
 and "w4 = makestrand  (nat ((snd (count y2)) + (-2)))" and "fst (count y2) = snd (count y1)"
 shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (y1⊗e_cup))∘(basic (y2⊗e_vert⊗e_vert))∘(basic (w4⊗e_cap⊗e_vert))∘z1))
              (Abs_diagram (x1 ∘ (basic y1) ∘(basic (y2⊗e_cup))∘(basic (w4⊗e_cap⊗e_vert))∘z1))"
@@ -3246,7 +2864,7 @@ from this show ?thesis by auto
 qed
 
 theorem metaequivalence_right_doubledrop: 
-assumes "(snd (count y2))>1" and "(z4 = makestrand (nat ((snd (count y2)) + (-2))+1))"
+assumes "(snd (count y2))>1" 
 and "w4 = makestrand  (nat ((snd (count y2)) + (-2)))" and "fst (count y2) = snd (count y1)"
 shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (y1⊗e_cup))∘(basic (y2⊗e_vert⊗e_vert))∘
 (basic (w4⊗e_cap⊗e_vert))∘z1))
@@ -3271,21 +2889,66 @@ qed
 
 
 theorem metaequivalence_both_doubledrop: 
-assumes "(snd (count y2))>1" and "(z4 = makestrand (nat ((snd (count y2)) + (-2))+1))"
-and "w4 = makestrand  (nat ((snd (count y2)) + (-2)))" and "fst (count y2) = snd (count y1)"
+assumes "(snd (count y2))>1" 
+and "w4 = makestrand  (nat ((snd (count y2)) + (-2)))" 
+and "w5 = makestrand (nat ((snd (count y2))))"
+and "fst (count y2) = snd (count y1)"
 shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1⊗e_cup))∘(basic (e_vert⊗e_vert⊗y2⊗e_vert⊗e_vert))∘
-(basic (e_vert⊗e_cap⊗ w4⊗e_cap⊗e_vert))∘z1))
+(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))∘z1))
              (Abs_diagram (x1 ∘ (basic y1)∘ (basic y2)∘z1))" 
- 
-proof-
 
+proof-
 have subresult1: "tanglerel_equiv (Abs_diagram ((x1)∘(basic (y1⊗e_cup))∘(basic (y2⊗e_vert⊗e_vert))∘
 (basic (w4⊗e_cap⊗e_vert))∘z1))
              (Abs_diagram (x1 ∘ (basic y1)∘ (basic y2)∘z1))" using assms metaequivalence_right_doubledrop
              by auto
+let ?p1 = "y1 ⊗ e_cup"
+let ?p2 = "y2 ⊗ e_vert ⊗e_vert"
+let ?p3 = "(basic (w4 ⊗ e_cap ⊗ e_vert))∘z1"
+have  "(snd (count (x⊗e_vert⊗e_vert))) = (snd (count (x⊗e_vert)) + 1)"
+using e_vert_def append_Nil append_Cons brickcount_def count_def 
+by (metis (hide_lams, no_types) brickcount.simps(1) count.simps(1) count_rightcompose
+leftright_associativity snd_conv)
+from this have subresult2:  "(snd (count (y2⊗e_vert⊗e_vert))) = (snd (count (y2)) + 2)"
+using e_vert_def append_Nil  append_Cons brickcount_def count_def
+by (metis (hide_lams, no_types) brickcount.simps(1) count.simps(1) count_rightcompose
+dbl_def dbl_simps(3) snd_conv)
+from this have "snd (count (y2 ⊗ e_vert ⊗ e_vert)) > (snd (count y2))" by auto
+from this have step1: "snd (count (?p2)) > 1" using assms  by auto
+have  "(fst (count (x⊗e_vert⊗e_vert))) = (fst (count (x⊗e_vert)) + 1)"
+using e_vert_def append_Nil append_Cons brickcount_def count_def 
+by (metis (hide_lams, no_types) brickcount.simps(1) count.simps(1) count_rightcompose
+leftright_associativity fst_conv)
+from this have assm2_substep1: "(fst (count (y2⊗e_vert⊗e_vert))) = (fst (count (y2)) + 2)"
+using e_vert_def append_Nil append_Cons brickcount_def count_def
+by (metis (hide_lams, no_types) brickcount.simps(1) count.simps(1) count_rightcompose
+dbl_def dbl_simps(3) fst_conv)
+have "(snd (count (y1⊗e_cup))) = (snd (count y1)) + 2"
+using e_cup_def count_def snd_conv append_Cons count_cup_rightcompose  by auto
+from this have "(snd (count (y1⊗e_cup))) = ((fst (count y2)) +2)" using assms by auto
+from this have step2: "fst (count ?p2) = snd (count ?p1)" using 
+assm2_substep1  by auto
+from subresult2 have "snd (count ?p2) = (snd (count y2)) + 2"  by auto
+from this have subresult5: "w5 = makestrand (nat (((snd (count ?p2)) + (-2))))" using assms by auto
+have subresult3: "(((snd (count ?p2))>1) ∧ (w5= makestrand  (nat ((snd (count ?p2)) + (-2))))
+∧(fst (count ?p2) = snd (count ?p1)))"
+using assms step1 step2 subresult5 by auto
+from this have "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗?p1))∘(basic (e_vert⊗e_vert⊗?p2))
+            ∘(basic (e_vert⊗e_cap⊗w5))∘?p3))
+             (Abs_diagram (x1 ∘ basic ?p1∘ basic ?p2∘?p3))"
+ using  metaequivalence_left_doubledrop_condition by auto
+from this have subresult6: "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1 ⊗ e_cup))
+  ∘(basic (e_vert⊗e_vert⊗y2 ⊗ e_vert ⊗e_vert))
+            ∘(basic (e_vert⊗e_cap⊗w5))∘(basic (w4 ⊗ e_cap ⊗ e_vert))∘z1))
+             (Abs_diagram (x1 ∘ basic (y1 ⊗ e_cup)∘ basic (y2 ⊗ e_vert ⊗e_vert)
+∘(basic (w4 ⊗ e_cap ⊗ e_vert))∘z1))"
+ using  metaequivalence_left_doubledrop_condition  by auto
+ from this have "tanglerel_equiv 
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1 ⊗ e_cup))
+  ∘(basic (e_vert⊗e_vert⊗y2 ⊗ e_vert ⊗e_vert))
+            ∘(basic (e_vert⊗e_cap⊗w5))∘(basic (w4 ⊗ e_cap ⊗ e_vert))∘z1))
+ (Abs_diagram (x1 ∘ (basic y1)∘ (basic y2)∘z1))"
+using subresult1 rtranclp_trans Tangle.abs_eq_iff by (metis)
+from this  show ?thesis by (simp)
+qed
 
-have subresult2: "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1⊗e_cup))∘(basic (e_vert⊗e_vert⊗y2⊗e_vert⊗e_vert))∘
-(basic (e_vert⊗e_cap⊗w4⊗e_cap⊗e_vert))∘z1)) 
-                    (Abs_diagram ((x1)∘(basic (y1⊗e_cup))∘(basic (y2⊗e_vert⊗e_vert))∘
-(basic (w4⊗e_cap⊗e_vert))∘z1))"
- using assms metaequivalence_left_doubledrop

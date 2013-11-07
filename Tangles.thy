@@ -329,11 +329,28 @@ abs_non_negative add_increasing add_nonneg_eq_0_iff wall_count_def
 by metis
 
 
+lemma well_defined_fst_wall_count: 
+assumes "well_defined x"
+shows "(abs (fst (wall_count x)) = 0)"
+using well_defined_composition abs_non_negative_sum list_sum_non_negative
+abs_non_negative add_increasing add_nonneg_eq_0_iff wall_count_def
+ assms well_defined_def
+by (metis)
+
 lemma diagram_snd_wall_count: 
 "(abs (snd (wall_count (Rep_diagram z))) = 0)"
 using well_defined_composition abs_non_negative_sum list_sum_non_negative
 abs_non_negative add_increasing add_nonneg_eq_0_iff wall_count_def
 by metis
+
+
+lemma well_defined_snd_wall_count: 
+assumes "well_defined x"
+shows "(abs (snd (wall_count x)) = 0)"
+using well_defined_composition abs_non_negative_sum list_sum_non_negative
+abs_non_negative add_increasing add_nonneg_eq_0_iff wall_count_def
+ assms well_defined_def
+by (metis)
 
 lemma wall_list_list_sum_non_negative:
 "(list_sum (wall_list x)) ≥ 0"
@@ -341,6 +358,18 @@ apply(induct_tac x)
 apply(auto)
 apply (simp add: abs_non_negative add_increasing)
 done
+
+lemma wall_list_list_sum_abs:
+"(list_sum (wall_list x)) = abs (list_sum (wall_list x))"
+using wall_list_list_sum_non_negative abs_def by auto
+
+
+lemma wall_list_list_sum_zero_add:
+assumes "(list_sum (wall_list x)) + (list_sum (wall_list y)) = 0"
+shows "(list_sum (wall_list x)) = 0" and "(list_sum (wall_list y)) = 0"
+using abs_non_negative_sum wall_list_list_sum_abs assms 
+apply metis 
+by (metis add_nonneg_eq_0_iff assms wall_list_list_sum_non_negative)
 
 lemma list_sum_append:
 "list_sum (x@y) = (list_sum x) + (list_sum y)"
@@ -354,6 +383,18 @@ lemma wall_list_list_sum_compose:
 (list_sum (wall_list y))"
 using wall_list_compose list_sum_def append_def list_sum_append
 by (metis ab_semigroup_add_class.add_ac(1) list_sum.simps(2))
+
+
+lemma list_sum_compose: assumes "list_sum (wall_list x) = 0" and "list_sum (wall_list y) = 0"
+and "(snd (wall_count x))= (fst (wall_count y))"
+shows  "list_sum (wall_list (x∘y)) = 0"
+proof-
+from  wall_list_list_sum_compose and assms and abs_def 
+have "list_sum (wall_list (x∘y)) = (list_sum (wall_list x))+(list_sum (wall_list y))"
+by auto
+from this and assms have "list_sum (wall_list (x∘y)) = 0" by auto
+from this show ?thesis by auto
+qed
 
 lemma diagram_wall_list:
 assumes "(abs ( (fst (wall_count y)) - (snd (wall_count x))))>0"
@@ -382,6 +423,8 @@ assumes "(list_sum (wall_list (x∘y)) = 0)"
 shows " (abs ( (fst (wall_count y)) - (snd (wall_count x))))=0"
 using diagram_wall_list list_sum_non_negative abs_non_negative assms less_le by (metis)
 
+
+
 lemma diagram_list_sum_zero:
  assumes "well_defined x"
 shows "list_sum (wall_list x) = 0" 
@@ -406,6 +449,19 @@ assumes "well_defined (x∘y)"
 shows " (fst (wall_count y)) = (snd (wall_count x))"
 using diagram_compose abs_zero_equality assms  by auto
 
+lemma diagram_list_sum_subsequence:
+assumes "well_defined (x∘y)"
+shows "(list_sum (wall_list x) = 0)∧(list_sum (wall_list y) = 0)"
+proof-
+have "(abs ( (fst (wall_count y)) - (snd (wall_count x)))) = 0" using diagram_compose assms
+by auto
+from this have "(list_sum (wall_list x)) + (list_sum (wall_list y)) = 0" using diagram_list_sum_zero
+wall_list_list_sum_compose assms plus_int_code(1)  by metis
+from this have goal1: "(list_sum (wall_list x)) = 0" and goal2:"(list_sum (wall_list y)) = 0" using 
+wall_list_list_sum_zero_add by auto
+from this have "(list_sum (wall_list x) = 0)∧(list_sum (wall_list y) = 0)" by auto
+from this show ?thesis by simp
+qed
 (*tangle relations are being defined here. Tangle equivalence is broken into many equivalances each 
 of which is defined as a disjunction of many functions.*)
 (*tangle_uncross*)
@@ -1948,19 +2004,13 @@ and "w4 = makestrand  (nat ((snd (count y1)) + (-2)))"
 shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (y1⊗e_cup))∘(basic (w4⊗e_cap⊗e_vert))∘z1))
              (Abs_diagram (x1 ∘ basic y1 ∘z1))" 
 proof-
-(*
-assume A: "snd (count y1) >1" 
-*)
 let ?k = " (nat ((snd (count y1))+ (-2) ))" 
 let ?z4 = "makestrand (nat ((snd (count y1)) + (-2))+1)"
 have C: " ?z4 = makestrand (?k+1)" using assms by auto
 let ?x2 = "x1 ∘ (basic y1)"
-
-
 have preliminary_result1:"((snd (count y1))+(-1))>0" using assms by auto
 have preliminary_result2:"((snd (count y1))+(-2))≥0" using assms by auto
 have preliminary_result3: "strands ?z4" using C strand_makestrand by auto
-
 have subresult0: "snd (wall_count ?x2) = snd (wall_count (basic y1))" 
            using wall_count_compose 
              by auto
@@ -3212,32 +3262,148 @@ qed
 theorem metaequivalence_bottom_drop: assumes "(fst (count y1))>1" 
 and "w4 = makestrand  (nat ((fst (count y1)) + (-2)))" 
 and "w5 = makestrand (nat ((fst (count y1))))"
-and "well_defined (x∘(basic y1)∘z1)" 
+and "well_defined (x1 ∘ basic y1 ∘ z1)" 
 shows "tanglerel_equiv (Abs_diagram ((x1)∘
 (basic (e_vert⊗e_cup⊗w5)) ∘ (basic (w4⊗e_cup⊗e_vert))∘(basic (e_cap⊗y1⊗e_cap))∘z1))
              (Abs_diagram (x1 ∘ (basic y1)∘ z1))" 
 proof-
-(*
-have "(fst (count y1))>1" using assms by auto
-also have  "w4 = makestrand  (nat ((fst (count y1)) + (-2)))" using assms 
 
-also have "well_defined (x1 ∘ basic y1 ∘z1)" using assms 
-using assms apply metis sledgehammer*)
+have "(fst (count y1))>1" using assms by auto
+also have  "w4 = makestrand  (nat ((fst (count y1)) + (-2)))" using assms by auto
+ have "well_defined (x1 ∘ basic y1 ∘ z1)"  using assms by auto
 from assms and metaequivalence_bottomright have subresult1: "tanglerel_equiv 
       (Abs_diagram ((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1))
              (Abs_diagram (x1 ∘ (basic y1)∘z1))"  
-sledgehammer
+by auto
+let ?y2 = "y1 ⊗ e_cap"
+let ?x2 = "x1∘(basic (w4⊗e_cup⊗e_vert))"
+have subresult2:"(fst (count (?y2))) = (fst (count y1)) + 2"
+using e_cup_def count_def fst_conv append_Cons count_cup_rightcompose by (metis brickcount.simps(3) count.simps(1) e_cap_def fst_count_additive)
+from this and assms have subresult3:"(fst (count (?y2))) >1" by auto
+have subresult4: " snd (count (y1⊗e_cap)) = snd (count y1)" using e_cap_def count_def snd_conv append_Cons count_cup_rightcompose
+by (metis (hide_lams, no_types) brickcount.simps(3) comm_monoid_add_class.add.right_neutral 
+count.simps(1) snd_count_additive)
+have "snd (count (w4⊗e_cup⊗e_vert)) = snd (count w4) + snd (count e_cup) +
+snd (count e_vert)" using leftright_associativity snd_count_additive by (auto)
+from this have subresult5: "snd (count (w4⊗e_cup⊗e_vert)) = snd (count w4) +3"
+using count_def e_cup_def e_vert_def snd_conv by (metis ab_semigroup_add_class.add_ac(1) 
+brickcount.simps(1) brickcount.simps(2) count.simps(1) inc.simps(2) numeral_inc)
+have "fst (count (w4⊗e_cup⊗e_vert)) =  fst (count w4) + fst (count e_cup) + fst( count e_vert)"
+using leftright_associativity fst_count_additive by auto
+from this have subresult6: "fst (count (w4⊗e_cup⊗e_vert)) =  fst (count w4) + 1"
+using count_def e_cup_def e_vert_def fst_conv brickcount.simps(1) count.simps(1) fst_count_additive 
+fstcount_cup_rightcompose
+ by (metis (full_types))
+have "(snd (count (makestrand n))) = (int n)+1"  using makestrand_sndequality by auto
+have subresult7: "(fst (count w4)) = (int (nat ((fst (count y1)) + (-2))))+1" using assms makestrand_fstequality
+by (metis)
+have "(fst (count y1) + (-2)) ≥ 0" using assms by auto
+from this  have "(int (nat ((fst (count y1)) + (-2)))) = (fst (count y1) + (-2))" using int_nat_eq assms 
+by auto
+from this and subresult7
+ have "fst (count w4) =  (fst (count y1)) + (-2) + 1" by auto
+from this have subresult8: "fst (count w4) = fst (count y1) + (-1)" by auto
+from this and makestrand_fstsndequality and assms have " snd (count w4) =  fst (count y1) + (-1)"
+by auto
+from this and subresult5 have "snd (count (w4⊗e_cup⊗e_vert)) = fst (count y1) + (-1) + 3" by auto
+from this and subresult2 have subresult9: "snd (count (w4⊗e_cup⊗e_vert)) = fst (count (y1⊗e_cap))" by auto
+from subresult8 and subresult6 have subresult10: "fst (count (w4⊗e_cup⊗e_vert)) = fst (count y1)" by auto
 
-let ?y2 = "y1 ⊗ e_cup"
-let ?z2 = "(basic (w4⊗e_cap⊗e_vert))∘z1"
-have subresult2:"(snd (count (?y2))) = (snd (count y1)) + 2"
-using e_cup_def count_def snd_conv append_Cons count_cup_rightcompose by auto
-from this and assms have subresult3:"(snd (count (?y2))) >1" by auto
-from subresult2 have subresult4: "w5 = makestrand (nat (snd (count ?y2) + (-2)))" using assms by auto
-from this and assms and subresult3 and metaequivalence_left have "tanglerel_equiv 
-      (Abs_diagram ((x1)∘(basic (e_cup⊗?y2))∘(basic (e_vert⊗e_cap⊗ w5))∘?z2))
-               (Abs_diagram ((x1)∘(basic (?y2))∘?z2))" by auto
-from this have "tanglerel_equiv 
+from subresult2 have subresult11: "w5 = makestrand (nat (fst (count ?y2) + (-2)))" using assms by auto
+have subresult12: "fst (wall_count ((basic y1)∘z1)) = snd(wall_count x1)" 
+using assms diagram_fst_equals_snd by metis
+have  "fst (wall_count ((basic y1)∘z1)) = fst(count y1)" using wall_count_def compose_def by auto
+from this and subresult12 have "snd(wall_count x1) = (fst (count y1))" by simp
+from this and subresult10 have subresult13: "snd(wall_count x1) = (fst (count (w4⊗e_cup⊗e_vert)))" by auto
+
+have subresult14:"snd (wall_count (x1∘(basic y1))) = fst(wall_count z1)" 
+using assms diagram_fst_equals_snd by (metis compose_leftassociativity)
+have "snd (wall_count (x1∘(basic y1))) = snd (count y1)" using wall_count_def compose_def by (metis snd_conv wall_count.simps(1) wall_count_compose)
+from subresult14 and this have subresult15: "fst(wall_count z1) =  snd (count y1)" by simp
+from this and subresult4 have subresult16: "fst(wall_count z1) = snd (count ?y2)" by simp
+
+have "(fst (wall_count ((basic (w4⊗e_cup⊗e_vert))∘(basic ?y2)∘z1))) = fst (count (w4⊗e_cup⊗e_vert))"
+by auto
+from this and  subresult13 have subresult17: "snd(wall_count x1) = (fst (wall_count ((basic (w4⊗e_cup⊗e_vert))∘(basic ?y2)∘z1)))"
+by auto
+
+have  "list_sum (wall_list (?y2*z1)) = 0" using subresult16 
+by (metis add_nonneg_eq_0_iff assms(4) 
+compose_Nil diagram_list_sum_zero diagram_wall_list_zero list_sum.simps(2) 
+list_sum_append monoid_add_class.add.left_neutral subresult15 wall_list.simps(2) 
+wall_list_compose wall_list_list_sum_non_negative)
+from this have subresult18: " list_sum (wall_list ((basic ?y2)∘z1)) = 0" by auto
+from subresult9 have "snd (count (w4⊗e_cup⊗e_vert)) = (fst (wall_count (((basic ?y2)∘z1))))"
+by (metis fst_conv wall_count.simps(1) wall_count_compose)
+from this and subresult18
+have "list_sum (wall_list ((w4⊗e_cup⊗e_vert)*((basic ?y2)∘z1))) = 0"
+using 
+add_nonneg_eq_0_iff assms(4) 
+compose_Nil diagram_list_sum_zero diagram_wall_list_zero list_sum.simps(2) 
+list_sum_append monoid_add_class.add.left_neutral subresult15 wall_list.simps(2) 
+wall_list_compose wall_list_list_sum_non_negative
+by (metis `fst (wall_count (basic y1 ∘ z1)) = fst (count y1)` `
+snd (wall_count x1) = fst (count y1)` diff_self subresult16 subresult9)
+from this have subresult19: "list_sum (wall_list ((basic (w4⊗e_cup⊗e_vert))∘((basic ?y2)∘z1))) = 0"
+by auto
+
+from diagram_list_sum_subsequence have subresult20: " ((list_sum (wall_list x1) = 0)
+∧((list_sum (wall_list ((basic y1)∘z1)))=0))" using assms by metis
+have "list_sum (wall_list ((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1)) = 
+list_sum (wall_list ((x1))) + list_sum (wall_list ((basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1))
++ abs ((fst (wall_count ((basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1))) - (snd (wall_count x1)))"
+using wall_list_list_sum_compose by auto
+from this and subresult19 and subresult20 and subresult17 
+have subresult21: "list_sum (wall_list ((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1)) =0"
+by (metis diff_self monoid_add_class.add.right_neutral wall_list_list_sum_abs)
+
+have subresult22:" (fst (wall_count ((x1)∘(basic y1)∘z1))) = fst(wall_count x1)" using wall_count_def
+compose_Cons by (metis fst_conv wall_count_compose)
+ have "abs( fst(wall_count (x1 ∘(basic y1)∘z1))) = 0" using well_defined_fst_wall_count assms  
+by metis
+from subresult22 and this have subresult23:"abs (fst(wall_count x1)) = 0"  by auto
+
+have subresult24:" (snd (wall_count ((x1)∘(basic y1)∘z1))) = snd(wall_count z1)" using wall_count_def
+compose_Cons by (metis snd_conv wall_count_compose)
+ have "abs( snd(wall_count (x1 ∘(basic y1)∘z1))) = 0" using well_defined_snd_wall_count assms  
+by metis
+from subresult24 and this have subresult25:"abs (snd(wall_count z1)) = 0"  by auto
+
+
+have subresult26:" (fst (wall_count (((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1))))
+= fst(wall_count x1)" 
+using wall_count_def compose_Cons by (metis fst_conv wall_count_compose)
+from this and subresult23 
+have subresult27:" abs (fst (wall_count (((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1)))) = 0" by auto
+have subresult28:" (snd (wall_count (((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1))))
+= snd (wall_count z1)" 
+using wall_count_def compose_Cons
+ by (metis snd_conv wall_count_compose)
+from subresult24  and subresult25 and subresult28 and subresult21 have subresult29:
+" abs (snd (wall_count (((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1))))= 0" by auto
+
+from subresult27 and subresult29 and subresult21 have subresult30: "well_defined  
+(((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1))" 
+using monoid_add_class.add.left_neutral well_defined_def
+by (auto)
+(*theorem begins
+theorem metaequivalence_bottomleft: 
+assumes "(fst (count y1))>1"
+and "w4 = makestrand  (nat ((fst (count y1)) + (-2)))" and "well_defined (x1 ∘ basic y1 ∘z1)"
+shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_vert⊗e_cup⊗w4)∘(basic (e_cap⊗y1))∘z1)))    
+ (Abs_diagram (x1 ∘ (basic y1) ∘z1))" *)
+(*well defined-ness needs to be proved*)
+
+
+from this and assms and subresult3 and metaequivalence_bottomleft and subresult30
+have "tanglerel_equiv 
+      (Abs_diagram ((?x2)∘(basic (e_vert⊗e_cup⊗ w5))∘(basic (e_cap⊗?y2))∘z1))
+               (Abs_diagram ((?x2)∘(basic (?y2))∘z1))"
+using compose_leftassociativity subresult11
+by (metis)
+
+from this have "tanglerel_equiv
+ (((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1))) 
       (Abs_diagram ((x1)∘(basic (e_cup⊗y1⊗e_cup))∘(basic (e_vert⊗e_cap⊗ w5))∘(basic (w4⊗e_cap⊗e_vert))∘z1))
                (Abs_diagram ((x1)∘(basic (y1 ⊗ e_cup))∘(basic (w4⊗e_cap⊗e_vert))∘z1))" by auto
 from this and subresult1 have "tanglerel_equiv 

@@ -3259,12 +3259,12 @@ qed
 
 
 
-theorem metaequivalence_bottom_drop: assumes "(fst (count y1))>1" 
+theorem metaequivalence_bottom_doubledrop: assumes "(fst (count y1))>1" 
 and "w4 = makestrand  (nat ((fst (count y1)) + (-2)))" 
 and "w5 = makestrand (nat ((fst (count y1))))"
 and "well_defined (x1 ∘ basic y1 ∘ z1)" 
-shows "tanglerel_equiv (Abs_diagram ((x1)∘
-(basic (e_vert⊗e_cup⊗w5)) ∘ (basic (w4⊗e_cup⊗e_vert))∘(basic (e_cap⊗y1⊗e_cap))∘z1))
+shows "tanglerel_equiv (Abs_diagram ((x1)∘  (basic (w4⊗e_cup⊗e_vert)) ∘
+(basic (e_vert⊗e_cup⊗w5))∘(basic (e_cap⊗y1⊗e_cap))∘z1))
              (Abs_diagram (x1 ∘ (basic y1)∘ z1))" 
 proof-
 
@@ -3386,14 +3386,6 @@ from subresult27 and subresult29 and subresult21 have subresult30: "well_defined
 (((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1))" 
 using monoid_add_class.add.left_neutral well_defined_def
 by (auto)
-(*theorem begins
-theorem metaequivalence_bottomleft: 
-assumes "(fst (count y1))>1"
-and "w4 = makestrand  (nat ((fst (count y1)) + (-2)))" and "well_defined (x1 ∘ basic y1 ∘z1)"
-shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_vert⊗e_cup⊗w4)∘(basic (e_cap⊗y1))∘z1)))    
- (Abs_diagram (x1 ∘ (basic y1) ∘z1))" *)
-(*well defined-ness needs to be proved*)
-
 
 from this and assms and subresult3 and metaequivalence_bottomleft and subresult30
 have "tanglerel_equiv 
@@ -3401,14 +3393,15 @@ have "tanglerel_equiv
                (Abs_diagram ((?x2)∘(basic (?y2))∘z1))"
 using compose_leftassociativity subresult11
 by (metis)
-
 from this have "tanglerel_equiv
- (((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1))) 
-      (Abs_diagram ((x1)∘(basic (e_cup⊗y1⊗e_cup))∘(basic (e_vert⊗e_cap⊗ w5))∘(basic (w4⊗e_cap⊗e_vert))∘z1))
-               (Abs_diagram ((x1)∘(basic (y1 ⊗ e_cup))∘(basic (w4⊗e_cap⊗e_vert))∘z1))" by auto
+ (Abs_diagram ((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (e_vert⊗e_cup⊗ w5))∘(basic (e_cap⊗y1⊗e_cap))∘z1))  
+       (Abs_diagram ((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (y1⊗e_cap))∘z1))" 
+using compose_leftassociativity by auto
+ 
+
 from this and subresult1 have "tanglerel_equiv 
-      (Abs_diagram ((x1)∘(basic (e_cup⊗y1⊗e_cup))∘(basic (e_vert⊗e_cap⊗ w5))∘(basic (w4⊗e_cap⊗e_vert))∘z1))
-            (Abs_diagram (x1 ∘ (basic y1)∘ z1))" using rtranclp_trans Tangle.abs_eq_iff 
+ (Abs_diagram ((x1)∘(basic (w4⊗e_cup⊗e_vert))∘(basic (e_vert⊗e_cup⊗ w5))∘(basic (e_cap⊗y1⊗e_cap))∘z1))   
+          (Abs_diagram (x1 ∘ (basic y1)∘ z1))" using rtranclp_trans Tangle.abs_eq_iff 
 by metis
 then show ?thesis by simp
 qed

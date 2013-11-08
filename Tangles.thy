@@ -1,5 +1,5 @@
 theory Tangles
-imports Datatype Main Typedef
+imports Datatype Main Typedef 
 begin
 
 (*each  block is a horizontal block built by putting basic tangle bricks next to each other.
@@ -8,7 +8,30 @@ begin
 (3) e_cap is the bottom facing cusp
 (4) e_over is the positive cross
 (5) e_under is the negative cross*)
+
+
+lemma symmetry1: assumes "symp R" 
+shows "∀x y. (x, y) ∈ {(x, y). R x y}⇧* ⟶ (y, x) ∈ {(x, y). R x y}⇧*" 
+proof-
+have  "R x y ⟶  R y x" by (metis assms sympD)
+then have " (x, y) ∈ {(x, y). R x y} ⟶ (y, x) ∈ {(x, y). R x y}" by auto
+then have 2:"∀ x y. (x, y) ∈ {(x, y). R x y} ⟶ (y, x) ∈ {(x, y). R x y}"
+ by (metis (full_types) assms mem_Collect_eq split_conv sympE)
+then have "sym {(x, y). R x y}" unfolding sym_def by auto
+then have 3: "sym (rtrancl {(x, y). R x y})" using sym_rtrancl by auto
+then show ?thesis by (metis symE)
+qed
+
+lemma symmetry2: assumes "∀x y. (x, y) ∈ {(x, y). R x y}⇧* ⟶ (y, x) ∈ {(x, y). R x y}⇧* "
+shows "symp R^**" 
+unfolding symp_def Enum.rtranclp_rtrancl_eq assms by (metis assms)
+
+lemma symmetry3: assumes "symp R" shows "symp R^**" using assms symmetry1 symmetry2 by metis
+(*
+lemma invariance: assumes "R x y ⟹ (f x = f y)" shows "R^** x y ⟹ (f x = f y)" unfolding Enum.rtranclp_rtrancl_eq 
+sledgehammer*)
  
+
 datatype brick = vert
                 |cup
                 |cap
@@ -54,6 +77,24 @@ primrec count::"block ⇒ int × int "
 where
 "count (cement x) = (brickcount x)"
 |"count (cons x y) = (fst (brickcount x) + fst (count y), snd (brickcount x) + snd (count y))"
+
+lemma e_vert_count:" count (e_vert) = (1,1)"
+using e_vert_def brickcount.simps(1) count.simps(1) by metis
+
+lemma e_cup_count:" count (e_cup) = (0,2)"
+using e_cup_def brickcount.simps(2) count.simps(1) by metis
+
+
+lemma e_cap_count:" count (e_cap) = (2,0)"
+using e_cap_def brickcount.simps(3) count.simps(1) by metis
+
+lemma e_over_count:" count (e_over) = (2,2)"
+using e_over_def brickcount.simps(4) count.simps(1) by metis
+
+lemma e_under_count:" count (e_under) = (2,2)"
+using e_under_def brickcount.simps(5) count.simps(1) by metis
+
+
 
 lemma brickcount_nonnegative: "fst (brickcount x) ≥ 0" 
 by 
@@ -144,7 +185,6 @@ by (metis (hide_lams, no_types) add_nonneg_eq_0_iff assms le_neq_trans snd_count
 snd_count_nonnegative)
 
 
-
 lemma trivial: "(count (vert # e_cup)) = (1,3)"
 apply (simp add: e_cup_def)
 done
@@ -172,6 +212,7 @@ lemma cusp_basic: "((cusp x) = False) ⟹
 by metis
 
 
+
 lemma brickcount_zero_implies_cup:"(fst (brickcount x)= 0) ⟹ (x = cup)"
 apply(case_tac "brickcount x")
 apply(auto)
@@ -188,13 +229,24 @@ apply(auto)
 done
 
 lemma count_zero_implies_cusp:"(fst (count x)= 0) ⟹ (cusp x)"
-apply(induct_tac x)
-apply (auto)
-apply (simp add: count_def brickcount_zero_implies_brick_cusp)
-apply(case_tac "count x")
-apply(case_tac "x")
-apply(case_tac "cusp x")
+proof(induction x)
+case (cement y)
+have "(fst (count (cement y))) = (fst (brickcount y))" by auto
+from this have " (fst (count (cement y)) = 0) ≡((fst (brickcount y))=0)"  by auto
+from this  have " (fst (count (cement y)) = 0)  ⟹(brick_cusp y)" using brickcount_zero_implies_brick_cusp
+by auto
+from this have "(fst (count (cement y)) = 0)  ⟹(cusp (cement y))" by auto 
+from this show ?case using cement.prems by (auto) 
+next
+case (cons a y)
+assume A: "(fst (count y)) = 0"
+have "(cusp y)" using cons.IH by auto 
+have "fst (count (a # y)) = fst (brickcount a) + (fst  (count y))" by auto
+from this 
+
+from this and assms have "
 oops
+
 
 (*cusp ends*)
 
@@ -3259,7 +3311,7 @@ qed
 
 
 
-theorem metaequivalence_bottom_doubledrop: assumes "(fst (count y1))>1" 
+theorem metaequivalence_bottom_doubledrag: assumes "(fst (count y1))>1" 
 and "w4 = makestrand  (nat ((fst (count y1)) + (-2)))" 
 and "w5 = makestrand (nat ((fst (count y1))))"
 and "well_defined (x1 ∘ basic y1 ∘ z1)" 
@@ -3446,7 +3498,11 @@ from this have  "tanglerel_equiv (Abs_diagram ((x1)∘(basic (w4⊗e_cup⊗e_ver
 ∘(basic (e_cup⊗y2))∘(basic (e_vert⊗e_cap⊗w5))∘z1))
            (Abs_diagram ((x1)∘(basic (w4⊗e_cup⊗e_vert)) ∘(basic (y1 ⊗e_cap))∘(basic y2)∘z1))"
 using compose_leftassociativity by auto
-from subresult and this have 
+from subresult and this have                              
+
+
+
+
 " tanglerel_equiv (Abs_diagram ((x1)∘(basic (w4⊗e_cup⊗e_vert)) ∘(basic (y1 ⊗e_cap))
 ∘(basic (e_cup⊗y2))∘(basic (e_vert⊗e_cap⊗w5))∘z1))
            (Abs_diagram ((x1)∘(basic y1)∘(basic y2)∘z1))"
@@ -3463,7 +3519,7 @@ and "fst (count y2) = snd (count y1)"
 and "(fst (count y3)) = (snd (count y2))"
 shows "tanglerel_equiv (Abs_diagram ((x1)∘(basic (e_cup⊗y1⊗e_cup))∘(basic (e_vert⊗e_vert⊗y2⊗e_vert⊗e_vert))∘
 (basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))∘z1))
-             (Abs_diagram (x1 ∘ (basic y1)∘(basic y2)∘(basic y2)∘z1))" 
+             (Abs_diagram (x1 ∘ (basic y1)∘(basic y2)∘(basic y3)∘z1))" 
 proof-
 let ?x2 = "x1∘ (basic y1)"
 have  "tanglerel_equiv (Abs_diagram (?x2∘(basic (e_cup⊗y2⊗e_cup))∘
@@ -3478,7 +3534,8 @@ by simp
 have subresult2: "fst (count e_cup) = 0" using e_cup_def 
 count_def add_left_cancel comm_monoid_add_class.add.right_neutral fst_count_additive fstcount_cup_rightcompose
 by (auto)
-let ?z2 = "(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))∘z1"
+let ?z2 = "(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) 
+∘ (basic (w4⊗e_cap⊗e_vert))∘z1"
 let ?w2 = "y2 ⊗ e_cup"
 have "fst (count ?w2) = fst (count y2)" using fstcount_cup_rightcompose by auto
 from this and assms have subresult3:"fst (count ?w2) = snd (count y1)" by auto
@@ -3487,24 +3544,125 @@ let ?B = "e_vert ⊗ e_vert"
 have subresult4: "strands ?B"
 using Tangles.append.append_Nil e_vert_def makestrand.simps(1) strand_makestrand strands.simps(2)
  by (metis)
-
-let ?x = "(Abs_diagram (x1 ∘ (basic (e_cup ⊗ y1)) ∘ (basic (?B⊗ ?w2)) ∘ ?z2))"
-let ?y = " (Abs_diagram (x1 ∘ (basic (y1)) ∘ (basic (e_cup⊗ ?w2)) ∘ ?z2))"
-
 from subresult4 and subresult2 and subresult3 and exI have 
- "∃w1.∃w2.∃y2.∃A.∃B.((?x= Abs_diagram
- ((basic (A⊗w1))∘(basic (B⊗w2))∘(y2))))"
-sledgehammer
-(*"tanglerel_compbelow_right 
+"(strands ?B) ∧ (fst (count ?w2) = snd (count y1)) ∧ (fst (count e_cup) = 0)"
+by auto
+from this and exI and tanglerel_compbelow_centerright_def have 
+"tanglerel_compbelow_centerright 
 (Abs_diagram (x1 ∘ (basic (e_cup ⊗ y1)) ∘ (basic (?B⊗ ?w2)) ∘ ?z2))
 (Abs_diagram (x1 ∘ (basic ( y1)) ∘ (basic (e_cup ⊗ ?w2)) ∘ ?z2))"
-sledgehammer
-*)
-(*definition tanglerel_compbelow_right::"diagram ⇒ diagram ⇒ bool"
-where
-tanglerel_compbelow_right x y ≡  ∃w1.∃w2.∃y2.∃A.∃B.((x= Abs_diagram
- ((basic (A⊗w1))∘(basic (B⊗w2))∘(y2)))∧ (y = Abs_diagram (
-(basic w1)∘(basic (B⊗w2))∘(y2)))
-∧((snd (count w1)) = (fst (count w2)))
-∧ (strands B)
-∧ ((fst (count A)) = 0))*)
+by metis
+from this and compose_leftassociativity and leftright_associativity have 
+"tanglerel_compbelow_centerright 
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))
+∘z1))
+ (Abs_diagram (x1∘(basic y1)∘(basic (e_cup⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))∘z1))"
+by auto
+from this have
+"tanglerel_compbelow 
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))
+∘z1))
+ (Abs_diagram (x1∘(basic y1)∘(basic (e_cup⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))∘z1))"
+using tanglerel_compbelow_def by auto
+from this have 
+"tanglerel_compress
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))
+∘z1))
+ (Abs_diagram (x1∘(basic y1)∘(basic (e_cup⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))∘z1))"
+using tanglerel_compress_def by auto
+from this have
+"tanglerel
+(Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))
+∘z1))
+ (Abs_diagram (x1∘(basic y1)∘(basic (e_cup⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))∘z1))"
+using tanglerel_def by auto
+from this have 
+"tanglerel_equiv
+(Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))
+∘z1))
+ (Abs_diagram (x1∘(basic y1)∘(basic (e_cup⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))∘z1))"
+using tanglerel_equiv_def r_into_rtranclp by metis
+from this and subresult1 and r_into_rtranclp rtranclp_trans have subresult5:
+"tanglerel_equiv
+(Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) ∘ (basic (w4⊗e_cap⊗e_vert))
+∘z1))
+(Abs_diagram (x1∘(basic y1)∘(basic y2)∘(basic y3)∘z1))"
+by (metis Tangle.abs_eq_iff compose_Nil)
+
+have "snd (count (e_cup ⊗ y1)) = 2 + snd (count y1)" using snd_count_additive 
+comm_semiring_1_class.normalizing_semiring_rules(24) count_cup_rightcompose snd_conv 
+snd_count_additive by metis
+from this and assms have subresult6: "snd (count (e_cup ⊗ y1)) = 2 + fst (count y2)" by auto
+
+let ?subs1 = "(e_cup ⊗ y1)"
+let ?subs2 = " (e_vert ⊗ e_vert ⊗ y2)"
+have " fst (count (e_vert ⊗ e_vert ⊗ y2)) = 2 + fst (count y2)"
+using fst_count_additive e_vert_count by auto 
+from this and subresult6 have "snd (count (?subs1)) = 
+fst (count (?subs2))" by auto
+from this and subresult2 and subresult4 have
+"(strands ?B) ∧ (fst (count ?subs2) = snd (count ?subs1)) ∧ (fst (count e_cup) = 0)" by auto
+
+from this  exI and tanglerel_compbelow_centerleft_def  
+have "tanglerel_compbelow_centerleft
+ (Abs_diagram ((x1)∘(basic (?subs1 ⊗ e_cup))∘(basic (?subs2⊗?B))∘
+?z2))
+ (Abs_diagram ((x1)∘(basic (?subs1))∘(basic (?subs2⊗e_cup))∘
+?z2))" by metis
+from this and leftright_associativity have
+"tanglerel_compbelow_centerleft
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1 ⊗ e_cup))∘(basic (e_vert⊗e_vert ⊗ y2 ⊗ e_vert ⊗ e_vert))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) 
+∘ (basic (w4⊗e_cap⊗e_vert))∘z1))
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) 
+∘ (basic (w4⊗e_cap⊗e_vert))∘z1))"
+by auto
+
+from this and tanglerel_compbelow_def have
+"tanglerel_compbelow
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1 ⊗ e_cup))∘(basic (e_vert⊗e_vert ⊗ y2 ⊗ e_vert ⊗ e_vert))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) 
+∘ (basic (w4⊗e_cap⊗e_vert))∘z1))
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) 
+∘ (basic (w4⊗e_cap⊗e_vert))∘z1))"
+by auto
+
+from this and tanglerel_compress_def and tanglerel_def have
+"tanglerel
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1 ⊗ e_cup))∘(basic (e_vert⊗e_vert ⊗ y2 ⊗ e_vert ⊗ e_vert))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) 
+∘ (basic (w4⊗e_cap⊗e_vert))∘z1))
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) 
+∘ (basic (w4⊗e_cap⊗e_vert))∘z1))"
+by auto
+from this and  tanglerel_equiv_def and  r_into_rtranclp have
+"tanglerel_equiv
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1 ⊗ e_cup))∘(basic (e_vert⊗e_vert ⊗ y2 ⊗ e_vert ⊗ e_vert))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) 
+∘ (basic (w4⊗e_cap⊗e_vert))∘z1))
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1))∘(basic (e_vert⊗e_vert⊗y2⊗e_cup))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) 
+∘ (basic (w4⊗e_cap⊗e_vert))∘z1))" by metis
+from this and subresult5 and r_into_rtranclp rtranclp_trans have
+ "tanglerel_equiv
+ (Abs_diagram ((x1)∘(basic (e_cup⊗y1 ⊗ e_cup))∘(basic (e_vert⊗e_vert ⊗ y2 ⊗ e_vert ⊗ e_vert))∘
+(basic (e_vert⊗e_vert⊗y3⊗e_vert⊗e_vert))∘(basic (e_vert⊗e_cap⊗ w5)) 
+∘ (basic (w4⊗e_cap⊗e_vert))∘z1))
+ (Abs_diagram ((x1)∘(basic y1)∘(basic y2)∘(basic y3)∘z1))"
+by (metis Tangle.abs_eq_iff compose_Nil)
+from this show ?thesis by auto
+qed

@@ -171,6 +171,12 @@ apply(simp add: count_def)
 apply(auto)
 done
 
+lemma fst_count_zero_sum: assumes "(fst (count x)) + (fst (count y)) = 0"
+shows "fst (count x) = 0" and "fst (count y) = 0"
+using count_positive count_nonnegative add_nonneg_eq_0_iff assms
+apply metis
+by (metis add_nonneg_eq_0_iff assms count_nonnegative)
+
 lemma fst_count_positive: assumes "fst (count y)>0" or "fst (count x)>0"
 shows "fst (count (x⊗y)) > 0"
 apply (simp add: fst_count_additive)
@@ -239,13 +245,21 @@ from this have "(fst (count (cement y)) = 0)  ⟹(cusp (cement y))" by auto
 from this show ?case using cement.prems by (auto) 
 next
 case (cons a y)
-assume A: "(fst (count y)) = 0"
-have "(cusp y)" using cons.IH by auto 
-have "fst (count (a # y)) = fst (brickcount a) + (fst  (count y))" by auto
-from this 
+show ?case 
+proof-
+have step1: "fst (count (a # y)) = fst (brickcount a) + (fst  (count y))" by auto
+from this and fst_count_zero_sum have"fst (count y) = 0" 
+by (metis Tangles.append.append_Nil cons.prems fst_count_additive)
+from this have step2: "(cusp y)" using cons.IH by (auto) 
+from this and step1 and fst_count_zero_sum  have "fst (brickcount a)= 0" by (metis cons.prems count.simps(1))
+from this have "brick_cusp a" using brickcount_zero_implies_brick_cusp by auto
+from this and assms have "a=cup" using brick_cusp_def 
+by (metis `fst (brickcount a) = 0` brickcount_zero_implies_cup)
+from this and step2 have "cusp (a#y)" using cusp_def by auto
+from this show ?case by auto
+qed
+qed
 
-from this and assms have "
-oops
 
 
 (*cusp ends*)
@@ -561,6 +575,13 @@ where
 ((tanglerel_uncross_positiveflip x y)∨(tanglerel_uncross_positivestraighten x y)
 ∨(tanglerel_uncross_negativeflip x y)∨(tanglerel_uncross_negativestraighten x y))"
 (*tangle_uncross ends*)
+(*framed tanglerel_uncross*)
+
+definition framed_tanglerel_uncross::"diagram ⇒ diagram ⇒ bool"
+where
+"framed_tanglerel_uncross x y ≡ 
+((tanglerel_uncross_positiveflip x y)∨(tanglerel_uncross_negativeflip x y))"
+
 (*tangle_pull begins*)
 
 definition tanglerel_pull_posneg::"diagram ⇒ diagram ⇒ bool"
@@ -569,8 +590,7 @@ where
 ∘(basic (z1⊗e_over⊗w1)∘(basic (z2⊗e_under⊗w2)))∘(y2)))∧(y = Abs_diagram
  ((y1)
 ∘(basic (z1⊗e_vert⊗e_vert⊗w1))∘(basic (z2⊗e_vert⊗e_vert⊗w2))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧((snd (count w1)) = (fst (count w2))))"
+∧((snd (count z1)) = (fst (count z2))))"
 
 
 definition tanglerel_pull_negpos::"diagram ⇒ diagram ⇒ bool"
@@ -579,8 +599,7 @@ where
 ∘(basic (z1⊗e_under⊗w1)∘(basic (z2⊗e_over⊗w2)))∘(y2)))∧(y = Abs_diagram
  ((y1)
 ∘(basic (z1⊗e_vert⊗e_vert⊗w1))∘(basic (z2⊗e_vert⊗e_vert⊗w2))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧((snd (count w1)) = (fst (count w2))))"
+∧((snd (count z1)) = (fst (count z2))))"
 
 (*tanglerel_pull definition*)
 definition tanglerel_pull::"diagram ⇒ diagram ⇒ bool"
@@ -595,9 +614,8 @@ where
 "tanglerel_straighten_topdown x y ≡  ∃y1.∃z1.∃z2.∃w1.∃w2.∃y2.((x = Abs_diagram ((y1)
 ∘(basic (z1⊗e_vert⊗e_cup⊗w1)∘(basic (z2⊗e_cap⊗e_vert⊗w2)))∘(y2)))∧(y = Abs_diagram
  ((y1)
-∘(basic (z1⊗e_vert⊗w1))∘(basic (z2⊗e_vert⊗w2))∘(y2))))
-∧((snd (count z1)) = (fst (count z2)))
- ∧ ((snd (count w1)) = (fst (count w2)))"
+∘(basic (z1⊗e_vert⊗w1))∘(basic (z2⊗e_vert⊗w2))∘(y2)))
+∧((snd (count z1)) = (fst (count z2))))"
 
 
 definition tanglerel_straighten_downtop::"diagram ⇒ diagram ⇒ bool"
@@ -605,9 +623,8 @@ where
 "tanglerel_straighten_downtop x y ≡  ∃y1.∃z1.∃z2.∃w1.∃w2.∃y2.((x = Abs_diagram ((y1)
 ∘(basic (z1⊗e_cup⊗e_vert⊗w1)∘(basic (z2⊗e_vert⊗e_cap⊗w2)))∘(y2)))∧(y = Abs_diagram
  ((y1)
-∘(basic (z1⊗e_vert⊗w1))∘(basic (z2⊗e_vert⊗w2))∘(y2))))
-∧((snd (count z1)) = (fst (count z2)))
- ∧ ((snd (count w1)) = (fst (count w2)))"
+∘(basic (z1⊗e_vert⊗w1))∘(basic (z2⊗e_vert⊗w2))∘(y2)))
+∧((snd (count z1)) = (fst (count z2))))"
 
 
 definition tanglerel_straighten_righttopdown::"diagram ⇒ diagram ⇒ bool"
@@ -673,49 +690,11 @@ where
 ∧((snd (count z1)) = (fst (count z2)))∧((snd (count z2)) = (fst (count z3)))
  ∧ ((snd (count w1)) = (fst (count w2)))∧((snd (count w2)) = (fst (count w3)))"
 
-definition tanglerel_swing_rightpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_swing_rightpos x y ≡ ∃y1.∃w1.∃w2.∃w3.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_over⊗e_vert⊗w1)∘(basic (e_vert⊗e_over⊗w2))∘(basic (e_over⊗e_vert⊗w3))∘(y2))))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_over⊗w1)∘(basic (e_over⊗e_vert⊗w2))∘(basic (e_vert⊗e_over⊗w3))∘(y2)))))
- ∧ ((snd (count w1)) = (fst (count w2)))∧((snd (count w2)) = (fst (count w3)))"
-
-
-
-definition tanglerel_swing_rightneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_swing_rightneg x y ≡ ∃y1.∃w1.∃w2.∃w3.∃y2.((x = Abs_diagram ((y1)
-∘(basic (e_under⊗e_vert⊗w1)∘(basic (e_vert⊗e_under⊗w2))∘(basic (e_under⊗e_vert⊗w3))∘(y2))))∧(y = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_under⊗w1)∘(basic (e_under⊗e_vert⊗w2))∘(basic (e_vert⊗e_under⊗w3))∘(y2)))))
- ∧ ((snd (count w1)) = (fst (count w2)))∧((snd (count w2)) = (fst (count w3)))"
-
-definition tanglerel_swing_leftpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_swing_leftpos x y ≡ ∃y1.∃z1.∃z2.∃z3.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_over⊗e_vert)∘(basic (z2⊗e_vert⊗e_over))∘(basic (z3⊗e_over⊗e_vert))∘(y2))))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_over)∘(basic (z2⊗e_over⊗e_vert))∘(basic (z3⊗e_vert⊗e_over))∘(y2)))))
-∧((snd (count z1)) = (fst (count z2)))∧((snd (count z2)) = (fst (count z3)))"
-
-
-
-definition tanglerel_swing_leftneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_swing_leftneg x y ≡ ∃y1.∃z1.∃z2.∃z3.∃y2.((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_under⊗e_vert)∘(basic (z2⊗e_vert⊗e_under))∘(basic (z3⊗e_under⊗e_vert))∘(y2))))∧(y = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_under)∘(basic (z2⊗e_under⊗e_vert))∘(basic (z3⊗e_vert⊗e_under))∘(y2)))))
-∧((snd (count z1)) = (fst (count z2)))∧((snd (count z2)) = (fst (count z3)))"
-
 (*swing definition*)
 
 definition tanglerel_swing::"diagram ⇒ diagram ⇒ bool"
 where
-"tanglerel_swing x y ≡ ((tanglerel_swing_pos x y) ∨ (tanglerel_swing_neg x y)
-∨(tanglerel_swing_rightpos x y) ∨ (tanglerel_swing_rightneg x y)
-∨(tanglerel_swing_leftpos x y) ∨ (tanglerel_swing_leftneg x y))"
+"tanglerel_swing x y ≡ ((tanglerel_swing_pos x y) ∨ (tanglerel_swing_neg x y))"
 
 (*swing ends*)
 (* rotate moves*)
@@ -760,85 +739,13 @@ where
 ∧((snd (count w1)) = (fst (count w2))))"
 
 
-definition tanglerel_rotate_righttoppos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_rotate_righttoppos x y ≡  ∃y1.∃w1.∃w2.∃y2.((x = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_over⊗w1))∘(basic (e_cap⊗e_vert⊗w2))∘(y2)))∧ ((y = Abs_diagram ((y1)
-∘(basic (e_under⊗e_vert⊗w1)∘(basic (e_vert⊗e_cap⊗w2)))∘(y2))))
-∧((snd (count w1)) = (fst (count w2))))"
-
-
-definition tanglerel_rotate_righttopneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_rotate_righttopneg x y ≡  ∃y1.∃w1.∃w2.∃y2.((x = Abs_diagram
- ((y1)
-∘(basic (e_vert⊗e_under⊗w1))∘(basic (e_cap⊗e_vert⊗w2))∘(y2)))∧ ((y = Abs_diagram ((y1)
-∘(basic (e_over⊗e_vert⊗w1)∘(basic (e_vert⊗e_cap⊗w2)))∘(y2))))
-∧((snd (count w1)) = (fst (count w2))))"
-
-definition tanglerel_rotate_rightdownpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_rotate_rightdownpos x y ≡  ∃y1.∃w1.∃w2.∃y2.((x = Abs_diagram
- ((y1)
-∘(basic (e_cap⊗e_vert⊗w1))∘(basic (e_vert⊗e_over⊗w2))∘(y2)))∧ ((y = Abs_diagram ((y1)
-∘(basic (e_vert⊗e_cap⊗w1)∘(basic (e_under⊗e_vert⊗w2)))∘(y2))))
-∧((snd (count w1)) = (fst (count w2))))"
-
-
-definition tanglerel_rotate_rightdownneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_rotate_rightdownneg x y ≡  ∃y1.∃w1.∃w2.∃y2.
-((x = Abs_diagram ((y1)
-∘(basic (e_cap⊗e_vert⊗w1))∘(basic (e_vert⊗e_under⊗w2))∘(y2)))∧ ((y = Abs_diagram ((y1)
-∘(basic (e_vert⊗e_cap⊗w1)∘(basic (e_over⊗e_vert⊗w2)))∘(y2))))
-∧((snd (count w1)) = (fst (count w2))))"
-
-
-definition tanglerel_rotate_lefttoppos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_rotate_lefttoppos x y ≡  ∃y1.∃z1.∃z2.∃y2.((x = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_over))∘(basic (z2⊗e_cap⊗e_vert))∘(y2)))∧ ((y = Abs_diagram ((y1)
-∘(basic (z1⊗e_under⊗e_vert)∘(basic (z2⊗e_vert⊗e_cap)))∘(y2))))
-∧((snd (count z1)) = (fst (count z2))))"
-
-definition tanglerel_rotate_lefttopneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_rotate_lefttopneg x y ≡  ∃y1.∃z1.∃z2.∃y2.((x = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_vert⊗e_under))∘(basic (z2⊗e_cap⊗e_vert))∘(y2)))∧ ((y = Abs_diagram ((y1)
-∘(basic (z1⊗e_over⊗e_vert)∘(basic (z2⊗e_vert⊗e_cap)))∘(y2))))
-∧((snd (count z1)) = (fst (count z2))))"
-
-definition tanglerel_rotate_leftdownpos::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_rotate_leftdownpos x y ≡  ∃y1.∃z1.∃z2.∃y2.((x = Abs_diagram
- ((y1)
-∘(basic (z1⊗e_cap⊗e_vert))∘(basic (z2⊗e_vert⊗e_over))∘(y2)))∧ ((y = Abs_diagram ((y1)
-∘(basic (z1⊗e_vert⊗e_cap)∘(basic (z2⊗e_under⊗e_vert)))∘(y2))))
-∧((snd (count z1)) = (fst (count z2))))"
-
-
-definition tanglerel_rotate_leftdownneg::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_rotate_leftdownneg x y ≡  ∃y1.∃z1.∃z2.∃y2.
-((x = Abs_diagram ((y1)
-∘(basic (z1⊗e_cap⊗e_vert))∘(basic (z2⊗e_vert⊗e_under))∘(y2)))∧ ((y = Abs_diagram ((y1)
-∘(basic (z1⊗e_vert⊗e_cap)∘(basic (z2⊗e_over⊗e_vert)))∘(y2))))
-∧((snd (count z1)) = (fst (count z2))))"
-
 (*rotate definition*)
 
 
 definition tanglerel_rotate::"diagram ⇒ diagram ⇒ bool"
 where
 "tanglerel_rotate x y ≡ ((tanglerel_rotate_toppos x y) ∨ (tanglerel_rotate_topneg x y)
-∨ (tanglerel_rotate_downpos x y) ∨ (tanglerel_rotate_downneg x y)
-∨ (tanglerel_rotate_righttoppos x y) ∨ (tanglerel_rotate_righttopneg x y)
-∨ (tanglerel_rotate_rightdownpos x y) ∨ (tanglerel_rotate_rightdownneg x y)
-∨(tanglerel_rotate_lefttoppos x y) ∨ (tanglerel_rotate_lefttopneg x y)
-∨ (tanglerel_rotate_leftdownpos x y) ∨ (tanglerel_rotate_leftdownneg x y))"
+∨ (tanglerel_rotate_downpos x y) ∨ (tanglerel_rotate_downneg x y))"
 
 (*rotate ends*)
 
@@ -871,90 +778,9 @@ where
  ((A)∘(basic B)∘(y2)))∧(y = Abs_diagram ((A)∘(y2)))
 ∧ (strands B) ∧ ((snd (wall_count A))>0))"
 
-(*compress below- abbreviated as compbelow*)
-definition tanglerel_compbelow_down::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_down x y ≡  ∃z1.∃z2.∃w1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((basic (z1⊗A⊗w1))∘(basic (z2⊗B⊗w2))∘(y2)))∧ ((y = Abs_diagram (
-(basic (z1⊗w1)∘(basic (z2⊗A⊗w2)))∘(y2))))
-∧((snd (count z1)) = (fst (count z2)))
-∧((snd (count w1)) = (fst (count w2)))
-∧(strands B))"
 
 
-definition tanglerel_compbelow_center::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_center x y ≡ ∃y1.∃z1.∃z2.∃w1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A⊗w1))∘(basic (z2⊗B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1⊗w1))∘(basic (z2⊗A⊗w2))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧((snd (count w1)) = (fst (count w2)))
-∧((fst (count A)) = 0)
-∧(strands B))"
 
-(*three at a time- botright*)
-definition tanglerel_compbelow_botright::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_botright x y ≡ ∃z2.∃w1.∃w2.∃y2.∃A.∃B.((x = Abs_diagram (
-(basic (A⊗w1))∘(basic (z2⊗B⊗w2))∘(y2)))∧ ((y = Abs_diagram (
-(basic (w1)∘(basic (z2⊗A⊗w2)))∘(y2))))
-∧(0 = (fst (count z2)))
-∧((snd (count w1)) = (fst (count w2)))
-∧(strands B))"
-
-
-definition tanglerel_compbelow_botleft::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_botleft x y ≡  ∃z1.∃z2.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((basic (z1⊗A))∘(basic (z2⊗B⊗w2))∘(y2)))∧ ((y = Abs_diagram (
-(basic (z1)∘(basic (z2⊗A⊗w2)))∘(y2))))
-∧((snd (count z1)) = (fst (count z2)))
-∧(0 = (fst (count w2)))
-∧(strands B))"
-
-
-definition tanglerel_compbelow_centerbotright::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_centerbotright x y ≡ ∃y1.∃z2.∃w1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (A⊗w1))∘(basic (z2⊗B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (w1))∘(basic (z2⊗A⊗w2))∘(y2)))
-∧(0 = (fst (count z2)))
-∧((snd (count w1)) = (fst (count w2)))
-∧((fst (count A)) = 0)
-∧(strands B))"
-
-
-definition tanglerel_compbelow_centerbotleft::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_centerbotleft x y ≡ ∃y1.∃z1.∃z2.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A))∘(basic (z2⊗B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1))∘(basic (z2⊗A⊗w2))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧(0 = (fst (count w2)))
-∧((fst (count A)) = 0)
-∧(strands B))"
-
-
-definition tanglerel_compbelow_centertopright::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_centertopright x y ≡ ∃y1.∃z1.∃w1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A))∘(basic (B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1⊗w1))∘(basic (A⊗w2))∘(y2)))
-∧((snd (count z1)) = 0)
-∧((snd (count w1)) = (fst (count w2)))
-∧((fst (count A)) = 0)
-∧(strands B))"
-
-
-definition tanglerel_compbelow_centertopleft::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_centertopleft x y ≡ ∃y1.∃z1.∃z2.∃w1.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A⊗w1))∘(basic (z2⊗B))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1⊗w1))∘(basic (z2⊗A))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧((snd (count w1)) = 0)
-∧((fst (count A)) = 0)
-∧(strands B))"
 
 (*two at a time*)
 
@@ -977,13 +803,23 @@ where
 ∧(strands B))"
 
 
-definition tanglerel_compbelow_bottom::"diagram ⇒ diagram ⇒ bool"
+definition tanglerel_compbelow_bottomright::"diagram ⇒ diagram ⇒ bool"
 where
-"tanglerel_compbelow_bottom x y ≡  ∃z2.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((basic (A))∘(basic (z2⊗B⊗w2))∘(y2)))∧ ((y = Abs_diagram (
-(basic (z2⊗A⊗w2))∘(y2))))
-∧(0 = (fst (count z2)))
+"tanglerel_compbelow_bottomright x y ≡  ∃w2.∃A.∃B.∃y2.((x = Abs_diagram
+ ((basic (A))∘(basic (B⊗w2))∘(y2)))∧ 
+(y = Abs_diagram (
+(basic (A⊗w2))∘(y2)))
 ∧(0 = (fst (count w2)))
+∧(strands B))"
+
+
+definition tanglerel_compbelow_bottomleft::"diagram ⇒ diagram ⇒ bool"
+where
+"tanglerel_compbelow_bottomleft x y ≡  ∃z2.∃A.∃B.∃y2.((x = Abs_diagram
+ ((basic (A))∘(basic (z2⊗B))∘(y2)))∧ 
+(y = Abs_diagram (
+(basic (A⊗z2))∘(y2)))
+∧(0 = (fst (count z2)))
 ∧(strands B))"
 
 
@@ -1007,15 +843,6 @@ where
 ∧(strands B))"
 
 
-definition tanglerel_compbelow_centerbottom::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_centerbottom x y ≡ ∃y1.∃z2.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (A))∘(basic (z2⊗B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘(basic (z2⊗A⊗w2))∘(y2)))
-∧(0 = (fst (count z2)))
-∧(0 = (fst (count w2)))
-∧((fst (count A)) = 0)
-∧(strands B))"
-
 
 definition tanglerel_compbelow_centertop::"diagram ⇒ diagram ⇒ bool"
 where
@@ -1027,209 +854,15 @@ where
 ∧((fst (count A)) = 0)
 ∧(strands B))"
 
-
-definition tanglerel_compbelow_centerrightcross::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_centerrightcross x y ≡ ∃y1.∃z1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A))∘(basic (B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1))∘(basic (A⊗w2))∘(y2)))
-∧((snd (count z1)) = 0)
-∧(0 = (fst (count w2)))
-∧((fst (count 
-A)) = 0)
-∧(strands B))"
-
-
-definition tanglerel_compbelow_centerleftcross::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_centerleftcross x y ≡ ∃y1.∃z2.∃w1.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (A⊗w1))∘(basic (z2⊗B))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (w1))∘(basic (z2⊗A))∘(y2)))
-∧(0 = (fst (count z2)))
-∧((snd (count w1)) = 0)
-∧((fst (count A)) = 0)
-∧(strands B))"
-
-(*one at a time- abbreviated notation is used here. For instance- lb-left bottom exists*)
-
-definition tanglerel_compbelow_lt::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_lt x y ≡  ∃z2.∃A.∃B.∃y2.((x = Abs_diagram
- ((basic (A))∘(basic (z2⊗B))∘(y2)))∧ ((y = Abs_diagram (
-(basic (z2⊗A))∘(y2))))
-∧(0 = (fst (count z2)))
-∧(strands B))"
-
-
-definition tanglerel_compbelow_rt::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_rt x y ≡  ∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((basic (A))∘(basic (B⊗w2))∘(y2)))∧ ((y = Abs_diagram (
-(basic (A⊗w2))∘(y2))))
-∧(0 = (fst (count w2)))
-∧(strands B))"
-
-(*center abbreviated one at a time*)
-
-definition tanglerel_compbelow_centerlb::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_centerlb x y ≡ ∃y1.∃z1.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A))∘(basic (B))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1))∘(basic (A))∘(y2)))
-∧((snd (count z1)) = 0)
-∧((fst (count A)) = 0)
-∧(strands B))"
-
-
-definition tanglerel_compbelow_centerrb::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_centerrb x y ≡ ∃y1.∃w1.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (A⊗w1))∘(basic (B))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (w1))∘(basic (A))∘(y2)))
-∧((snd (count w1)) = 0)
-∧((fst (count A)) = 0)
-∧(strands B))"
-
-
-definition tanglerel_compbelow_centerlt::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_centerlt x y ≡ ∃y1.∃z2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (A))∘(basic (z2⊗B))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z2⊗A))∘(y2)))
-∧(0 = (fst (count z2)))
-∧((fst (count A)) = 0)
-∧(strands B))"
-
-
-definition tanglerel_compbelow_centerrt::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_centerrt x y ≡ ∃y1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (A))∘(basic (B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘(basic (A⊗w2))∘(y2)))
-∧(0 = (fst (count w2)))
-∧((fst (count A)) = 0)
-∧(strands B))"
-(*comp below definition*)
-
 (*compbelow definition*)
 definition tanglerel_compbelow::"diagram ⇒ diagram ⇒ bool"
 where
-"tanglerel_compbelow x y ≡ (tanglerel_compbelow_down x y) ∨ (tanglerel_compbelow_center x y) 
-∨ (tanglerel_compbelow_botright x y) ∨ (tanglerel_compbelow_botleft x y ) 
-∨ (tanglerel_compbelow_centerbotleft x y) ∨ (tanglerel_compbelow_centerbotright x y)
-∨ (tanglerel_compbelow_centertopright x y) ∨ (tanglerel_compbelow_centertopleft x y)
-∨ (tanglerel_compbelow_right x y) ∨ (tanglerel_compbelow_left x y) ∨ (tanglerel_compbelow_bottom x y)
+"tanglerel_compbelow x y ≡ 
+(tanglerel_compbelow_right x y) ∨ (tanglerel_compbelow_left x y)
 ∨ (tanglerel_compbelow_centerleft x y) ∨ (tanglerel_compbelow_centerright x y)
-∨ (tanglerel_compbelow_centerbottom x y) ∨ (tanglerel_compbelow_centertop x y)
-∨(tanglerel_compbelow_centerrightcross x y) ∨ (tanglerel_compbelow_centerleftcross x y)
-∨ (tanglerel_compbelow_lt x y) ∨ (tanglerel_compbelow_rt x y) 
-∨ (tanglerel_compbelow_centerlb x y) ∨ (tanglerel_compbelow_centerrb x y)
-∨ (tanglerel_compbelow_centerlt x y) ∨ (tanglerel_compbelow_centerrt x y)
+∨(tanglerel_compbelow_centertop x y)
 "
 (*comp above*)
-definition tanglerel_compabove_up::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_up x y ≡  ∃z1.∃z2.∃w1.∃w2.∃A.∃B.∃y1.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A⊗w1))∘(basic (z2⊗B⊗w2))))∧ ((y = Abs_diagram ((y1)∘
-(basic (z1⊗B⊗w1)∘(basic (z2⊗w2))))))
-∧((snd (count z1)) = (fst (count z2)))
-∧((snd (count w1)) = (fst (count w2)))
-∧(strands A))"
-
-
-definition tanglerel_compabove_center::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_center x y ≡ ∃y1.∃z1.∃z2.∃w1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A⊗w1))∘(basic (z2⊗B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1⊗B⊗w1))∘(basic (z2⊗w2))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧((snd (count w1)) = (fst (count w2)))
-∧((snd (count B)) = 0)
-∧(strands A))"
-
-(*three at a time*)
-definition tanglerel_compabove_bottomright::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_bottomright x y ≡  ∃z2.∃w1.∃w2.∃A.∃B.∃y1.((x = Abs_diagram
- ((y1)∘(basic (A⊗w1))∘(basic (z2⊗B⊗w2))))∧ ((y = Abs_diagram (
-(basic (B⊗w1)∘(basic (z2⊗w2))))))
-∧(0 = (fst (count z2)))
-∧((snd (count w1)) = (fst (count w2)))
-∧(strands A))"
-
-
-definition tanglerel_compabove_bottomleft::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_bottomleft x y ≡  ∃z1.∃z2.∃w2.∃A.∃B.∃y1.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A))∘(basic (z2⊗B⊗w2))))∧ ((y = Abs_diagram (
-(y1)∘(basic (z1⊗B)∘(basic (z2⊗w2))))))
-∧((snd (count z1)) = (fst (count z2)))
-∧(0 = (fst (count w2)))
-∧(strands A))"
-
-
-definition tanglerel_compabove_topright::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_topright x y ≡  ∃z1.∃w1.∃w2.∃A.∃B.∃y1.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A⊗w1))∘(basic (B⊗w2))))∧ ((y = Abs_diagram (
-(y1)∘(basic (z1⊗B⊗w1)∘(basic (w2))))))
-∧((snd (count z1)) = 0)
-∧((snd (count w1)) = (fst (count w2)))
-∧(strands A))"
-
-
-definition tanglerel_compabove_topleft::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_topleft x y ≡  ∃z1.∃z2.∃w1.∃A.∃B.∃y1.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A⊗w1))∘(basic (z2⊗B))))∧ ((y = Abs_diagram (
-(y1)∘(basic (z1⊗B⊗w1)∘(basic (z2))))))
-∧((snd (count z1)) = (fst (count z2)))
-∧((snd (count w1)) = 0)
-∧(strands A))"
-
-
-definition tanglerel_compabove_centerbottomright::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_centerbottomright x y ≡ ∃y1.∃z2.∃w1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (A⊗w1))∘(basic (z2⊗B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (B⊗w1))∘(basic (z2⊗w2))∘(y2)))
-∧(0 = (fst (count z2)))
-∧((snd (count w1)) = (fst (count w2)))
-∧((snd (count B)) = 0)
-∧(strands A))"
-
-
-definition tanglerel_compabove_centerbottomleft::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_centerbottomleft x y ≡ ∃y1.∃z1.∃z2.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A))∘(basic (z2⊗B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1⊗B))∘(basic (z2⊗w2))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧(0 = (fst (count w2)))
-∧((snd (count B)) = 0)
-∧(strands A))"
-
-
-definition tanglerel_compabove_centertopright::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_centertopright x y ≡ ∃y1.∃z1.∃z2.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A))∘(basic (z2⊗B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1⊗B))∘(basic (z2⊗w2))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧(0 = (fst (count w2)))
-∧((snd (count B)) = 0)
-∧(strands A))"
-
-
-definition tanglerel_compabove_centertopleft::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_centertopleft x y ≡ ∃y1.∃z1.∃z2.∃w1.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A⊗w1))∘(basic (z2⊗B))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1⊗B⊗w1))∘(basic (z2))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
-∧((snd (count w1)) = 0)
-∧((snd (count B)) = 0)
-∧(strands A))"
-(*two at a time*)
 
 definition tanglerel_compabove_right::"diagram ⇒ diagram ⇒ bool"
 where
@@ -1244,30 +877,31 @@ definition tanglerel_compabove_left::"diagram ⇒ diagram ⇒ bool"
 where
 "tanglerel_compabove_left x y ≡  ∃z1.∃z2.∃A.∃B.∃y1.((x = Abs_diagram
  ((y1)∘(basic (z1⊗A))∘(basic (z2⊗B))))∧ ((y = Abs_diagram (
-(y1)∘(basic (z1⊗B)∘(basic (z2))))))
+(y1)∘(basic (B⊗z1)∘(basic (z2))))))
 ∧((snd (count z1)) = (fst (count z2)))
 ∧(strands A))"
 
 
-definition tanglerel_compabove_top::"diagram ⇒ diagram ⇒ bool"
+
+
+definition tanglerel_compabove_topright::"diagram ⇒ diagram ⇒ bool"
 where
-"tanglerel_compabove_top x y ≡  ∃z1.∃z2.∃w1.∃w2.∃A.∃B.∃y1.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A⊗w1))∘(basic (B))))∧ ((y = Abs_diagram (
-(y1)∘(basic (z1⊗B⊗w1)))))
-∧((snd (count z1)) = (fst (count z2)))
-∧((snd (count w1)) = (fst (count w2)))
+"tanglerel_compabove_topright x y ≡  ∃w1.∃A.∃B.∃y1.((x = Abs_diagram
+ ((y1)∘(basic (A⊗w1))∘(basic (B))))∧ ((y = Abs_diagram (
+(y1)∘(basic (B⊗w1)))))
+∧((snd (count w1)) = 0)
 ∧(strands A))"
 
+
+definition tanglerel_compabove_topleft::"diagram ⇒ diagram ⇒ bool"
+where
+"tanglerel_compabove_topleft x y ≡  ∃z1.∃A.∃B.∃y1.((x = Abs_diagram
+ ((y1)∘(basic (z1⊗A))∘(basic (B))))∧ ((y = Abs_diagram (
+(y1)∘(basic (z1⊗B)))))
+∧((snd (count z1)) = 0)
+∧(strands A))"
 (*two at a time-center*)
 
-definition tanglerel_compabove_centerright::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_centerright x y ≡ ∃y1.∃w1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (A⊗w1))∘(basic (B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (B⊗w1))∘(basic (w2))∘(y2)))
-∧((snd (count w1)) = (fst (count w2)))
-∧((snd (count B)) = 0)
-∧(strands A))"
 
 definition tanglerel_compabove_centerleft::"diagram ⇒ diagram ⇒ bool"
 where
@@ -1279,125 +913,22 @@ where
 ∧(strands A))"
 
 
-definition tanglerel_compabove_centertop::"diagram ⇒ diagram ⇒ bool"
+definition tanglerel_compabove_centerright::"diagram ⇒ diagram ⇒ bool"
 where
-"tanglerel_compabove_centertop x y ≡ ∃y1.∃z1.∃w1.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A⊗w1))∘(basic (B))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1⊗B⊗w1))∘(y2)))
-∧((snd (count z1)) = 0)
-∧((snd (count w1)) = 0)
-∧((snd (count B)) = 0)
-∧(strands A))"
-
-
-definition tanglerel_compabove_centerbottom::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_centerbottom x y ≡ ∃y1.∃z2.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (A))∘(basic (z2⊗B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (B))∘(basic (z2⊗w2))∘(y2)))
-∧(0 = (fst (count z2)))
-∧((fst (count w2)) = 0)
-∧((snd (count B)) = 0)
-∧(strands A))"
-
-
-definition tanglerel_compabove_centerrightcross::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_centerrightcross x y ≡ ∃y1.∃z2.∃w1.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (A⊗w1))∘(basic (z2⊗B))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (B⊗w1))∘(basic (z2))∘(y2)))
-∧(0 = (fst (count z2)))
-∧((snd (count w1)) = 0)
-∧((snd (count B)) = 0)
-∧(strands A))"
-
-definition tanglerel_compabove_centerleftcross::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_centerleftcross x y ≡ ∃y1.∃z1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A))∘(basic (B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1⊗B))∘(basic (w2))∘(y2)))
-∧((snd (count z1)) = 0)
-∧(0 = (fst (count w2)))
-∧((snd (count B)) = 0)
-∧(strands A))"
-(*one at a time- abbreviated notion- for instance lb- left bottom block is present*)
-
-definition tanglerel_compabove_lb::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_lb x y ≡  ∃z1.∃A.∃B.∃y1.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A))∘(basic (B))))∧ (y = Abs_diagram 
-((y1)∘(basic (z1⊗B))))
-∧((snd (count z1)) = 0)
-∧(strands A))"
-
-definition tanglerel_compabove_rb::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_rb x y ≡  ∃w1.∃A.∃B.∃y1.((x = Abs_diagram
- ((y1)∘(basic (A⊗w1))∘(basic (B))))∧ ((y = Abs_diagram ((y1)∘
-(basic (B⊗w1)))))
-∧((snd (count w1)) = 0)
-∧(strands A))"
-
-(*center- on at a time*)
-
-definition tanglerel_compabove_centerlb::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_centerlb x y ≡ ∃y1.∃z1.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A))∘(basic (B))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1⊗B))∘(y2)))
-∧((snd (count z1)) = 0)
-∧((snd (count B)) = 0)
-∧(strands A))"
-
-
-definition tanglerel_compabove_centerrb::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_centerrb x y ≡ ∃y1.∃w1.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (A⊗w1))∘(basic (B))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (B⊗w1))∘(y2)))
-∧((snd (count w1)) = 0)
-∧((snd (count B)) = 0)
-∧(strands A))"
-
-
-definition tanglerel_compabove_centerlt::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_centerlt x y ≡ ∃y1.∃z1.∃z2.∃w1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A⊗w1))∘(basic (z2⊗B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1⊗B⊗w1))∘(basic (z2⊗w2))∘(y2)))
-∧((snd (count z1)) = (fst (count z2)))
+"tanglerel_compabove_centerright x y ≡ ∃y1.∃w1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
+ ((y1)∘(basic (A⊗w1))∘(basic (B ⊗ w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
+(basic (B⊗w1))∘(basic (w2))∘(y2)))
 ∧((snd (count w1)) = (fst (count w2)))
 ∧((snd (count B)) = 0)
 ∧(strands A))"
-
-
-
-definition tanglerel_compabove_centerrt::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compabove_centerrt x y ≡ ∃y1.∃w2.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (A))∘(basic (B⊗w2))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (B))∘(basic (w2))∘(y2)))
-∧((fst (count w2)) = 0)
-∧((snd (count B)) = 0)
-∧(strands A))"
-
 (*compabove definition*)
 
 (*compbelow definition*)
 definition tanglerel_compabove::"diagram ⇒ diagram ⇒ bool"
 where
-"tanglerel_compabove x y ≡ (tanglerel_compabove_up x y)∨(tanglerel_compabove_center x y) 
-∨ (tanglerel_compabove_bottomright x y) ∨ (tanglerel_compabove_bottomleft x y ) 
-∨ (tanglerel_compabove_topright x y) ∨ (tanglerel_compabove_topleft x y) 
-∨ (tanglerel_compabove_centerbottomleft x y) ∨ (tanglerel_compabove_centerbottomright x y)
-∨ (tanglerel_compabove_centertopright x y) ∨ (tanglerel_compabove_centertopleft x y)
-∨ (tanglerel_compabove_right x y) ∨ (tanglerel_compabove_left x y) ∨ (tanglerel_compabove_top x y)
-∨ (tanglerel_compabove_centerleft x y) ∨ (tanglerel_compabove_centerright x y)
-∨ (tanglerel_compabove_centerbottom x y) ∨ (tanglerel_compabove_centertop x y)
-∨(tanglerel_compabove_centerrightcross x y) ∨ (tanglerel_compabove_centerleftcross x y)
-∨ (tanglerel_compabove_lb x y) ∨ (tanglerel_compabove_rb x y) 
-∨ (tanglerel_compabove_centerlb x y) ∨ (tanglerel_compabove_centerrb x y)
-∨ (tanglerel_compabove_centerlt x y) ∨ (tanglerel_compabove_centerrt x y)"
+"tanglerel_compabove x y ≡ ((tanglerel_compabove_topright x y) ∨ (tanglerel_compabove_topleft x y) 
+∨ (tanglerel_compabove_right x y) ∨ (tanglerel_compabove_left x y) 
+∨ (tanglerel_compabove_centerleft x y) ∨ (tanglerel_compabove_centerright x y))"
 
 (*definition compess*)
 definition tanglerel_compress::"diagram ⇒ diagram => bool"

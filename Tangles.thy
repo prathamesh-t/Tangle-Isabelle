@@ -844,24 +844,14 @@ where
 
 
 
-definition tanglerel_compbelow_centertop::"diagram ⇒ diagram ⇒ bool"
-where
-"tanglerel_compbelow_centertop x y ≡ ∃y1.∃z1.∃w1.∃A.∃B.∃y2.((x = Abs_diagram
- ((y1)∘(basic (z1⊗A⊗w1))∘(basic (B))∘(y2)))∧ (y = Abs_diagram ((y1)∘
-(basic (z1⊗w1))∘(basic (A))∘(y2)))
-∧((snd (count z1)) = 0)
-∧((snd (count w1)) = 0)
-∧((fst (count A)) = 0)
-∧(strands B))"
-
 (*compbelow definition*)
 definition tanglerel_compbelow::"diagram ⇒ diagram ⇒ bool"
 where
 "tanglerel_compbelow x y ≡ 
 (tanglerel_compbelow_right x y) ∨ (tanglerel_compbelow_left x y)
 ∨ (tanglerel_compbelow_centerleft x y) ∨ (tanglerel_compbelow_centerright x y)
-∨(tanglerel_compbelow_centertop x y)
 "
+
 (*comp above*)
 
 definition tanglerel_compabove_right::"diagram ⇒ diagram ⇒ bool"
@@ -968,19 +958,45 @@ where
 ∨  (tanglerel_uncross y x) ∨ (tanglerel_pull y x) ∨ (tanglerel_straighten y x) 
 ∨(tanglerel_swing y x)∨(tanglerel_rotate y x) ∨ (tanglerel_compress y x) ∨ (tanglerel_slide y x))
 "
+
+
+definition framed_tanglerel::"diagram =>diagram⇒bool"
+where
+"framed_tanglerel x y = ((framed_tanglerel_uncross x y) ∨ (tanglerel_pull x y) ∨ (tanglerel_straighten x y) 
+∨(tanglerel_swing x y)∨(tanglerel_rotate x y) ∨ (tanglerel_compress x y) ∨ (tanglerel_slide x y)
+∨  (framed_tanglerel_uncross y x) ∨ (tanglerel_pull y x) ∨ (tanglerel_straighten y x) 
+∨(tanglerel_swing y x)∨(tanglerel_rotate y x) ∨ (tanglerel_compress y x) ∨ (tanglerel_slide y x))
+"
+
 (* lemmas for proving that equivalence is well defined*)
 lemma tanglerel_symp: "symp tanglerel" unfolding tanglerel_def symp_def by auto
+
+lemma framed_tanglerel_symp: "symp framed_tanglerel" unfolding framed_tanglerel_def symp_def by auto
+
 
 (*find_theorems"rtranclp"*)
  
 definition tanglerel_equiv::"diagram⇒diagram⇒bool"
 where
 "(tanglerel_equiv) = (tanglerel)^**" 
+
+
+definition framed_tanglerel_equiv::"diagram⇒diagram⇒bool"
+where
+"(framed_tanglerel_equiv) = (framed_tanglerel)^**" 
  
 lemma reflective: "tanglerel_equiv x x" unfolding tanglerel_equiv_def by simp
 
+
+lemma framed_reflective: "framed_tanglerel_equiv x x" unfolding framed_tanglerel_equiv_def by simp
+
+
 lemma tangle_symmetry:"symp tanglerel_equiv" using tanglerel_symp symmetry3 
 by (metis (full_types) tanglerel_equiv_def)
+
+
+lemma framed_tangle_symmetry:"symp framed_tanglerel_equiv" using framed_tanglerel_symp symmetry3 
+by (metis (full_types) framed_tanglerel_equiv_def)
 
 (*tangles upto equivalence are well defined*)
 (*Tangle- Definition and the proof of being well defined*)
@@ -992,6 +1008,15 @@ show "reflp tanglerel_equiv" unfolding reflp_def reflective by (metis reflective
 show "symp tanglerel_equiv" using tangle_symmetry by auto
 show "transp tanglerel_equiv" unfolding transp_def tanglerel_equiv_def rtranclp_trans by auto  
 qed
+
+quotient_type Framed_Tangle = "diagram" / "framed_tanglerel_equiv"
+ morphisms Rep_framed_tangles Abs_framed_tangles
+proof (rule equivpI)
+show "reflp framed_tanglerel_equiv" unfolding reflp_def framed_reflective by (metis framed_reflective)
+show "symp framed_tanglerel_equiv" using framed_tangle_symmetry by auto
+show "transp framed_tanglerel_equiv" unfolding transp_def framed_tanglerel_equiv_def rtranclp_trans by auto  
+qed
+
 (*additional Tanglerel*)
 
 (*proof zone*)
@@ -2840,8 +2865,6 @@ by metis
 then show ?thesis by simp
 qed
 
-
-
 theorem metaequivalence_bottom_doubledrag: assumes "(fst (count y1))>1" 
 and "w4 = makestrand  (nat ((fst (count y1)) + (-2)))" 
 and "w5 = makestrand (nat ((fst (count y1))))"
@@ -2850,7 +2873,6 @@ shows "tanglerel_equiv (Abs_diagram ((x1)∘  (basic (w4⊗e_cup⊗e_vert)) ∘
 (basic (e_vert⊗e_cup⊗w5))∘(basic (e_cap⊗y1⊗e_cap))∘z1))
              (Abs_diagram (x1 ∘ (basic y1)∘ z1))" 
 proof-
-
 have "(fst (count y1))>1" using assms by auto
 also have  "w4 = makestrand  (nat ((fst (count y1)) + (-2)))" using assms by auto
  have "well_defined (x1 ∘ basic y1 ∘ z1)"  using assms by auto

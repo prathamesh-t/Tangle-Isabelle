@@ -9,7 +9,6 @@ begin
 (4) e_over is the positive cross
 (5) e_under is the negative cross*)
 
-
 lemma symmetry1: assumes "symp R" 
 shows "∀x y. (x, y) ∈ {(x, y). R x y}⇧* ⟶ (y, x) ∈ {(x, y). R x y}⇧*" 
 proof-
@@ -582,6 +581,11 @@ where
 "framed_tanglerel_uncross x y ≡ 
 ((tanglerel_uncross_positiveflip x y)∨(tanglerel_uncross_negativeflip x y))"
 
+lemma framed_uncross_implies_uncross: "(framed_tanglerel_uncross x y) ⟹ (tanglerel_uncross x y)"
+apply (simp add: framed_tanglerel_uncross_def tanglerel_uncross_def)
+apply(auto)
+done
+
 (*tangle_pull begins*)
 
 definition tanglerel_pull_posneg::"diagram ⇒ diagram ⇒ bool"
@@ -669,6 +673,8 @@ where
 "tanglerel_straighten x y ≡ ((tanglerel_straighten_topdown x y) ∨ (tanglerel_straighten_downtop x y)
 ∨(tanglerel_straighten_righttopdown x y) ∨ (tanglerel_straighten_rightdowntop x y)
 ∨(tanglerel_straighten_lefttopdown x y) ∨ (tanglerel_straighten_leftdowntop x y))"
+
+
 
 (*straighten ends*)
 (*swing begins*)
@@ -871,9 +877,6 @@ where
 ∧((snd (count z1)) = (fst (count z2)))
 ∧(strands A))"
 
-
-
-
 definition tanglerel_compabove_topright::"diagram ⇒ diagram ⇒ bool"
 where
 "tanglerel_compabove_topright x y ≡  ∃w1.∃A.∃B.∃y1.((x = Abs_diagram
@@ -881,7 +884,6 @@ where
 (y1)∘(basic (B⊗w1)))))
 ∧((snd (count w1)) = 0)
 ∧(strands A))"
-
 
 definition tanglerel_compabove_topleft::"diagram ⇒ diagram ⇒ bool"
 where
@@ -968,6 +970,9 @@ where
 ∨(tanglerel_swing y x)∨(tanglerel_rotate y x) ∨ (tanglerel_compress y x) ∨ (tanglerel_slide y x))
 "
 
+lemma framed_tanglerel_implies_tanglerel: "(framed_tanglerel x y) ⟹ (tanglerel x y)"
+using framed_uncross_implies_uncross framed_tanglerel_def tanglerel_def by auto
+
 (* lemmas for proving that equivalence is well defined*)
 lemma tanglerel_symp: "symp tanglerel" unfolding tanglerel_def symp_def by auto
 
@@ -987,13 +992,10 @@ where
  
 lemma reflective: "tanglerel_equiv x x" unfolding tanglerel_equiv_def by simp
 
-
 lemma framed_reflective: "framed_tanglerel_equiv x x" unfolding framed_tanglerel_equiv_def by simp
-
 
 lemma tangle_symmetry:"symp tanglerel_equiv" using tanglerel_symp symmetry3 
 by (metis (full_types) tanglerel_equiv_def)
-
 
 lemma framed_tangle_symmetry:"symp framed_tanglerel_equiv" using framed_tanglerel_symp symmetry3 
 by (metis (full_types) framed_tanglerel_equiv_def)

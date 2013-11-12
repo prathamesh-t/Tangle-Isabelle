@@ -64,19 +64,23 @@ lemma matrix_set_list: assumes "mat nr nc M" and "length v = k"
 and " x ∈ set M" 
  shows "∃ys.∃zs.(ys@x#zs = M)" using assms set_def in_set_conv_decomp by metis
 
+lemma matrix_short: assumes "M = x#xs" and "mat nr (nc+1) M" 
+shows "mat nr nc xs"
+proof-
+
+
+
 lemma matrix_list_length:
 assumes "mat nr nc M" and "length v = k"
-and " (ys@x#zs = (list_tensor v M))" 
- shows " (vec (nr*k) x)"
+and " (ys@x#zs = M)" 
+ shows " (vec (nr*k) x"
 proof-
 let ?N = "x#zs"
 let ?l = "length ys"
-have "length (list_tensor v M) = length ys + (length (x#zs))" using assms(3) length_append by metis
-from this have "length  (list_tensor v M) = ?l + (length (x#zs))" by auto
-from this have "length ?N = length  (list_tensor v M) - ?l" by auto
-from this have step1: "length ?N = nc - ?l" using assms mat_def list_tensor_length by metis
-
-have "hd ?N = x" using list_tensor_def by (simp add: hd_def)
+have "length M = length ys + (length (x#zs))" using assms(3) length_append by auto
+from this have "length M = ?l + (length (x#zs))" by auto
+from this have "length ?N = length M - ?l" by auto
+from this have step1: "length ?N = nc - ?l" using assms mat_def by metis
 
 have step2: "(y ∈ set M) ⟹ (vec nr y)" using mat_def assms by auto
 have "(y ∈ set ?N) ⟹ (y ∈ set M)" using append_eq_conv_conj assms(3) in_mono set_drop_subset
@@ -89,7 +93,7 @@ from this and step1 have step3:" mat nr (nc-?l) ?N" using mat_def by metis
 let ?H = "(list_tensor v ?N)"
 let ?y = "hd ?H"
 from step3 and assms(2) have  "(vec (nr*k) ?y)" using length_matrix by auto
-from 
+
 
 (*
 theorem length_matrix: assumes "mat nr nc (y#ys)" and "length v = k"

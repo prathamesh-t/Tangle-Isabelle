@@ -1,5 +1,4 @@
 
-
 header {* Basic Operations on Matrices *}
 
 theory Matrix_Tensor
@@ -48,28 +47,26 @@ apply(induct_tac ys)
 apply(auto)
 done
 
-(*
-(* vector of given length *)
-definition vec :: "nat \<Rightarrow> 'x vec \<Rightarrow> bool"
- where "vec n x = (length x = n)"
+theorem length_matrix: assumes "mat nr nc (y#ys)" and "length v = k"
+and "(list_tensor v (y#ys) = x#xs)" 
+ shows "(vec (nr*k) x)" 
+proof-
+have "list_tensor v (y#ys) = (product v y)#(list_tensor v ys)"  using list_tensor_def assms by auto
+also have "(product v y) = x" using assms by auto
+also have "length y = nr" using assms mat_def by (metis in_set_member member_rec(1) vec_def)
+from this
+ have "length (product v y) = nr*k" using assms product_length nat_mult_commute by auto
+from this have "length x = nr*k" by (simp add: `product v y = x`)
+from this have "vec (nr*k) x" using vec_def by auto
+from this show ?thesis by auto
+qed
 
-(* matrix of given number of rows and columns *)
-definition mat :: "nat \<Rightarrow> nat \<Rightarrow> 'a mat \<Rightarrow> bool" where
- "mat nr nc m = (length m = nc \<and> Ball (set m) (vec nr))"
-
-Set.Ball_def: Ball ?A ?P = (∀x. x ∈ ?A ⟶ ?P x)*)
-
-find_theorems Ball
-
-primrec tensor::" nat mat ⇒ nat mat ⇒nat mat" (infixl "⊗" 65)
-where
-"[]⊗yss  = []"|
-"(xs#xss)⊗(yss) = (list_tensor xs yss)@(tensor xss yss)"
-
-theorem well_defined_tensor:assumes "mat m n A" and "mat k l B" shows
-"mat (m*k) (n*l) (A⊗B)"
-sledgehammer
-
+theorem matrix: assumes "mat nr nc M" and "length v = k"
+and " x ∈ set M" 
+ shows "(vec (nr*k) x)" using length_matrix 
+proof-
+have "(x ∈ set M) ⟹ ∃ys.∃zs.(ys@x#zs = M)" using set_def in_set_conv_decomp by metis
+fix ys zs
 
 
 

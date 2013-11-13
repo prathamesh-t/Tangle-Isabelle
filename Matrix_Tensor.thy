@@ -4,6 +4,8 @@ theory Matrix_Tensor
 imports
   Utility Matrix_Arith
 begin
+(*Matrix Tensor begins*)
+
 
 primrec times:: "nat ⇒ nat vec ⇒ nat vec"
 where
@@ -64,9 +66,22 @@ lemma matrix_set_list: assumes "mat nr nc M" and "length v = k"
 and " x ∈ set M" 
  shows "∃ys.∃zs.(ys@x#zs = M)" using assms set_def in_set_conv_decomp by metis
 
-lemma matrix_short: assumes "M = x#xs" and "mat nr (nc+1) M" 
+primrec reduct :: "'a mat ⇒ 'a mat"
+where
+"reduct [] = []"
+|"reduct (x#xs) = xs"
+
+lemma length_reduct: assumes "m ≠ []"
+shows "length (reduct m) +1  = (length m)"
+apply(auto)
+by (metis One_nat_def Suc_eq_plus1 assms list.size(4) neq_Nil_conv reduct.simps(2))
+
+
+
+lemma matrix_short: assumes "mat nr (nc+1) M" 
 shows "mat nr nc xs"
-proof-
+
+unfolding mat_def 
 
 
 

@@ -26,10 +26,7 @@ shows "symp R^**"
 unfolding symp_def Enum.rtranclp_rtrancl_eq assms by (metis assms)
 
 lemma symmetry3: assumes "symp R" shows "symp R^**" using assms symmetry1 symmetry2 by metis
-(*
-lemma invariance: assumes "R x y ⟹ (f x = f y)" shows "R^** x y ⟹ (f x = f y)" unfolding Enum.rtranclp_rtrancl_eq 
-sledgehammer*)
- 
+
 
 datatype brick = vert
                 |cup

@@ -973,6 +973,18 @@ where
 lemma framed_tanglerel_implies_tanglerel: "(framed_tanglerel x y) ⟹ (tanglerel x y)"
 using framed_uncross_implies_uncross framed_tanglerel_def tanglerel_def by auto
 
+
+lemma transitive_implication: assumes " (x,y) ∈ A ⟹ (x, y) ∈ B"
+shows "((x,y) ∈ (rtrancl A)) ⟹ ((x,y) ∈ (rtrancl B)) "
+proof(induction rule:rtrancl.induct)
+case rtrancl_refl show ?case by simp
+next
+case rtrancl_into_rtrancl 
+have "(b,c) ∈ A" using  rtrancl_into_rtrancl.prems sledgehammer
+lemma framed_equiv_implies_tangleequiv: "(framed_tanglerel_equiv x y) ⟹ (tanglerel_equiv x y)"
+using framed_uncross_implies_uncross framed_tanglerel_def tanglerel_def oops
+
+
 (* lemmas for proving that equivalence is well defined*)
 lemma tanglerel_symp: "symp tanglerel" unfolding tanglerel_def symp_def by auto
 

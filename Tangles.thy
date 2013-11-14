@@ -2,16 +2,12 @@ theory Tangles
 imports Datatype Main Typedef 
 begin
 
-(*each  block is a horizontal block built by putting basic tangle bricks next to each other.
-(1) e_vert is the straight line
-(2) e_cup is the up facing cusp
-(3) e_cap is the bottom facing cusp
-(4) e_over is the positive cross
-(5) e_under is the negative cross*)
+(*introductory lemma on relations*)
 
 lemma symmetry1: assumes "symp R" 
 shows "∀x y. (x, y) ∈ {(x, y). R x y}⇧* ⟶ (y, x) ∈ {(x, y). R x y}⇧*" 
 proof-
+fix x y
 have  "R x y ⟶  R y x" by (metis assms sympD)
 then have " (x, y) ∈ {(x, y). R x y} ⟶ (y, x) ∈ {(x, y). R x y}" by auto
 then have 2:"∀ x y. (x, y) ∈ {(x, y). R x y} ⟶ (y, x) ∈ {(x, y). R x y}"
@@ -27,6 +23,14 @@ unfolding symp_def Enum.rtranclp_rtrancl_eq assms by (metis assms)
 
 lemma symmetry3: assumes "symp R" shows "symp R^**" using assms symmetry1 symmetry2 by metis
 
+
+
+(*each  block is a horizontal block built by putting basic tangle bricks next to each other.
+(1) e_vert is the straight line
+(2) e_cup is the up facing cusp
+(3) e_cap is the bottom facing cusp
+(4) e_over is the positive cross
+(5) e_under is the negative cross*)
 
 datatype brick = vert
                 |cup

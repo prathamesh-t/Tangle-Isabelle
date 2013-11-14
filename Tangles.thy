@@ -973,25 +973,11 @@ where
 lemma framed_tanglerel_implies_tanglerel: "(framed_tanglerel x y) ⟹ (tanglerel x y)"
 using framed_uncross_implies_uncross framed_tanglerel_def tanglerel_def by auto
 
-
-lemma transitive_implication: assumes " (x,y) ∈ A ⟹ (x, y) ∈ B"
-shows "((x,y) ∈ (rtrancl A)) ⟹ ((x,y) ∈ (rtrancl B)) "
-proof(induction rule:rtrancl.induct)
-case rtrancl_refl show ?case by simp
-next
-case rtrancl_into_rtrancl 
-have "(b,c) ∈ A" using  rtrancl_into_rtrancl.prems sledgehammer
-lemma framed_equiv_implies_tangleequiv: "(framed_tanglerel_equiv x y) ⟹ (tanglerel_equiv x y)"
-using framed_uncross_implies_uncross framed_tanglerel_def tanglerel_def oops
-
-
 (* lemmas for proving that equivalence is well defined*)
 lemma tanglerel_symp: "symp tanglerel" unfolding tanglerel_def symp_def by auto
 
 lemma framed_tanglerel_symp: "symp framed_tanglerel" unfolding framed_tanglerel_def symp_def by auto
 
-
-(*find_theorems"rtranclp"*)
  
 definition tanglerel_equiv::"diagram⇒diagram⇒bool"
 where
@@ -1002,6 +988,29 @@ definition framed_tanglerel_equiv::"diagram⇒diagram⇒bool"
 where
 "(framed_tanglerel_equiv) = (framed_tanglerel)^**" 
  
+
+lemma transitive_implication:
+assumes " ∀x.∀y.((r x y) ⟶(q x y))"
+shows "r^** x y ⟹ q^** x y"
+proof(induction rule:rtranclp.induct)
+fix a
+let ?case = "q⇧*⇧* a a"
+show ?case by simp
+next
+fix a b c
+assume rtranclp : "r^** a b" "r b c" "q^** a b"
+let ?case = "q^** a c"
+have "(r b c)⟹ (q b c)" using assms by auto
+from this have "q b c" using assms rtranclp by auto
+from this  have "q^** a c" using rtranclp(3) rtranclp.rtrancl_into_rtrancl by auto
+thus ?case by simp
+qed
+
+theorem framed_equiv_implies_tangleequiv: "(framed_tanglerel_equiv x y) ⟹ (tanglerel_equiv x y)"
+using  framed_tanglerel_equiv_def tanglerel_equiv_def transitive_implication  
+framed_tanglerel_implies_tanglerel
+by metis
+
 lemma reflective: "tanglerel_equiv x x" unfolding tanglerel_equiv_def by simp
 
 lemma framed_reflective: "framed_tanglerel_equiv x x" unfolding framed_tanglerel_equiv_def by simp
@@ -1030,8 +1039,6 @@ show "reflp framed_tanglerel_equiv" unfolding reflp_def framed_reflective by (me
 show "symp framed_tanglerel_equiv" using framed_tangle_symmetry by auto
 show "transp framed_tanglerel_equiv" unfolding transp_def framed_tanglerel_equiv_def rtranclp_trans by auto  
 qed
-
-(*additional Tanglerel*)
 
 (*proof zone*)
 lemma strand_makestrand: " strands (makestrand n)" 

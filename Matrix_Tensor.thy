@@ -3,9 +3,9 @@ header {* Basic Operations on Matrices *}
 theory Matrix_Tensor
 imports
   Utility Matrix_Arith
-begin
+begin(*Matrix Tensor begins*)
 
-primrec times:: "nat \<Rightarrow> nat vec \<Rightarrow> nat vec"
+primrec times:: "nat ⇒ nat vec ⇒ nat vec"
 where
 "times n [] = []"|
 "times n (y#ys) = (n*y)#(times n ys)"
@@ -15,7 +15,7 @@ apply(induct_tac y)
 apply(auto)
 done
 
-primrec product:: "nat vec \<Rightarrow> nat vec \<Rightarrow> nat vec"
+primrec product:: "nat vec ⇒ nat vec ⇒ nat vec"
 where
 "product [] ys = []"|
 "product (x#xs) ys = (times x ys)@(product xs ys)"
@@ -34,7 +34,7 @@ apply(simp add:product_length)
 apply (metis assms(1) assms(2) vec_def)
 done
 
-primrec list_tensor::" nat vec \<Rightarrow> nat mat \<Rightarrow>nat mat"
+primrec list_tensor::" nat vec ⇒ nat mat ⇒nat mat"
 where
 "list_tensor xs []  = []"|
 "list_tensor xs (ys#yss) = (product xs ys)#(list_tensor xs yss)"
@@ -61,15 +61,15 @@ from this show ?thesis by auto
 qed
 
 lemma matrix_set_list: assumes "mat nr nc M" and "length v = k"
-and " x \<in> set M" 
- shows "\<exists>ys.\<exists>zs.(ys@x#zs = M)" using assms set_def in_set_conv_decomp by metis
+and " x ∈ set M" 
+ shows "∃ys.∃zs.(ys@x#zs = M)" using assms set_def in_set_conv_decomp by metis
 
-primrec reduct :: "'a mat \<Rightarrow> 'a mat"
+primrec reduct :: "'a mat ⇒ 'a mat"
 where
 "reduct [] = []"
 |"reduct (x#xs) = xs"
 
-lemma length_reduct: assumes "m \<noteq> []"
+lemma length_reduct: assumes "m ≠ []"
 shows "length (reduct m) +1  = (length m)"
 apply(auto)
 by (metis One_nat_def Suc_eq_plus1 assms list.size(4) neq_Nil_conv reduct.simps(2))
@@ -87,19 +87,19 @@ lemma vec_uniqueness: assumes "vec m v" and "vec n v" shows
 using vec_def assms(1) assms(2)  by metis
 
 lemma mat_uniqueness: assumes "mat nr1 nc M" and "mat nr2 nc M" and "z = hd M" and "M ≠ []"
-shows "(\<forall>x\<in>(set M).(nr1 = nr2))" 
+shows "(∀x∈(set M).(nr1 = nr2))" 
 proof-
  have A:"z ∈ set M" using assms(1) assms(3) assms(4) set_def mat_def by (metis hd_in_set)
  have "Ball (set M) (vec nr1)" using mat_def assms(1) by auto 
-  from this have step1: "((x \<in> (set M)) \<longrightarrow> (vec nr1 x))" using Ball_def assms by auto
+  from this have step1: "((x ∈ (set M)) ⟶ (vec nr1 x))" using Ball_def assms by auto
   have "Ball (set M) (vec nr2)" using mat_def assms(2) by auto
-  from this have step2: "((x \<in> (set M)) \<longrightarrow> (vec nr2 x))" using Ball_def assms by auto
-  from step1 and step2 have step3:"\<forall>x.((x \<in> (set M))\<longrightarrow> ((vec nr1 x)\<and> (vec nr2 x)))"
+  from this have step2: "((x ∈ (set M)) ⟶ (vec nr2 x))" using Ball_def assms by auto
+  from step1 and step2 have step3:"∀x.((x ∈ (set M))⟶ ((vec nr1 x)∧ (vec nr2 x)))"
   by (metis `Ball (set M) (vec nr1)` `Ball (set M) (vec nr2)`)
-  have "((vec nr1 x)\<and> (vec nr2 x)) \<longrightarrow> (nr1 = nr2)" using vec_uniqueness by auto
-  from this and step3  have "(\<forall>x.((x \<in> (set M)) \<longrightarrow>((nr1 = nr2))))" by 
+  have "((vec nr1 x)∧ (vec nr2 x)) ⟶ (nr1 = nr2)" using vec_uniqueness by auto
+  from this and step3  have "(∀x.((x ∈ (set M)) ⟶((nr1 = nr2))))" by 
  (metis vec_uniqueness) 
- from this have "(\<forall>x\<in>(set M).(nr1 = nr2))" by auto 
+ from this have "(∀x∈(set M).(nr1 = nr2))" by auto 
  from this show ?thesis by auto
 qed
 
@@ -116,13 +116,13 @@ qed
 
 abbreviation null_matrix::"'a list list"
 where
-"null_matrix \<equiv> [Nil] "
+"null_matrix ≡ [Nil] "
 
 lemma zero_matrix:" mat 0 0 []" using mat_def in_set_insert insert_Nil list.size(3) not_Cons_self2
  by (metis (full_types))
 
 
-definition row_length:: "'a mat \<Rightarrow> nat"
+definition row_length:: "'a mat ⇒ nat"
 where
 "row_length xs ≡ if (xs = []) then 0 else (length (hd xs))"
 
@@ -152,7 +152,7 @@ qed
 
 
 
-primrec tensor::" nat mat \<Rightarrow> nat mat \<Rightarrow>nat mat" (infixl "⊗" 63)
+primrec tensor::" nat mat ⇒ nat mat ⇒nat mat" (infixl "⊗" 63)
 where
 "tensor [] xs = []"|
 "tensor (x#xs) ys = (list_tensor x ys)@(tensor xs ys)"
@@ -209,36 +209,30 @@ proof(induct m1)
 lemma hd_set:assumes "x ∈ set (a#M)" shows "(x = a) ∨ (x∈(set M))"
              using set_def assms set_ConsD  by auto
 
-theorem row_length_mat: assumes "mat nr nc M" 
+theorem matrix_row_length: assumes "mat nr nc M" 
 shows "mat (row_length M) (length M) M"
-proof(induct M)
+proof(cases M)
 case Nil
- have "row_length []= 0 " using row_length_def by metis
- moreover have "length [] = 0" by auto
- moreover  have "mat 0 0 []" using zero_matrix by auto 
- ultimately show ?case  using mat_empty_row_length row_length_def mat_def by metis
+ have "row_length M= 0 " using row_length_def by (metis Nil)
+ moreover have "length M = 0" by (metis Nil list.size(3))
+ moreover  have "mat 0 0 M" using zero_matrix Nil by auto 
+ ultimately show ?thesis  using mat_empty_row_length row_length_def mat_def  by metis
 next
+case (Cons a N) 
+ have 1: "mat nr nc (a#N)" using assms Cons by auto
+ from this have "(x ∈ set (a #N)) ⟶ (x = a) ∨ (x ∈ (set N))" using hd_set by auto
+ from this and 1 have 2:"vec nr a" using  mat_def by (metis Ball_set_list_all list_all_simps(1))
+ have "row_length (a#N) = length a" using row_length_def Cons hd.simps list.distinct(1) by metis
+ from this have " vec (row_length (a#N)) a" using vec_def by auto
+ from this and 2 have 3:"(row_length M)  = nr" using vec_uniqueness Cons by auto
+ have  " nc = (length M)" using 1 and mat_def and assms by metis
+ from this and 3 have "mat (row_length M) (length M) M" using assms by auto 
+ from this show ?thesis by auto
+qed
 
-(*
-
- 
 theorem well_defined_mult: assumes "mat nr nc m" and "m ≠ []"  
 shows "mat (nr*(length v)) nc (list_tensor v m)"
 proof (induct m arbitrary:nr)
 case (Cons a n)
  have "mat nr nc (a#n)" using 
  show ?case 
-
-
-
-   moreover  have "a#m1 ≠ []" by auto
-  
- moreover have "((a # m1) ⊗ m2) = (list_tensor a m2)@(m1⊗m2)" using tensor.simps(2) by auto
- ultimately have "hd ((list_tensor a m2)@(m1⊗m2))  = hd (list_tensor a m2)" using  hd_append 
-     nitpick [non_std, show_all]
-
-
-theorem tensor_compose:
-"mat-multI ze pl ti  (m1⊗n1)  (m2⊗n1) 
-
-  *)

@@ -3,7 +3,7 @@ header {* Basic Operations on Matrices *}
 theory Matrix_Tensor
 imports
   Utility Matrix_Arith
-begin(*Matrix Tensor begins*)
+begin
 
 primrec times:: "nat ⇒ nat vec ⇒ nat vec"
 where
@@ -230,7 +230,8 @@ case (Cons a N)
  from this and 3 have "mat (row_length M) (length M) M" using assms by auto 
  from this show ?thesis by auto
 qed
-(*
+
+
 lemma reduct_matrix: assumes "mat (row_length (a#M)) (length (a#M)) (a#M)"
 shows "mat (row_length M) (length M) M"
 proof(cases M)
@@ -238,16 +239,30 @@ proof(cases M)
    show ?thesis using row_length_def zero_matrix Nil by (metis list.size(3))
  next   
  case (Cons b N)
+  have 1: "b ∈ (set M)" using set_def  Cons ListMem_iff elem  by auto
   have "mat (row_length (a#M)) (length (a#M)) (a#M)" using assms by auto
   from this have "(x ∈ (set (a#M))) ⟶ ((x = a) ∨ (x ∈ set M))" by auto
   from this have " (x ∈ (set (a#M))) ⟶ (vec (row_length (a#M)) x)" using mat_def Ball_def assms 
       by metis
   from this have "(x ∈ (set (a#M))) ⟶ (vec (length a) x)" using row_length_def 
-  by (metis hd.simps list.distinct(1))
-  from this have "x ∈ (set M) ⟶ (vec (length a) x)" by auto
-*)
-theorem well_defined_mult:  
-"(mat (row_length M) (length M) M) ⟹ (mat ((row_length M)*(length v)) (length M) (list_tensor v M))"
+      by (metis hd.simps list.distinct(1))
+  from this have 2:"x ∈ (set M) ⟶ (vec (length a) x)" by auto
+  from this and 1 have 3:"(vec (length a) b)" by (metis assms in_set_member mat_def member_rec(1) vec_def) 
+  have 5: "(vec (length b) b)" using vec_def by auto
+  from this and 3 have "(length a) = (length b)" using vec_uniqueness by auto
+  from this and 2 have 4: "x ∈ (set M) ⟶ (vec (length b) x)" by auto
+  have 6:"row_length M = (length b)" using row_length_def hd.simps by (metis Cons list.distinct(1))
+  from this and 4 have "x ∈ (set M) ⟶ (vec (row_length M) x)" by auto
+  from this have "(∀x. (x ∈ (set M) ⟶ (vec (row_length M) x)))" by (metis Cons 5 6
+   assms in_set_member mat_def member_rec(1) vec_uniqueness)
+  from this have "Ball (set M) (vec (row_length M))" using Ball_def by auto
+  from this have "(mat (row_length M) (length M) M)" using mat_def by auto
+  from this show ?thesis by auto
+  qed 
+
+
+theorem well_defined_list_tensor:
+"(mat (row_length M) (length M) M) ⟹(mat ((row_length M)*(length v)) (length M) (list_tensor v M))"
 proof(induct M) 
  case Nil
   have "(list_tensor v []) = []" using list_tensor.simps(1) Nil  by simp
@@ -257,16 +272,14 @@ proof(induct M)
   from this show ?case by simp
  next
  fix a M
-
-(*(mat (row_length M) (length M) M ⟹ mat (row_length M * length v) (length M) (list_tensor v M)) ⟹
-          mat (row_length (a # M)) (length (a # M)) (a # M) *)
- assume hyp : "(mat (row_length M) (length M) M) ⟹ mat (row_length M * length v) (length M) (list_tensor v M)"
-              "mat (row_length (a#M)) (length (a#M)) (a#M)"
-             
+ assume hyp :"(mat (row_length M) (length M) M ⟹ mat (row_length M * length v) (length M) (list_tensor v M))"
+               " mat (row_length (a#M)) (length (a#M)) (a#M)"                      
   let ?case = "mat (row_length (a#M) * length v) (length (a#M)) (list_tensor v (a#M))"
-  have "mat (row_length (a#M) * length v) (length (a#M)) (list_tensor v (a#M))"
-   proof (cases M)
-     case Nil
+  have step1: "mat (row_length M) (length M) M" using hyp(2) reduct_matrix by auto
+  from this have step2:"mat (row_length M * length v) (length M) (list_tensor v M)" using hyp(1) by auto 
+  have "mat (row_length (a#M) * length v) (length (a#M)) (list_tensor v (a#M))" 
+    proof (cases M)
+         case Nil 
      have 1:"(list_tensor v (a#M)) = [product v a]" using list_tensor.simps Nil by auto
      have   "(x ∈ (set [product v a])) ⟶  x = (product v a)" using set_def by auto
      from this have 2:" (x ∈ (set [product v a])) ⟶ (vec (length (product v a)) x)" using vec_def by metis 
@@ -295,7 +308,7 @@ proof(induct M)
       from this have "(length b) = (length a)" using vec_def vec_uniqueness by auto
       from this have 2:"row_length M = (length a)" using row_length_def hd.simps by (metis Cons list.distinct(1)) 
       
-      have "  mat (row_length M * length v) (length M) (list_tensor v M)" using hyp by auto 
+      have "  mat (row_length M * length v) (length M) (list_tensor v M)" using step2 by auto 
       from this have " Ball (set (list_tensor v M)) (vec ((row_length M)*(length v)))" using mat_def by auto
       from this have "(x ∈ set (list_tensor v M)) ⟶ (vec ((row_length M)*(length v)) x)" using mat_def Ball_def
       by auto
@@ -324,8 +337,130 @@ proof(induct M)
         by (metis (hide_lams, no_types) "5" `length (product v a) = length a * length v` length_code)
      from this show ?thesis by auto
      qed
-    
- from hyp this show ?case  
+    from hyp this show ?case by auto  
 qed
-(*(mat (row_length M) (length M) M ⟹ mat (row_length M * length v) (length M) (list_tensor v M)) ⟹
-          mat (row_length (a # M)) (length (a # M)) (a # M) *)
+
+lemma length_tensor:" (length (M1⊗M2)) = (length M1)*(length M2)"
+proof(induct M1)
+ case Nil
+  show ?case by auto
+ next
+ case (Cons a M1)
+ (* 1. ⋀a M1. length (M1 ⊗ M2) = length M1 * length M2 ⟹ length (a # M1 ⊗ M2) = length (a # M1) * length M2*)
+ have "((a # M1) ⊗ M2) = (list_tensor a M2)@(M1 ⊗ M2)" using tensor.simps(2) by auto
+ from this have 1:"length ((a # M1) ⊗ M2) = length ((list_tensor a M2)@(M1 ⊗ M2))" by auto
+ have 2:"length ((list_tensor a M2)@(M1 ⊗ M2)) = length (list_tensor a M2)+ length (M1 ⊗ M2)" using append_def
+ by auto
+ have 3:"(length (list_tensor a M2)) = length M2" using list_tensor_length by (auto)
+ have 4:"length (M1 ⊗ M2) = (length M1)*(length M2)" using  Cons.hyps by auto
+ from this 2 3 have  "length ((list_tensor a M2)@(M1 ⊗ M2)) =  (length M2) + (length M1)*(length M2)"
+ by auto
+ from this have 5:"length ((list_tensor a M2)@(M1 ⊗ M2)) =  (1 + (length M1))*(length M2)" by auto
+ have "length (a#M1) = 1+(length M1)" by auto
+ from this have "((length (a # M1)) * (length M2)) = (1 + (length M1))*(length M2)" by auto 
+ from 1 5 this have "length ((a # M1) ⊗ M2) = ((length (a # M1)) * (length M2))" by auto
+ from this show ?case by auto
+qed
+
+
+lemma append_reduct_matrix: 
+"(mat (row_length (M1@M2)) (length (M1@M2)) (M1@M2))
+⟹(mat (row_length M2) (length M2) M2)"
+proof(induct M1)
+case Nil
+ show ?thesis using Nil append.simps(1) by auto
+next
+case (Cons a M1)
+ have "mat (row_length (M1 @ M2)) (length (M1 @ M2)) (M1 @ M2)" using reduct_matrix Cons.prems 
+   append_Cons by metis
+ from this have "(mat (row_length M2) (length M2) M2)" using Cons.hyps by auto
+ from this show?thesis by simp
+qed
+
+theorem well_defined_tensor:
+"(mat (row_length M1) (length M1) M1) ∧ (mat (row_length M2) (length M2) M2)
+⟹(mat ((row_length M1)*(row_length M2)) ((length M1)*(length M2)) (M1⊗M2))"
+proof(induct M1)
+ case Nil
+  have "(row_length []) * (row_length M2) = 0" using row_length_def  mult_zero_left  by (metis)
+  moreover have "(length []) * (length M2) = 0" using  mult_zero_left list.size(3) by auto 
+  moreover have "[] ⊗ M2 = []" using tensor.simps(1) by auto
+  ultimately have "mat (row_length [] * row_length M2) (length [] * length M2) ([] ⊗ M2)"
+     using zero_matrix by metis
+  from this show ?case by simp
+ next
+ case (Cons a M1)
+ have step1: "mat (row_length (a # M1)) (length (a # M1)) (a # M1)" using Cons.prems by auto
+ then have "mat (row_length (M1)) (length (M1)) (M1)" using reduct_matrix by auto
+ moreover have "mat (row_length (M2)) (length (M2)) (M2)" using Cons.prems by auto
+ ultimately have step2:"mat (row_length M1 * row_length M2) (length M1 * length M2) (M1 ⊗ M2)"
+ using Cons.hyps by auto
+ have 0:"row_length (a#M1) = length a" using row_length_def hd.simps list.distinct(1)  
+      by metis
+ have "mat (row_length (a # M1) * row_length M2) (length (a # M1) * length M2) (a # M1 ⊗ M2)"
+  proof(cases M1)
+   case Nil 
+    have "(mat ((row_length M2)*(length a)) (length M2) (list_tensor a M2))" using Cons.prems 
+    well_defined_list_tensor by auto
+    moreover have "(length (a # M1)) * (length M2) = length M2" using Nil by auto
+    moreover have "(a#M1)⊗M2 = (list_tensor a M2)" using Nil tensor.simps append.simps(1) by auto
+    ultimately have "(mat ((row_length M2)*(row_length (a#M1))) ((length (a # M1)) * (length M2))
+               ((a#M1)⊗M2))" using 0
+             by auto
+    from this show ?thesis using nat_mult_commute by metis
+  next
+  case (Cons b N1)
+     have 1:"x ∈ (set (a#M1)) ⟶ ((x=a) ∨ (x ∈ (set M1)))" using hd_set by auto
+     have "mat (row_length (a#M1)) (length (a#M1)) (a#M1)" using Cons.prems by auto
+     from this have "x∈ (set (a#M1)) ⟶ (vec (row_length (a#M1)) x)" using mat_def Ball_def by metis
+      from this have "x∈ (set (a#M1))⟶ (vec (length a) x)" using row_length_def hd.simps list.distinct(1)
+      by (metis ) 
+      from this and 1 have "x∈ (set M1)⟶ (vec (length a) x)" by auto
+      moreover have " b ∈ (set M1)" using Cons by auto
+      ultimately have "vec (length a) b" by (metis Cons.prems in_set_member mat_def member_rec(1) vec_def)
+      from this have "(length b) = (length a)" using vec_def vec_uniqueness by auto
+      from this have 2:"row_length M1 = (length a)" using row_length_def hd.simps by (metis Cons list.distinct(1)) 
+      from this have "mat ((length a) * row_length M2) (length M1 * length M2) (M1 ⊗ M2)" using step2
+      by auto
+      from this have "Ball (set (M1⊗M2)) (vec ((length a)*(row_length M2))) " using mat_def by auto     
+      from this have 3:"∀x. x ∈ (set (M1 ⊗ M2)) ⟶ (vec ((length a)*(row_length M2)) x)" using Ball_def by auto
+    
+    
+      have "(mat ((row_length M2)*(length a)) (length M2) (list_tensor a M2))" using well_defined_list_tensor
+       Cons.prems by auto
+      from this have "Ball (set (list_tensor a M2)) (vec ((row_length M2)*(length a)))" using mat_def
+         by auto
+      from this have 4:"∀x. x ∈ (set (list_tensor a M2)) ⟶ (vec ((length a)*(row_length M2)) x)"
+           using  nat_mult_commute by metis
+      from this and 3 have 5: "∀x. (x ∈ (set (list_tensor a M2)))∨(x ∈ (set (M1 ⊗ M2))) 
+                         ⟶ (vec ((length a)*(row_length M2)) x)"     by auto  
+
+       have 6:"(a # M1 ⊗ M2) = (list_tensor a M2)@(M1 ⊗M2)" using tensor.simps(2) by auto 
+       from this have "x ∈ (set (a # M1 ⊗ M2)) 
+        ⟶ (x ∈ (set (list_tensor a M2)))∨(x ∈ (set (M1 ⊗ M2)))"
+           using set_def append_def by auto
+       from this and 5 have "∀x. (x ∈  (set (a # M1 ⊗ M2)))
+                         ⟶ (vec ((length a)*(row_length M2)) x)" by auto
+       from this have 7:"Ball (set (a # M1 ⊗ M2)) (vec ((row_length (a#M1))*(row_length M2)))" 
+       using Ball_def 0 by auto
+   
+       have "(length ((a#M1)⊗M2)) = (length (a#M1))*(length M2)" using length_tensor by metis
+       from this and 7 
+           have "mat (row_length (a # M1) * row_length M2) (length (a # M1) * length M2) (a # M1 ⊗ M2)"
+             using mat_def by (metis "0" `∀x. x ∈ set (a # M1 ⊗ M2) ⟶ vec (length a * row_length M2) x` length_tensor)
+       from this show ?thesis by auto
+       qed
+     from this show ?case by auto
+   qed
+
+
+theorem effective_well_defined_tensor:
+assumes "(mat (row_length M1) (length M1) M1)" and "(mat (row_length M2) (length M2) M2)"
+shows "(mat ((row_length M1)*(row_length M2)) ((length M1)*(length M2)) (M1⊗M2))"
+using well_defined_tensor assms by auto
+
+end
+
+ 
+
+      

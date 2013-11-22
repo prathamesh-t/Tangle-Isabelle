@@ -20,11 +20,14 @@ where
 
 primrec wall_inv::"walls ⇒ 'a"
 where
-"wall_inv (basic x) = (block_inv x)"
-|"wall_inv (a*xs) = prod (block_inv a) (wall_inv xs)"
+"wall_inv (basic x) = (block_inv x)"|
+"(wall_inv (a*xs)) = comp (block_inv a) (wall_inv xs)"
 
-definition well_defined_invariant::"diagram ⇒ 'a"
+definition map::"diagram ⇒ 'a"
 where
-"well_defined_invariant (Abs_diagram x) = (wall_inv x)"
+"map x = (wall_inv (Rep_diagram x))"
+end
 
-
+locale invariant= tangle_invariant+assumes "(tangle_equiv x y) ⟶ ((map x) = (map y))"
+context invariant
+begin

@@ -5,17 +5,24 @@ imports
   Utility Matrix_Arith
 begin
 
-primrec times:: "nat ⇒ nat vec ⇒ nat vec"
+locale mult = 
+ fixes f::" 'a ⇒ 'a ⇒ 'a " (infixl "*" 60)
+ assumes comm:" f a  b = f b  a "
+ assumes assoc:" (f (f a b) c) = (f a (f b c))"
+context mult
+begin   
+ 
+primrec times:: "'a ⇒ 'a vec ⇒ 'a vec"
 where
 "times n [] = []"|
-"times n (y#ys) = (n*y)#(times n ys)"
+"times n (y#ys) = (f n y)#(times n ys)"
 
 lemma preserving_length: "length (times n y) = (length y)"
 apply(induct_tac y)
 apply(auto)
 done
 
-primrec product:: "nat vec ⇒ nat vec ⇒ nat vec"
+primrec product:: "'a vec ⇒ 'a vec ⇒ 'a vec"
 where
 "product [] ys = []"|
 "product (x#xs) ys = (times x ys)@(product xs ys)"
@@ -34,7 +41,7 @@ apply(simp add:product_length)
 apply (metis assms(1) assms(2) vec_def)
 done
 
-primrec list_tensor::" nat vec ⇒ nat mat ⇒nat mat"
+primrec list_tensor::"'a vec ⇒ 'a mat ⇒'a mat"
 where
 "list_tensor xs []  = []"|
 "list_tensor xs (ys#yss) = (product xs ys)#(list_tensor xs yss)"
@@ -152,7 +159,7 @@ qed
 
 
 
-primrec tensor::" nat mat ⇒ nat mat ⇒nat mat" (infixl "⊗" 63)
+primrec tensor::" 'a mat ⇒ 'a mat ⇒'a mat" (infixl "⊗" 63)
 where
 "tensor [] xs = []"|
 "tensor (x#xs) ys = (list_tensor x ys)@(tensor xs ys)"
@@ -376,7 +383,7 @@ case (Cons a M1)
  from this have "(mat (row_length M2) (length M2) M2)" using Cons.hyps by auto
  from this show?thesis by simp
 qed
-
+(*proves that tensor product takes well defined matrices to well defined matrices*)
 theorem well_defined_tensor:
 "(mat (row_length M1) (length M1) M1) ∧ (mat (row_length M2) (length M2) M2)
 ⟹(mat ((row_length M1)*(row_length M2)) ((length M1)*(length M2)) (M1⊗M2))"
@@ -459,6 +466,13 @@ assumes "(mat (row_length M1) (length M1) M1)" and "(mat (row_length M2) (length
 shows "(mat ((row_length M1)*(row_length M2)) ((length M1)*(length M2)) (M1⊗M2))"
 using well_defined_tensor assms by auto
 
+theorem tensor_associativity: "(A⊗B)⊗C = A ⊗(B ⊗ C)" using tensor.simps append.simps sledgehammer 
+
+(*To Prove-
+That Tensors Commute with products*)
+(*theorem multiplicative_distributivity:  mat k1 l1 M1 mat k2 l2 N1 mat l1 j1 M2 mat l2 j2 N2 shows 
+( ((M1⊗N1)∘(M2⊗N2)) = (M1∘M2)⊗(M2∘N2)*)
+  
 end
 
  

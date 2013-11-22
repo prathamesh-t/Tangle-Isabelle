@@ -374,6 +374,18 @@ apply(auto)
 apply(simp add:abs_def e_cup_def e_cap_def well_defined_def)
 done
 
+(*well_defined properties*)
+
+lemma Abs_Rep_well_defined: assumes " well_defined x" shows "Rep_diagram (Abs_diagram x) = x"
+using Rep_diagram Abs_diagram_inverse assms mem_Collect_eq  by auto
+
+
+lemma Rep_Abs_well_defined: assumes " well_defined x"  and "well_defined y" 
+and  "(Abs_diagram x) = (Abs_diagram y)"
+shows "x = y"
+using Rep_diagram Abs_diagram_inverse assms mem_Collect_eq  by metis
+
+
 (* statement about diagrams*)
 lemma well_defined_composition: 
 "((list_sum (wall_list (Rep_diagram z))+(abs(fst(wall_count (Rep_diagram z)))

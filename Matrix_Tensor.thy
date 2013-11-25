@@ -466,7 +466,62 @@ assumes "(mat (row_length M1) (length M1) M1)" and "(mat (row_length M2) (length
 shows "(mat ((row_length M1)*(row_length M2)) ((length M1)*(length M2)) (M1⊗M2))"
 using well_defined_tensor assms by auto
 
-theorem tensor_associativity: "(A⊗B)⊗C = A ⊗(B ⊗ C)" using tensor.simps append.simps sledgehammer 
+definition natmod::"nat ⇒ nat ⇒ nat" (infixl "nmod" 50)
+where
+ "natmod x y = nat ((int x) mod (int y))"
+
+theorem times_elements:
+"∀i.(i<(length v)) ⟹ (times a v)!i = f a (v!i)"
+proof(induct v)
+case Nil
+have "(length [] = 0)" by auto
+from this have "i <(length []) ⟹ False" by auto
+moreover have "(times a []) = []" using times.simps(1) by auto 
+ultimately have "(i<(length [])) ⟹ (times a [])!i = f a ([]!i)" by auto
+from this show ?case using Nil.prems(1) by auto
+next
+fix x xs 
+assume hyps: "∀i.(i < length xs) ⟹ (times a xs) ! i = a * (xs ! i)" 
+let ?case = "∀i.(i < length (x#xs)) ⟹ (times a (x#xs)) ! i = a * ((x#xs) ! i)" 
+have 1:" (i<length xs) ⟹((times a xs)!i = f a (xs!i))" using hyps sledgehammer
+
+have "(x#xs)!(i+1) = (xs)!i" by auto
+have "(times a (x#xs))!i = f a ((x#xs)!i)"
+proof(cases i)
+case 0
+have "((times a (x#xs))!i) = f a x" using 0 times.simps(2) by auto
+from this have "(times a (x#xs))!i = f a ((x#xs)!i)" using 0 by auto
+from this show ?thesis by auto
+next
+case (Suc j)
+have " (times a (x#xs))!j = ((f a x)#(times a xs))!j" using times.simps(2) by auto
+have "((f a x)#(times a xs))!i = (times a xs)!j" using Suc by auto
+have "(i <length (x#xs)) ⟹ (j<length xs)" using One_nat_def Suc Suc_eq_plus1 list.size(4) not_less_eq 
+by metis
+have "(i<length xs) ⟹((times a xs)!i = (f a (xs!i)))" using 1 sledgehammer
+
+theorem product_elements:
+"(i<((length v1)*(length v2))) ⟹ 
+(product x y)!i = ("
+
+theorem list_tensor_elements: 
+"(i<(length M))∧(j<((row_length M)*(length v)))
+⟹(list_tensor v M)!i !j = f (v! (j nmod i))  (M!i!(j nmod (row_length M)))"
+proof(induct M)
+case Nil
+have "(list_tensor v []) = []" using list_tensor.simps(1)  by auto 
+have "(length []) = 0" by auto
+from this have 1:"(i< 0) ⟹ False" by auto
+from this have "(i<(length ([]))) ⟹(list_tensor v M)!i !j = f (v! (j nmod i))  (M!i!(j nmod (row_length M)))" using assms
+by auto
+from this have "(i<(length []))∧(j<((row_length [])*(length v)))
+⟹(list_tensor v [])!i !j = f (v! (j nmod i))  ([]!i!(j nmod (row_length [])))" by auto
+from this show ?case using Nil by auto
+next
+case (
+
+
+
 
 (*To Prove-
 That Tensors Commute with products*)

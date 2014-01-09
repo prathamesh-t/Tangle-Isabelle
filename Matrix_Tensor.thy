@@ -5,6 +5,85 @@ imports
   Utility Matrix_Arith
 begin
 
+context semiring_1
+begin
+abbreviation vec1 :: "nat ⇒ nat ⇒ 'a vec"
+where "vec1 ≡ vec1I zero one"
+
+abbreviation mat1 :: "nat ⇒ 'a mat"
+where "mat1 ≡ mat1I zero one"
+
+abbreviation mat_pow where "mat_pow ≡ mat_powI (0 :: 'a) 1 (op +) (op *)"
+
+
+lemma scalar_left_one: assumes wf: "vec nn v"
+  and i: "i < nn"
+  shows "scalar_prod (vec1 nn i) v = v ! i"
+  using assms 
+  unfolding vec1I_def vec_def 
+proof (induct nn arbitrary: v i)
+  case (Suc n) note oSuc = this
+  from this obtain a vv where v: "v = a # vv" and lvv: "length vv = n" by (cases v, auto)
+  show ?case 
+  proof (cases i)
+    case 0
+    thus ?thesis using scalar_left_zero unfolding vec0I_def by (simp add: v scalar_prod_cons add_commute)
+  next
+    case (Suc ii)
+    thus ?thesis using oSuc lvv v by (auto simp: scalar_prod_cons)
+  qed
+qed blast
+
+
+lemma scalar_right_one: assumes wf: "vec nn v"
+  and i: "i < nn"
+  shows "scalar_prod v (vec1 nn i) = v ! i"
+  using assms 
+  unfolding vec1I_def vec_def 
+proof (induct nn arbitrary: v i)
+  case (Suc n) note oSuc = this
+  from this obtain a vv where v: "v = a # vv" and lvv: "length vv = n" by (cases v, auto)
+  show ?case 
+  proof (cases i)
+    case 0
+    thus ?thesis using scalar_right_zero unfolding vec0I_def by (simp add: v scalar_prod_cons add_commute)
+  next
+    case (Suc ii)
+    thus ?thesis using oSuc lvv v by (auto simp: scalar_prod_cons)
+  qed
+qed blast
+
+
+lemma mat1_mult_right: assumes wf: "mat nr nc m"
+  shows "mat_mult nr m (mat1 nc) = m"
+proof (simp only: mat_eq_index[OF mat_mult[OF wf mat1] wf], intro allI impI)
+  fix i j
+  assume i: "i < nc" and j: "j < nr"
+  show "mat_mult nr m (mat1 nc) ! i ! j = m ! i ! j"
+    by (simp only: mat_mult_index[OF wf mat1 j i],
+    simp only: col_mat1[OF i],
+    simp only: scalar_right_one[OF row[OF wf j] i],
+    simp only: row_col[OF wf j i],
+    unfold col_def, simp)
+qed
+
+
+lemma mat1_mult_left: assumes wf: "mat nr nc m"
+  shows "mat_mult nr (mat1 nr) m = m"
+proof (simp only: mat_eq_index[OF mat_mult[OF mat1 wf] wf], intro allI impI)
+  fix i j
+  assume i: "i < nc" and j: "j < nr"
+  show "mat_mult nr (mat1 nr) m ! i ! j = m ! i ! j"
+    by (simp only: mat_mult_index[OF mat1 wf j i],
+      simp only: row_mat1[OF j],
+      simp only: scalar_left_one[OF col[OF wf i] j], unfold col_def, simp)
+qed
+end
+
+
+declare vec0[simp del] mat0[simp del] vec0_plus[simp del] plus_vec0[simp del] plus_mat0[simp del]
+(*Matrix Tensor begins*)
+
 locale mult = 
  fixes f::" 'a ⇒ 'a ⇒ 'a " (infixl "*" 60)
  assumes comm:" f a  b = f b  a "
@@ -128,7 +207,6 @@ where
 lemma zero_matrix:" mat 0 0 []" using mat_def in_set_insert insert_Nil list.size(3) not_Cons_self2
  by (metis (full_types))
 
-
 definition row_length:: "'a mat ⇒ nat"
 where
 "row_length xs ≡ if (xs = []) then 0 else (length (hd xs))"
@@ -156,8 +234,6 @@ proof(induct m)
   by auto
   from this show ?case by auto
 qed
-
-
 
 primrec tensor::" 'a mat ⇒ 'a mat ⇒'a mat" (infixl "⊗" 63)
 where
@@ -238,7 +314,6 @@ case (Cons a N)
  from this show ?thesis by auto
 qed
 
-
 lemma reduct_matrix: assumes "mat (row_length (a#M)) (length (a#M)) (a#M)"
 shows "mat (row_length M) (length M) M"
 proof(cases M)
@@ -266,7 +341,6 @@ proof(cases M)
   from this have "(mat (row_length M) (length M) M)" using mat_def by auto
   from this show ?thesis by auto
   qed 
-
 
 theorem well_defined_list_tensor:
 "(mat (row_length M) (length M) M) ⟹(mat ((row_length M)*(length v)) (length M) (list_tensor v M))"
@@ -347,13 +421,13 @@ proof(induct M)
     from hyp this show ?case by auto  
 qed
 
+
 lemma length_tensor:" (length (M1⊗M2)) = (length M1)*(length M2)"
 proof(induct M1)
  case Nil
   show ?case by auto
  next
  case (Cons a M1)
- (* 1. ⋀a M1. length (M1 ⊗ M2) = length M1 * length M2 ⟹ length (a # M1 ⊗ M2) = length (a # M1) * length M2*)
  have "((a # M1) ⊗ M2) = (list_tensor a M2)@(M1 ⊗ M2)" using tensor.simps(2) by auto
  from this have 1:"length ((a # M1) ⊗ M2) = length ((list_tensor a M2)@(M1 ⊗ M2))" by auto
  have 2:"length ((list_tensor a M2)@(M1 ⊗ M2)) = length (list_tensor a M2)+ length (M1 ⊗ M2)" using append_def
@@ -471,42 +545,387 @@ where
  "natmod x y = nat ((int x) mod (int y))"
 
 theorem times_elements:
-"∀i.(i<(length v)) ⟹ (times a v)!i = f a (v!i)"
+"∀i.((i<(length v)) ⟶ (times a v)!i = f a (v!i))"
+apply(rule allI)
 proof(induct v)
 case Nil
 have "(length [] = 0)" by auto
 from this have "i <(length []) ⟹ False" by auto
 moreover have "(times a []) = []" using times.simps(1) by auto 
-ultimately have "(i<(length [])) ⟹ (times a [])!i = f a ([]!i)" by auto
-from this show ?case using Nil.prems(1) by auto
+ultimately have "(i<(length [])) ⟶ (times a [])!i = f a ([]!i)" by auto
+from this have "∀i. ((i<(length [])) ⟶ (times a [])!i = f a ([]!i))" by auto
+from this show ?case  by auto
 next
-fix x xs 
-assume hyps: "∀i.(i < length xs) ⟹ (times a xs) ! i = a * (xs ! i)" 
-let ?case = "∀i.(i < length (x#xs)) ⟹ (times a (x#xs)) ! i = a * ((x#xs) ! i)" 
-have 1:" (i<length xs) ⟹((times a xs)!i = f a (xs!i))" using hyps sledgehammer
+case (Cons x xs)
+have "∀i.((x#xs)!(i+1) = (xs)!i)" by auto
 
-have "(x#xs)!(i+1) = (xs)!i" by auto
-have "(times a (x#xs))!i = f a ((x#xs)!i)"
-proof(cases i)
-case 0
-have "((times a (x#xs))!i) = f a x" using 0 times.simps(2) by auto
-from this have "(times a (x#xs))!i = f a ((x#xs)!i)" using 0 by auto
+have 0:"((i<length (x#xs))⟶ ((i<(length xs)) ∨ (i = (length xs))))" by auto
+have 1:" ((i<length xs) ⟶((times a xs)!i = f a (xs!i)))" by (metis Cons.hyps)
+have "∀i.((x#xs)!(i+1) = (xs)!i)" by auto
+have "((i <length (x#xs)) ⟶(times a (x#xs))!i = f a ((x#xs)!i))"  
+ proof(cases i)
+   case 0
+    have "((times a (x#xs))!i) = f a x" using 0 times.simps(2) by auto
+    from this have "(times a (x#xs))!i = f a ((x#xs)!i)" using 0 by auto
+    from this show ?thesis by auto
+    next
+  case (Suc j)
+    have 1:" (times a (x#xs))!i = ((f a x)#(times a xs))!i" using times.simps(2) by auto 
+    have 2:"((f a x)#(times a xs))!i = (times a xs)!j" using Suc by auto
+    have 3:"(i <length (x#xs)) ⟶ (j<length xs)" using One_nat_def Suc Suc_eq_plus1 list.size(4) not_less_eq 
+    by metis
+    have 4:"(j<length xs) ⟶ ((times a xs)!j = (f a (xs!j)))" using 1 by (metis Cons.hyps)
+    have 5:"(x#xs)!i = (xs!j)" using Suc by (metis nth_Cons_Suc)
+    from 1 2 4 5 have " (j<length xs) ⟶ ((times a (x#xs))!i = (f a ((x#xs)!i)))" by auto
+    from 3 and this have "(i <length (x#xs)) ⟶ ((times a (x#xs))!i = (f a ((x#xs)!i)))" by auto
+    from this show ?thesis  by auto
+   qed
+from this show ?case by auto
+qed
+
+lemma simpl_times_elements:assumes "(i<length xs)" shows "((i<(length v)) ⟶ (times a v)!i = f a (v!i))"
+using times_elements by auto
+
+(*preparatory lemmas*)
+lemma append_simpl: "i<(length xs) ⟶ (xs@ys)!i = (xs!i)" 
+using nth_append  by metis
+
+lemma append_simpl2: "i ≥(length xs) ⟶ (xs@ys)!i = (ys!(i- (length xs)))" 
+using nth_append less_asym  leD  by metis
+
+lemma append_simpl3: 
+assumes "i > (length y)"
+shows " ((i <((length (z#zs))*(length y)))) ⟶ ((i - (length y))< (length zs)*(length y))"
+proof-
+have "length (z#zs) = (length zs)+1" by auto
+from this have "(i <((length (z#zs))*(length y))) ⟶ (i <(((length zs)+1)*(length y)))"
+by auto
+from this have 1: "(i <((length (z#zs))*(length y))) ⟶ (i <((length zs)*(length y)+ (length y)))" by auto
+have " (i <((length zs)*(length y)+ (length y))) = ((i - (length y)) <((length zs)*(length y)))"
+using assms by auto
+from this have "(i <((length (z#zs))*(length y))) ⟶ ((i - (length y)) <((length zs)*(length y)))"
+by auto
 from this show ?thesis by auto
-next
-case (Suc j)
-have " (times a (x#xs))!j = ((f a x)#(times a xs))!j" using times.simps(2) by auto
-have "((f a x)#(times a xs))!i = (times a xs)!j" using Suc by auto
-have "(i <length (x#xs)) ⟹ (j<length xs)" using One_nat_def Suc Suc_eq_plus1 list.size(4) not_less_eq 
+qed
+
+lemma append_simpl4: "
+(i > (length y))
+⟶ ((i <((length (z#zs))*(length y)))) ⟶ ((i - (length y))< (length zs)*(length y))"
+using append_simpl3 by auto
+
+lemma product_simpl: "i<(length y) ⟶ (product (z#zs) y)!i = (times z y)!i" 
+proof-
+have a: "product (z#zs) y = (times z y)@(product zs y)" by auto
+from this have b: "length (times z y) = (length y)" using preserving_length by auto
+from this have "i<(length (times z y)) ⟶ ((times z y)@(product zs y))!i = (times z y)!i" using append_simpl
 by metis
-have "(i<length xs) ⟹((times a xs)!i = (f a (xs!i)))" using 1 sledgehammer
+from this b have "i<(length y) ⟶ ((times z y)@(product zs y))!i = (times z y)!i" by auto
+from this a have "i<(length y) ⟶ (product (z#zs) y)!i = (times z y)!i" by auto
+from this show ?thesis by auto
+qed
+
+
+lemma product_simpl2: "(i ≥ (length y)) ⟶ ((product (z#zs) y)!i = (product zs y)!(i- (length y)))" 
+using product.simps(2) append_simpl2  preserving_length by metis
+
+lemma division_product: 
+assumes "(b::int)>0"
+and "a>b"
+shows " (a div b) = ((a - b) div b) + 1"
+proof-
+have " a -b > 0" using assms(2) by auto
+have 1: "a - b = a + (-1)*b" by auto
+have "(b ≠ 0) ⟶ ((a + b * c) div b = c + a div b)" using div_mult_self2 by auto
+have "(b ≠ 0) ⟶ ((a + b * (-1)) div b = (-1) + a div b)" using div_mult_self2 by metis
+from this 1 assms(1) have "((a - b) div b) = (-1) + a div b" using  
+comm_semiring_1_class.normalizing_semiring_rules(7) less_int_code(1)
+by metis
+from this have "(a div b) = ((a - b) div b) + 1" by auto
+from this show ?thesis by auto
+qed
+
+lemma int_nat_div: " (int a) div (int b) = int ((a::nat) div b)"
+by (metis zdiv_int)
+
+lemma int_nat_eq: assumes "int (a::nat) = int b"
+shows "a = b" by (metis assms of_nat_eq_iff)
+
+lemma nat_div: assumes "(b::nat) > 0" and "a>b"
+shows "(a div b) = ((a - b) div b) + 1"
+proof-
+have 1:"(int b)>0" using assms(1) division_product by auto
+moreover have "(int a)>(int b)" using assms(2) by auto
+from this 1 have 2: " ((int a) div (int b)) = (((int a) - (int b)) div (int b)) + 1" using division_product
+by auto
+from int_nat_div have 3: "((int a) div (int b)) = int ( a div b)" by auto
+from int_nat_div  assms(2) have 4: "(((int a) - (int b)) div (int b)) = int ((a - b) div b)" by (metis (full_types) less_asym not_less of_nat_diff)
+have " (int x) + 1 = int (x +1)" by auto
+from this 2 3 4 have "int (a div b) = int (((a - b) div b) + 1)" by auto
+from this int_nat_eq have "(a div b) = ((a - b) div b) + 1" by auto
+from this show ?thesis by auto
+qed
+
+lemma mod_eq:" (m::int) mod n = (m + (-1)*n) mod n"
+using mod_mult_self1 by metis
+
+lemma nat_mod_eq: "(int (m::nat)) mod (int n) = int ( m mod n)"
+using Divides.transfer_int_nat_functions(2) by auto 
+
+lemma nat_mod: assumes  "(m::nat) > n"
+shows "(m::nat) mod n = (m -n) mod n"
+using assms mod_if not_less_iff_gr_or_eq by auto 
+
+lemma logic: assumes "A ⟶ B" and "¬A ⟶ B" shows "B" using assms(1) assms(2) by auto
 
 theorem product_elements:
-"(i<((length v1)*(length v2))) ⟹ 
-(product x y)!i = ("
+assumes " (y ≠ [])"
+shows 
+"∀i.((i<((length x)*(length y)))
+⟶ ((product x y)!i) = f (x!(i div (length y))) (y!(i mod (length y))))"
+ apply(rule allI)
+ proof(induct x)
+ case Nil
+ have "(length [] = 0)" by auto
+ also have "length (product [] y) = 0" using product.simps(1) by auto
+ from this have "i <(length (product [] y)) ⟹ False" by auto
+ moreover have "(product [] y) = []" by auto 
+ moreover have "(i<(length (product [] y))) ⟶ 
+ ((product x y)!i) = f (x!(i div (length y))) (y!(i mod (length y)))"  
+ by auto
+ from this show ?case  by auto
+ next
+ case (Cons z zs)
+ have 1:"product (z#zs) y = (times z y)@(product zs y)" by auto
+ have 2:"i<(length y)⟶((times z y)!i = f z (y!i))" using times_elements by auto
+ moreover have 3:"i<(length y) ⟶ (product (z#zs) y)!i = (times z y)!i" using product_simpl by auto
+ moreover  have "i<(length y) ⟶ (product (z#zs) y)!i = f z (y!i)" by (metis calculation(1) calculation(2))
+ have "(y ≠ []) ⟶ (length y) >0 " by auto 
+ have "(i <(length y)) ⟶  ((i div (length y)) = 0)" by auto
+ from this have  6:"(i <(length y)) ⟶ (z#zs)!(i div (length y)) = z" using nth_Cons_0 by auto
+ from this have 7:"(i <(length y)) ⟶ (i mod (length y)) = i" by auto
+ from 2 6 7 have "(i < (length y)) ⟶ (times z y)!i = f  ((z#zs)!(i div (length y))) (y! (i mod (length y)))
+ " by auto 
+ from this 3 have step1:"((i < (length y)) ⟶ 
+  ((i<((length x)*(length y)) ⟶ ((product (z#zs) y)!i 
+  =  f  ((z#zs)!(i div (length y))) (y! (i mod (length y)))))))"
+ by auto
+ have "((length y) ≤ i) ⟶ (i - (length y)) ≥ 0" by auto
+ have step2:" ((length y) < i) ⟶
+  ((i < (length (z#zs)*(length y)))⟶((product (z#zs) y)!i) 
+   = f ((z#zs)!(i div (length y))) (y!(i mod (length y))))"
+  proof-
+  have "(length y)>0" using assms by auto
+  from this have 1: "(i > (length y))⟶(i div (length y)) = ((i-(length y)) div (length y)) + 1" using nat_div 
+    by auto
+  have "zs!j = (z#zs)!(j+1)" by auto
+  from this have " (zs!((i - (length y)) div (length y))) = (z#zs)!(((i - (length y)) div (length y))+1)"
+  by auto
+  from this 1  have 2: "(i > (length y))⟶ (zs!((i - (length y)) div (length y)) = (z#zs)!(i div (length y)))"
+  by auto
+   have "(i > (length y))⟶((i mod (length y)) = ((i - (length y)) mod (length y)))" using nat_mod 
+  by auto
+  from this have 3:"(i > (length y))⟶((y! (i mod (length y))) = (y! ((i - (length y)) mod (length y))))" 
+  by auto
+  have 4:" (i > (length y))⟶(product (z#zs) y)!i =  (product zs y)!(i- (length y))" using product_simpl2 
+  by auto
+  have 5: " (i > (length y))⟶((i <((length (z#zs))*(length y)))) = ((i - (length y))< (length zs)*(length y))"
+   by auto
+  from this have 6:"∀i.((i<((length zs)*(length y)))
+  ⟶ ((product zs y)!i) = f (zs!(i div (length y))) (y!(i mod (length y))))" using Cons.hyps by auto
+  from this 5 have "(i > (length y))⟶((i<((length (z#zs))*(length y)))
+  ⟶ ((product zs y)!(i -(length y))) = f (zs!((i -(length y)) div (length y))) (y!((i -(length y)) 
+   mod (length y))))
+   = ((i<((length zs)*(length y)))
+  ⟶ ((product zs y)!i) = f (zs!(i div (length y))) (y!(i mod (length y))))
+    " by auto
+   from this 6 have "(i > (length y))⟶((i<((length (z#zs))*(length y)))
+  ⟶ ((product zs y)!(i -(length y))) = f (zs!((i -(length y)) div (length y))) (y!((i -(length y)) 
+   mod (length y))))" by auto
+   from this 2 3 4 have  "(i > (length y))⟶((i<((length (z#zs))*(length y)))
+  ⟶ ((product (z#zs) y)!i) = f ((z#zs)!(i div (length y))) (y!(i mod (length y))))"
+  by auto
+  from this show ?thesis  by auto
+  qed
+ have "((length y) = i) ⟶
+ ((i < (length (z#zs)*(length y)))⟶((product (z#zs) y)!i) 
+   = f ((z#zs)!(i div (length y))) (y!(i mod (length y))))"
+  proof-
+  have 1:"(i = (length y)) ⟶ ((product (z#zs) y)!i) = (product zs y)!0" using product_simpl2
+   by auto
+  have 2:"(i = length y) ⟶ (i mod (length y)) = 0" by auto
+  have 3:"(i = length y) ⟶ (i div (length y)) = 1" 
+    by (metis `y ≠ [] ⟶ 0 < length y` assms div_self less_numeral_extra(3))
+  have 4: "(i = length y) ⟶ ((i < (length (z#zs))*(length y)) = (0 < (length zs)*(length y)))" by auto
+  have " (z#zs)!1 = (zs!0)" by auto
+  from this 3 have 5:" (i = length y) ⟶ ((z#zs)!(i div (length y))) = (zs!0)" by auto 
+  have " ∀i.((i < (length zs)*(length y))⟶((product (zs) y)!i) 
+    = f ((zs)!(i div (length y))) (y!(i mod (length y))))" using Cons.hyps by auto  
+  from this 4 have 6:"(i = length y) ⟶((0 < ((length zs)*(length y)))⟶ (((product (zs) y)!0) 
+    = f ((zs)!0) (y!0))) = ((i < ((length zs)*(length y)))⟶(((product zs y)!i) 
+    = f ((zs)!(i div (length y))) (y!(i mod (length y)))))" by auto
+  have 7: " (0 div (length y)) = 0" by auto
+  have 8: " (0 mod (length y)) = 0" by auto
+  have 9: "(0 < ((length zs)*(length y))) ⟶ ((product zs y)!0) 
+    = f (zs!0) (y!0)" using 7 8 Cons.hyps by auto
+  from this 4 5 8 have "(i = length y) ⟶ ((i < (length (z#zs))*(length y)) ⟶ (((product (zs) y)!0) 
+    = f ((zs)!0) (y!0)))" 
+  by auto
+  from this 1 2 5 have "(i = length y) ⟶ ((i < (length (z#zs))*(length y)) ⟶ (((product ((z#zs)) y)!i) 
+    = f ((z#zs)!(i div (length y))) (y!(i mod (length y)))))" by auto
+  from this show ?thesis by auto
+  qed
+ from this step2 have step4: " (i ≥ (length y)) ⟶  ((i < (length (z#zs))*(length y)) ⟶ (((product ((z#zs)) y)!i) 
+   = f ((z#zs)!(i div (length y))) (y!(i mod (length y)))))" by auto
+ have "(i < (length y)) ∨ (i ≥ (length y))" by auto
+ from this step1 step4 have " ((i < (length (z#zs))*(length y)) ⟶ (((product ((z#zs)) y)!i) 
+   = f ((z#zs)!(i div (length y))) (y!(i mod (length y)))))" using logic by (metis "6" "7" 
+  `i < length y ⟶ product (z # zs) y ! i = z * y ! i`) 
+ from this show ?case by auto
+ qed
+(*list_tensor elements*)
+(*def- 
+primrec list_tensor::"'a vec ⇒ 'a mat ⇒'a mat"
+where
+"list_tensor xs []  = []"|
+"list_tensor xs (ys#yss) = (product xs ys)#(list_tensor xs yss)"
+*)
+
+lemma nat_int:  "nat (int x + int y) = x + y"
+using nat_int of_nat_add by auto
+
+lemma int_nat_equiv: "(x > 0) ⟶ (nat ((int x) + -1)+1) = x"
+proof-
+have "1 = nat (int 1)" by auto
+have "-1 = -int 1" by auto
+from this have 1:"(nat ((int x) + -1)+1) = (nat ((int x) + -1) + (nat (int 1)))" by auto
+from this have 2:"  (x > 0) ⟶ nat ((int x) + -1 ) + (nat (int 1)) =  (nat (((int x)  + -1) + (int 1)))" 
+using of_nat_add nat_int by auto
+ have "  (nat (((int x)  + -1) + (int 1))) = (nat ((int x) + -1 + (int 1)))" by auto
+from this have "  (nat (((int x)  + -1) + (int 1))) = (nat ((int x)))" by auto
+from this have "(nat (((int x)  + -1) + (int 1))) = x" by auto
+from this 1 2 have " (x > 0) ⟶ nat ((int x) + -1 ) + 1 = x" by auto
+from this show ?thesis by auto
+qed 
+
+theorem list_tensor_elements: 
+"∀i.∀j.(((i<((length v)*(row_length M)))∧(j < (length M)))∧(mat (row_length M) (length M) M)
+⟶ ((list_tensor v M)!j!i) = f (v!(i div (row_length M))) (M!j!(i mod (row_length M))))"
+ apply(rule allI)
+ apply(rule allI)
+ proof(induct M)
+ case Nil
+ have "row_length [] = 0" using row_length_def by auto
+ from this have "(length v)*(row_length []) = 0" by auto
+ from this have "((i<((length v)*(row_length [])))∧(j < (length []))) ⟶ False" by auto
+ moreover have "list_tensor v [] = []" by auto 
+ moreover have "(((i<((length v)*(row_length [])))∧(j < (length [])))
+⟶ ((list_tensor v [])!j!i) = f (v!(i div (row_length []))) ([]!j!(i mod (row_length []))))"
+ by auto
+ from this show ?case by auto
+ next
+ case (Cons a M)
+ assume mat_well_def: "(mat (row_length (a#M)) (length (a#M)) (a#M))"
+ have "∀i.∀j.(((i<((length v)*(row_length (a#M))))∧(j < (length (a#M))))∧(mat (row_length (a#M)) 
+ (length (a#M)) (a#M))
+⟶ ((list_tensor v (a#M))!j!i) = f (v!(i div (row_length (a#M)))) ((a#M)!j!(i mod (row_length (a#M)))))"
+ proof(cases a)
+ case Nil
+  have "row_length ([]#M) = 0" using row_length_def by auto
+  from this have "(length v)*(row_length ([]#M)) = 0" by auto
+ from this have "((i<((length v)*(row_length ([]#M))))∧(j < (length ([]#M)))) ⟶ False" by auto
+ moreover have "(((i<((length v)*(row_length ([]#M))))∧(j < (length ([]#M))))
+  ⟶ ((list_tensor v ([]#M))!j!i) = f (v!(i div (row_length ([]#M)))) ([]!j!(i mod (row_length ([]#M)))))"
+ by (metis calculation)
+ from this show ?thesis by (metis Nil `length v * row_length ([] # M) = 0` less_nat_zero_code)
+ next
+ case (Cons x xs)
+ have 1:"(a#M)!(j+1) = M!j" by auto
+ have " (((i<((length v)*(row_length M)))∧(j < (length M)))∧ (mat (row_length M) (length M) M)
+ ⟶ ((list_tensor v M)!j!i) = f (v!(i div (row_length M))) (M!j!(i mod (row_length M))))" 
+ using Cons.hyps by auto
+ have 2: "(row_length (a#M)) = (length a)" using row_length_def by auto
+ from this have 3:"(i< (row_length (a#M))*(length v)) = (i < (length a)*(length v))" by auto
+ have "a ≠ []" using Cons by auto
+ from this have 4:" ∀i.((i < (length a)*(length v)) ⟶  
+    ((product v a)!i) = f (v!(i div (length a))) (a!(i mod (length a))))" using product_elements Cons.hyps
+  using nat_mult_commute by auto
+ have "(list_tensor v (a#M))!0 = (product v a)" using list_tensor.simps(2) by auto
+ from this 2 4 have 5: " ∀i.((i < (row_length (a#M))*(length v)) ⟶  
+    ((list_tensor v (a#M))!0!i) = f (v!(i div (row_length (a#M)))) ((a#M)!0!(i mod (row_length (a#M)))))" 
+  by auto 
+ have "length (a#M)>0" by auto
+ from this 5 have 6: "(j = 0)⟶
+ ( ∀i.(((i < (row_length (a#M))*(length v)) ∧(j < (length (a#M))))
+   ∧ (mat (row_length (a#M)) (length (a#M)) (a#M))   ⟶  
+ ((list_tensor v (a#M))!j!i) = f (v!(i div (row_length (a#M)))) ((a#M)!j!(i mod (row_length (a#M))))))" 
+  by auto 
+  have " (((i < (row_length (a#M))*(length v)) ∧(j < (length (a#M))))
+   ∧ (mat (row_length (a#M)) (length (a#M)) (a#M))   ⟶  
+  ((list_tensor v (a#M))!j!i) = f (v!(i div (row_length (a#M)))) ((a#M)!j!(i mod (row_length (a#M)))))" 
+  proof(cases M)
+   case Nil
+   have "(length (a#[])) = 1" by auto
+   from this have "(j<(length (a#[]))) = (j = 0)" by auto
+   from this have " ( ∀i.(((i < (row_length (a#[]))*(length v)) ∧(j < (length (a#[]))))
+   ∧ (mat (row_length (a#[])) (length (a#[])) (a#[]))   ⟶  
+   ((list_tensor v (a#[]))!j!i) = f (v!(i div (row_length (a#[])))) ((a#[])!j!(i mod (row_length (a#[]))))))" 
+   using 6 Nil by auto
+   from this show ?thesis using Nil by auto 
+   next
+   case (Cons b N)
+   have 7:"(mat  (row_length (a#b#N))  (length (a#b#N)) (a#b#N)) ⟶ 
+    (row_length (a#b#N) = (row_length (b#N)))" 
+     proof-
+     have "(mat  (row_length (a#b#N))  (length (a#b#N)) (a#b#N)) ⟶ (b ∈ set (a#b#M))" by auto
+     moreover have "(mat  (row_length (a#b#N))  (length (a#b#N)) (a#b#N)) 
+          ⟶ (Ball (set (a#b#N)) (vec (row_length (a#b#N))))"
+          using mat_def by metis
+     moreover have "(mat  (row_length (a#b#N))  (length (a#b#N)) (a#b#N)) ⟶ (b ∈ (set (a#b#N)))⟶ 
+                        (vec (row_length (a#b#N)) b)"  by (metis calculation(2))
+     from this have "(mat  (row_length (a#b#N))  (length (a#b#N)) (a#b#N)) 
+       ⟶ (length b) = (row_length (a#b#N))" using vec_def by auto
+     from this have "(mat  (row_length (a#b#N))  (length (a#b#N)) (a#b#N)) 
+          ⟶ (row_length (b#N)) = (row_length (a#b#N))" using row_length_def by auto
+     then show ?thesis by auto
+     qed
+  have 7: "(k>0) ⟶ ((x#xs)!k = xs!(nat ((int k)+-1)))"  
+  proof-
+  have " ((x#xs)!(k+1) = xs!k)" by auto
+  have "j = (k+1) ⟶ (nat ((int j)+-1)) = k" by auto
+  moreover have "(nat ((int j)+-1)) = k ⟶ ((nat ((int j)+-1)) + 1) = (k +1)" by auto
+  moreover have "(j>0)⟶(((nat ((int j)+-1)) + 1) = j)" using  int_nat_equiv by (auto)
+  moreover have "(k>0) ⟶ ((x#xs)!k = xs!(nat ((int k)+-1)))" 
+  sledgehammer
+  have 8:"(list_tensor v (b#N))!k = (list_tensor v (a#b#N))!(k+1)" using list_tensor.simps(2)
+  by (metis add_diff_cancel_left' gr_implies_not0 less_add_one nat_add_commute nth_Cons')
+  have 9:"∀i. ∀k.(((i < (row_length (b#N))*(length v)) ∧((k) < (length (b#N))))
+   ∧ (mat (row_length (b#N)) (length (b#N)) (b#N))   ⟶  
+  ((list_tensor v (b#N))!(k)!i) = f (v!(i div (row_length (b#N)))) ((b#N)!(k)!(i mod (row_length (b#N)))))"
+      using Cons.hyps by (metis Cons nat_mult_commute) 
+
+
+
+
+  have 9:"((k+1)<(length (a#M))) ⟶ (k<(length M))" by auto
+    from this 8 have 10: "(((i < (row_length (a#b#N))*(length v)) ∧((k+1) < (length (a#b#N))))
+    ∧ (mat (row_length (a#b#N)) (length (a#b#N)) (a#b#N))   ⟶  
+ ((list_tensor v (a#b#N))!(k+1)!i) = f (v!(i div (row_length (a#b#N)))) ((a#b#N)!(k+1)!(i mod (row_length (a#b#N)))))" 
+  using Cons.hyps  "1" "7" Cons nat_mult_commute reduct_matrix by (metis add_diff_cancel_left' gr_implies_not0 less_add_one nat_add_commute nth_Cons')
+  from this have 11: "(j= (k+1)) ⟶ (((i < (row_length (a#b#N))*(length v)) ∧((j) < (length (a#b#N))))
+    ∧ (mat (row_length (a#b#N)) (length (a#b#N)) (a#b#N))   ⟶  
+ ((list_tensor v (a#b#N))!(j)!i) = f (v!(i div (row_length (a#b#N)))) ((a#b#N)!(j)!(i mod (row_length (a#b#N)))))" 
+ by auto
+
+
+
+(*
+  have " (((i < (row_length (a#M))*(length v)) ∧(j < (length (a#M))))
+   ∧ (mat (row_length (a#M)) (length (a#M)) (a#M))   ⟶  
+  ((list_tensor v (a#M))!j!i) = f (v!(i div (row_length (a#M)))) ((a#M)!j!(i mod (row_length (a#M)))))" 
 
 theorem list_tensor_elements: 
 "(i<(length M))∧(j<((row_length M)*(length v)))
-⟹(list_tensor v M)!i !j = f (v! (j nmod i))  (M!i!(j nmod (row_length M)))"
+⟶(list_tensor v M)!i !j = f (v! (j nmod i))  (M!i!(j nmod (row_length M)))"
 proof(induct M)
 case Nil
 have "(list_tensor v []) = []" using list_tensor.simps(1)  by auto 
@@ -519,7 +938,7 @@ from this have "(i<(length []))∧(j<((row_length [])*(length v)))
 from this show ?case using Nil by auto
 next
 case (
-
+*)
 
 
 

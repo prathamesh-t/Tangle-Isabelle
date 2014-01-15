@@ -41,18 +41,13 @@ datatype brick = vert
 datatype block = cement brick
                  |cons brick block  (infixr "#" 60)              
 
-primrec bricklength::"brick \<Rightarrow> nat"
-where
-"bricklength vert = 1"|
-"bricklength cup =  1"|
-"bricklength cap =  1"|
-"bricklength over =  1"|
-"bricklength under =  1"
+
 
 primrec length::"block \<Rightarrow> nat"
 where
-"length (cement x) = bricklength x"|
-"length (cons x y) = (bricklength x) + (length y)"
+"length (cement x) = 1"|
+"length (cons x y) = 1 + (length y)"
+
 
 
 definition e_vert::block where "e_vert \<equiv> (cement vert)"

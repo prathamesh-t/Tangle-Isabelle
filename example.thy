@@ -5,9 +5,7 @@ begin
 text{*We prove that the link diagram with a single crossing is equivalent to the unknot*}
 
 
-lemma linkrel_trans: assumes "linkrel_equiv x y" and "linkrel_equiv y z"
-shows "linkrel_equiv x z"
-using rtranclp_trans linkrel_equiv_def  by (metis (full_types) assms(1) assms(2))
+
 
 theorem example:"linkrel_equiv (Abs_diagram ((basic ((cement cup) \<otimes> (cement cup))) \<circ>(basic ((cement vert) \<otimes> (cement over) \<otimes> (cement vert))) 
 \<circ> (basic ((cement cap) \<otimes> (cement cap)))))

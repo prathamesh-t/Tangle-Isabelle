@@ -2,6 +2,10 @@ theory Link_Equivalence_Theorems
 imports Tangles
 begin
 
+lemma linkrel_trans: assumes "linkrel_equiv x y" and "linkrel_equiv y z"
+shows "linkrel_equiv x z"
+using rtranclp_trans linkrel_equiv_def  by (metis (full_types) assms(1) assms(2))
+
 
 text{* We prove a set of theorems which prove equivalence of certain class of link diagrams. These
 equivalences are useful in practise to prove equivalence of two given link diagrams. These theorems

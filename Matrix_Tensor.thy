@@ -41,23 +41,23 @@ apply(simp add:product_length)
 apply (metis assms(1) assms(2) vec_def)
 done
 
-primrec list_tensor::"'a vec \<Rightarrow> 'a mat \<Rightarrow>'a mat"
+primrec vec_tensor::"'a vec \<Rightarrow> 'a mat \<Rightarrow>'a mat"
 where
-"list_tensor xs []  = []"|
-"list_tensor xs (ys#yss) = (product xs ys)#(list_tensor xs yss)"
+"vec_tensor xs []  = []"|
+"vec_tensor xs (ys#yss) = (product xs ys)#(vec_tensor xs yss)"
 
 
-theorem list_tensor_length : 
- "(length(list_tensor xs ys)) = (length ys)"
+theorem vec_tensor_length : 
+ "(length(vec_tensor xs ys)) = (length ys)"
 apply(induct_tac ys)
 apply(auto)
 done
 
 theorem length_matrix: assumes "mat nr nc (y#ys)" and "length v = k"
-and "(list_tensor v (y#ys) = x#xs)" 
+and "(vec_tensor v (y#ys) = x#xs)" 
  shows "(vec (nr*k) x)" 
 proof-
-have "list_tensor v (y#ys) = (product v y)#(list_tensor v ys)"  using list_tensor_def assms by auto
+have "vec_tensor v (y#ys) = (product v y)#(vec_tensor v ys)"  using vec_tensor_def assms by auto
 also have "(product v y) = x" using assms by auto
 also have "length y = nr" using assms mat_def by (metis in_set_member member_rec(1) vec_def)
 from this
@@ -134,24 +134,24 @@ where
 
 lemma row_length_Nil: "row_length [] =0" using row_length_def by (metis )
 
-lemma row_length_vect_mat: " row_length (list_tensor v m) = length v*(row_length m)"
+lemma row_length_vect_mat: " row_length (vec_tensor v m) = length v*(row_length m)"
 proof(induct m)
  case Nil
   have "row_length [] = 0" using row_length_Nil by simp
-  moreover have "list_tensor v [] = []" using list_tensor.simps(1) by auto 
-  ultimately have " row_length (list_tensor v []) = length v*(row_length [])" using mult_0_right by (metis )
+  moreover have "vec_tensor v [] = []" using vec_tensor.simps(1) by auto 
+  ultimately have " row_length (vec_tensor v []) = length v*(row_length [])" using mult_0_right by (metis )
   from this show ?case by metis
  next  
   fix a m
-  assume A:"row_length (list_tensor v m) = length v * row_length m"
-  let ?case = "row_length (list_tensor v (a#m)) = (length v)*(row_length (a#m))" 
+  assume A:"row_length (vec_tensor v m) = length v * row_length m"
+  let ?case = "row_length (vec_tensor v (a#m)) = (length v)*(row_length (a#m))" 
   have A:"row_length (a # m) = length a" using row_length_def by (metis hd.simps list.distinct(1))
-  have "(list_tensor v  (a#m)) = (product v a)#(list_tensor v m)" using list_tensor_def list_tensor.simps(2)
+  have "(vec_tensor v  (a#m)) = (product v a)#(vec_tensor v m)" using vec_tensor_def vec_tensor.simps(2)
   by auto
-  from this have "row_length (list_tensor v (a#m)) = length (product v a)" using row_length_def  hd.simps
-  by (metis list.distinct(1) list_tensor.simps(2))
-  from this and product_length have "row_length (list_tensor v (a#m)) = (length v)*(length a)" by auto
-  from this and A  have "row_length (list_tensor v (a#m)) = (length v)*(row_length (a#m))"
+  from this have "row_length (vec_tensor v (a#m)) = length (product v a)" using row_length_def  hd.simps
+  by (metis list.distinct(1) vec_tensor.simps(2))
+  from this and product_length have "row_length (vec_tensor v (a#m)) = (length v)*(length a)" by auto
+  from this and A  have "row_length (vec_tensor v (a#m)) = (length v)*(row_length (a#m))"
   by auto
   from this show ?case by auto
 qed
@@ -159,7 +159,7 @@ qed
 primrec tensor::" 'a mat \<Rightarrow> 'a mat \<Rightarrow>'a mat" (infixl "\<otimes>" 63)
 where
 "tensor [] xs = []"|
-"tensor (x#xs) ys = (list_tensor x ys)@(tensor xs ys)"
+"tensor (x#xs) ys = (vec_tensor x ys)@(tensor xs ys)"
 
 lemma tensor_null: "xs \<otimes>[] = []" 
 apply(induct_tac xs)
@@ -192,18 +192,18 @@ proof(induct m1)
     assume "row_length (a # m1 \<otimes> m2) = row_length (a # m1) * row_length m2"
     let ?case= " row_length (a # m1 \<otimes> aa # m2) = row_length (a # m1) * row_length (aa # m2)"
     have "aa#m2 \<noteq> []" by auto
-    from this have "(list_tensor a (aa#m2)) \<noteq> []" using list_tensor_def by auto
-    from this have "hd ((list_tensor a (aa#m2))@(m1\<otimes>m2))= hd (list_tensor a (aa#m2)) " by auto
+    from this have "(vec_tensor a (aa#m2)) \<noteq> []" using vec_tensor_def by auto
+    from this have "hd ((vec_tensor a (aa#m2))@(m1\<otimes>m2))= hd (vec_tensor a (aa#m2)) " by auto
 
-    from this have "hd ((a#m1)\<otimes>(aa#m2)) = hd (list_tensor a (aa#m2))" using tensor.simps(2) by auto
-    from this have s1: "row_length ((a#m1)\<otimes>(aa#m2)) = row_length (list_tensor a (aa#m2))" 
-           using row_length_def by (metis Nil_is_append_conv `list_tensor a (aa # m2) \<noteq> []` tensor.simps(2))
-    have "row_length (list_tensor a (aa#m2)) = (length a)*row_length(aa#m2)" using row_length_vect_mat
+    from this have "hd ((a#m1)\<otimes>(aa#m2)) = hd (vec_tensor a (aa#m2))" using tensor.simps(2) by auto
+    from this have s1: "row_length ((a#m1)\<otimes>(aa#m2)) = row_length (vec_tensor a (aa#m2))" 
+           using row_length_def by (metis Nil_is_append_conv `vec_tensor a (aa # m2) \<noteq> []` tensor.simps(2))
+    have "row_length (vec_tensor a (aa#m2)) = (length a)*row_length(aa#m2)" using row_length_vect_mat
     by metis   
     from this and s1  
-     have "row_length (list_tensor a (aa#m2)) = (length a)*row_length(aa#m2)"
+     have "row_length (vec_tensor a (aa#m2)) = (length a)*row_length(aa#m2)"
          by auto
-   from this and B have "row_length (list_tensor a (aa#m2)) = (row_length (a#m1))*row_length(aa#m2)"    
+   from this and B have "row_length (vec_tensor a (aa#m2)) = (row_length (a#m1))*row_length(aa#m2)"    
         by auto
    from this  and s1 show ?case  by (auto)
    qed
@@ -263,36 +263,36 @@ proof(cases M)
   from this show ?thesis by auto
   qed 
 
-theorem well_defined_list_tensor:
-"(mat (row_length M) (length M) M) \<Longrightarrow>(mat ((row_length M)*(length v)) (length M) (list_tensor v M))"
+theorem well_defined_vec_tensor:
+"(mat (row_length M) (length M) M) \<Longrightarrow>(mat ((row_length M)*(length v)) (length M) (vec_tensor v M))"
 proof(induct M) 
  case Nil
-  have "(list_tensor v []) = []" using list_tensor.simps(1) Nil  by simp
+  have "(vec_tensor v []) = []" using vec_tensor.simps(1) Nil  by simp
   moreover have "(row_length [] = 0)"  using row_length_def Nil by metis
   moreover have "(length []) = 0" using Nil by simp
-  ultimately have "mat ((row_length [])*(length v)) (length []) (list_tensor v [])" using zero_matrix by (metis mult_zero_left)
+  ultimately have "mat ((row_length [])*(length v)) (length []) (vec_tensor v [])" using zero_matrix by (metis mult_zero_left)
   from this show ?case by simp
  next
  fix a M
- assume hyp :"(mat (row_length M) (length M) M \<Longrightarrow> mat (row_length M * length v) (length M) (list_tensor v M))"
+ assume hyp :"(mat (row_length M) (length M) M \<Longrightarrow> mat (row_length M * length v) (length M) (vec_tensor v M))"
                " mat (row_length (a#M)) (length (a#M)) (a#M)"                      
-  let ?case = "mat (row_length (a#M) * length v) (length (a#M)) (list_tensor v (a#M))"
+  let ?case = "mat (row_length (a#M) * length v) (length (a#M)) (vec_tensor v (a#M))"
   have step1: "mat (row_length M) (length M) M" using hyp(2) reduct_matrix by auto
-  from this have step2:"mat (row_length M * length v) (length M) (list_tensor v M)" using hyp(1) by auto 
-  have "mat (row_length (a#M) * length v) (length (a#M)) (list_tensor v (a#M))" 
+  from this have step2:"mat (row_length M * length v) (length M) (vec_tensor v M)" using hyp(1) by auto 
+  have "mat (row_length (a#M) * length v) (length (a#M)) (vec_tensor v (a#M))" 
     proof (cases M)
          case Nil 
-     have 1:"(list_tensor v (a#M)) = [product v a]" using list_tensor.simps Nil by auto
+     have 1:"(vec_tensor v (a#M)) = [product v a]" using vec_tensor.simps Nil by auto
      have   "(x \<in> (set [product v a])) \<longrightarrow>  x = (product v a)" using set_def by auto
      from this have 2:" (x \<in> (set [product v a])) \<longrightarrow> (vec (length (product v a)) x)" using vec_def by metis 
      have "length (product v a) = (length v)*(length a)" using product_length by auto 
      from this have "length (product v a) = (length v)*(row_length (a#M))" using row_length_def hd.simps
      list.distinct(1) by metis
      from this and 2 have "(x \<in> (set [product v a])) \<longrightarrow> (vec ((length v)*(row_length (a#M))) x)" by auto
-     from this and 1 have 3:"(x \<in> set (list_tensor v (a#M))) \<longrightarrow> vec ((length v)*(row_length (a#M))) x" 
+     from this and 1 have 3:"(x \<in> set (vec_tensor v (a#M))) \<longrightarrow> vec ((length v)*(row_length (a#M))) x" 
      by auto
-     have 4: "length (list_tensor v (a#M)) = (length (a#M))" using list_tensor_length by auto
-     from this have "mat (row_length (a#M) * length v) (length (list_tensor v (a#M))) (list_tensor v (a#M))"
+     have 4: "length (vec_tensor v (a#M)) = (length (a#M))" using vec_tensor_length by auto
+     from this have "mat (row_length (a#M) * length v) (length (vec_tensor v (a#M))) (vec_tensor v (a#M))"
      using mat_def Ball_def by (metis (hide_lams, no_types) 
     "1" `length (product v a) = length v * row_length (a # M)` `length (product v a) = length v * length a` 
     hd_set in_set_insert insert_Nil length_code nat_mult_commute not_Cons_self2 product_length vec_def)
@@ -310,11 +310,11 @@ proof(induct M)
       from this have "(length b) = (length a)" using vec_def vec_uniqueness by auto
       from this have 2:"row_length M = (length a)" using row_length_def hd.simps by (metis Cons list.distinct(1)) 
       
-      have "  mat (row_length M * length v) (length M) (list_tensor v M)" using step2 by auto 
-      from this have " Ball (set (list_tensor v M)) (vec ((row_length M)*(length v)))" using mat_def by auto
-      from this have "(x \<in> set (list_tensor v M)) \<longrightarrow> (vec ((row_length M)*(length v)) x)" using mat_def Ball_def
+      have "  mat (row_length M * length v) (length M) (vec_tensor v M)" using step2 by auto 
+      from this have " Ball (set (vec_tensor v M)) (vec ((row_length M)*(length v)))" using mat_def by auto
+      from this have "(x \<in> set (vec_tensor v M)) \<longrightarrow> (vec ((row_length M)*(length v)) x)" using mat_def Ball_def
       by auto
-      from this have 3:" (x \<in> set (list_tensor v M)) \<longrightarrow> (vec ((length a)*(length v)) x)" using 2 by auto
+      from this have 3:" (x \<in> set (vec_tensor v M)) \<longrightarrow> (vec ((length a)*(length v)) x)" using 2 by auto
   
       have "length (product v a) = (length a)*(length v)" by (metis nat_mult_commute product_length)  
       from this  have 4:" vec ((length a)*(length v)) (product v a)" using product_length vec_def 
@@ -322,19 +322,19 @@ proof(induct M)
 
       have 5:"(length a) = (row_length (a#M))" using row_length_def hd.simps  list.distinct(1)  by (metis) 
  
-      have "list_tensor v (a#M) = (product v a)#(list_tensor v M)" using list_tensor.simps(2) by auto
-      from this have "(x \<in> set (list_tensor v (a#M)))\<longrightarrow> ((x = (product v a)) \<or> (x \<in> (set (list_tensor v M)))) "
+      have "vec_tensor v (a#M) = (product v a)#(vec_tensor v M)" using vec_tensor.simps(2) by auto
+      from this have "(x \<in> set (vec_tensor v (a#M)))\<longrightarrow> ((x = (product v a)) \<or> (x \<in> (set (vec_tensor v M)))) "
       using hd.simps hd_set by auto
-      from this 3 4 have "(x \<in> set (list_tensor v (a#M)))\<longrightarrow>  vec ((length a)*(length v)) x" by auto
-      from this 5 have "(x \<in> set (list_tensor v (a#M)))\<longrightarrow>  vec ((row_length (a#M))*(length v)) x" by auto
-      from this have "\<forall>x.((x \<in> set (list_tensor v (a#M)))\<longrightarrow>  vec ((row_length (a#M))*(length v)) x)"
-       by (metis "2" "4" "5" `Ball (set (list_tensor v M)) (vec (row_length M * length v))` 
-      hd_set list_tensor.simps(2))
-      from this have 6: "Ball (set (list_tensor v (a#M))) (vec ((row_length (a#M))*(length v)))" using Ball_def by 
+      from this 3 4 have "(x \<in> set (vec_tensor v (a#M)))\<longrightarrow>  vec ((length a)*(length v)) x" by auto
+      from this 5 have "(x \<in> set (vec_tensor v (a#M)))\<longrightarrow>  vec ((row_length (a#M))*(length v)) x" by auto
+      from this have "\<forall>x.((x \<in> set (vec_tensor v (a#M)))\<longrightarrow>  vec ((row_length (a#M))*(length v)) x)"
+       by (metis "2" "4" "5" `Ball (set (vec_tensor v M)) (vec (row_length M * length v))` 
+      hd_set vec_tensor.simps(2))
+      from this have 6: "Ball (set (vec_tensor v (a#M))) (vec ((row_length (a#M))*(length v)))" using Ball_def by 
       auto
-      have 7:"length (list_tensor v (a#M)) = length (a#M)" using list_tensor_length by auto
+      have 7:"length (vec_tensor v (a#M)) = length (a#M)" using vec_tensor_length by auto
     
-      from 6 and 7 have "mat ((row_length (a#M))*(length v)) (length (a#M)) (list_tensor v (a#M))"
+      from 6 and 7 have "mat ((row_length (a#M))*(length v)) (length (a#M)) (vec_tensor v (a#M))"
         using mat_def
         by (metis (hide_lams, no_types) "5" `length (product v a) = length a * length v` length_code)
      from this show ?thesis by auto
@@ -349,15 +349,15 @@ proof(induct M1)
   show ?case by auto
  next
  case (Cons a M1)
- have "((a # M1) \<otimes> M2) = (list_tensor a M2)@(M1 \<otimes> M2)" using tensor.simps(2) by auto
- from this have 1:"length ((a # M1) \<otimes> M2) = length ((list_tensor a M2)@(M1 \<otimes> M2))" by auto
- have 2:"length ((list_tensor a M2)@(M1 \<otimes> M2)) = length (list_tensor a M2)+ length (M1 \<otimes> M2)" using append_def
+ have "((a # M1) \<otimes> M2) = (vec_tensor a M2)@(M1 \<otimes> M2)" using tensor.simps(2) by auto
+ from this have 1:"length ((a # M1) \<otimes> M2) = length ((vec_tensor a M2)@(M1 \<otimes> M2))" by auto
+ have 2:"length ((vec_tensor a M2)@(M1 \<otimes> M2)) = length (vec_tensor a M2)+ length (M1 \<otimes> M2)" using append_def
  by auto
- have 3:"(length (list_tensor a M2)) = length M2" using list_tensor_length by (auto)
+ have 3:"(length (vec_tensor a M2)) = length M2" using vec_tensor_length by (auto)
  have 4:"length (M1 \<otimes> M2) = (length M1)*(length M2)" using  Cons.hyps by auto
- from this 2 3 have  "length ((list_tensor a M2)@(M1 \<otimes> M2)) =  (length M2) + (length M1)*(length M2)"
+ from this 2 3 have  "length ((vec_tensor a M2)@(M1 \<otimes> M2)) =  (length M2) + (length M1)*(length M2)"
  by auto
- from this have 5:"length ((list_tensor a M2)@(M1 \<otimes> M2)) =  (1 + (length M1))*(length M2)" by auto
+ from this have 5:"length ((vec_tensor a M2)@(M1 \<otimes> M2)) =  (1 + (length M1))*(length M2)" by auto
  have "length (a#M1) = 1+(length M1)" by auto
  from this have "((length (a # M1)) * (length M2)) = (1 + (length M1))*(length M2)" by auto 
  from 1 5 this have "length ((a # M1) \<otimes> M2) = ((length (a # M1)) * (length M2))" by auto
@@ -402,10 +402,10 @@ proof(induct M1)
  have "mat (row_length (a # M1) * row_length M2) (length (a # M1) * length M2) (a # M1 \<otimes> M2)"
   proof(cases M1)
    case Nil 
-    have "(mat ((row_length M2)*(length a)) (length M2) (list_tensor a M2))" using Cons.prems 
-    well_defined_list_tensor by auto
+    have "(mat ((row_length M2)*(length a)) (length M2) (vec_tensor a M2))" using Cons.prems 
+    well_defined_vec_tensor by auto
     moreover have "(length (a # M1)) * (length M2) = length M2" using Nil by auto
-    moreover have "(a#M1)\<otimes>M2 = (list_tensor a M2)" using Nil tensor.simps append.simps(1) by auto
+    moreover have "(a#M1)\<otimes>M2 = (vec_tensor a M2)" using Nil tensor.simps append.simps(1) by auto
     ultimately have "(mat ((row_length M2)*(row_length (a#M1))) ((length (a # M1)) * (length M2))
                ((a#M1)\<otimes>M2))" using 0
              by auto
@@ -428,18 +428,18 @@ proof(induct M1)
       from this have 3:"\<forall>x. x \<in> (set (M1 \<otimes> M2)) \<longrightarrow> (vec ((length a)*(row_length M2)) x)" using Ball_def by auto
     
     
-      have "(mat ((row_length M2)*(length a)) (length M2) (list_tensor a M2))" using well_defined_list_tensor
+      have "(mat ((row_length M2)*(length a)) (length M2) (vec_tensor a M2))" using well_defined_vec_tensor
        Cons.prems by auto
-      from this have "Ball (set (list_tensor a M2)) (vec ((row_length M2)*(length a)))" using mat_def
+      from this have "Ball (set (vec_tensor a M2)) (vec ((row_length M2)*(length a)))" using mat_def
          by auto
-      from this have 4:"\<forall>x. x \<in> (set (list_tensor a M2)) \<longrightarrow> (vec ((length a)*(row_length M2)) x)"
+      from this have 4:"\<forall>x. x \<in> (set (vec_tensor a M2)) \<longrightarrow> (vec ((length a)*(row_length M2)) x)"
            using  nat_mult_commute by metis
-      from this and 3 have 5: "\<forall>x. (x \<in> (set (list_tensor a M2)))\<or>(x \<in> (set (M1 \<otimes> M2))) 
+      from this and 3 have 5: "\<forall>x. (x \<in> (set (vec_tensor a M2)))\<or>(x \<in> (set (M1 \<otimes> M2))) 
                          \<longrightarrow> (vec ((length a)*(row_length M2)) x)"     by auto  
 
-       have 6:"(a # M1 \<otimes> M2) = (list_tensor a M2)@(M1 \<otimes>M2)" using tensor.simps(2) by auto 
+       have 6:"(a # M1 \<otimes> M2) = (vec_tensor a M2)@(M1 \<otimes>M2)" using tensor.simps(2) by auto 
        from this have "x \<in> (set (a # M1 \<otimes> M2)) 
-        \<longrightarrow> (x \<in> (set (list_tensor a M2)))\<or>(x \<in> (set (M1 \<otimes> M2)))"
+        \<longrightarrow> (x \<in> (set (vec_tensor a M2)))\<or>(x \<in> (set (M1 \<otimes> M2)))"
            using set_def append_def by auto
        from this and 5 have "\<forall>x. (x \<in>  (set (a # M1 \<otimes> M2)))
                          \<longrightarrow> (vec ((length a)*(row_length M2)) x)" by auto
@@ -703,7 +703,7 @@ shows
   `i < length y \<longrightarrow> product (z # zs) y ! i = z * y ! i`) 
  from this show ?case by auto
  qed
-(*list_tensor elements*)
+(*vec_tensor elements*)
 
 lemma nat_int:  "nat (int x + int y) = x + y"
 using nat_int of_nat_add by auto
@@ -753,9 +753,9 @@ lemma row_length_eq:"(mat  (row_length (a#b#N))  (length (a#b#N)) (a#b#N)) \<lon
 
 (*main theorem*)
 
-theorem list_tensor_elements: 
+theorem vec_tensor_elements: 
 "\<forall>i.\<forall>j.(((i<((length v)*(row_length M)))\<and>(j < (length M)))\<and>(mat (row_length M) (length M) M)
-\<longrightarrow> ((list_tensor v M)!j!i) = f (v!(i div (row_length M))) (M!j!(i mod (row_length M))))"
+\<longrightarrow> ((vec_tensor v M)!j!i) = f (v!(i div (row_length M))) (M!j!(i mod (row_length M))))"
  apply(rule allI)
  apply(rule allI)
  proof(induct M)
@@ -763,30 +763,30 @@ theorem list_tensor_elements:
  have "row_length [] = 0" using row_length_def by auto
  from this have "(length v)*(row_length []) = 0" by auto
  from this have "((i<((length v)*(row_length [])))\<and>(j < (length []))) \<longrightarrow> False" by auto
- moreover have "list_tensor v [] = []" by auto 
+ moreover have "vec_tensor v [] = []" by auto 
  moreover have "(((i<((length v)*(row_length [])))\<and>(j < (length [])))
-\<longrightarrow> ((list_tensor v [])!j!i) = f (v!(i div (row_length []))) ([]!j!(i mod (row_length []))))"
+\<longrightarrow> ((vec_tensor v [])!j!i) = f (v!(i div (row_length []))) ([]!j!(i mod (row_length []))))"
  by auto
  from this show ?case by auto
  next
  case (Cons a M)
  have "(((i<((length v)*(row_length (a#M))))\<and>(j < (length (a#M))))\<and>(mat (row_length (a#M)) 
  (length (a#M)) (a#M))
-\<longrightarrow> ((list_tensor v (a#M))!j!i) = f (v!(i div (row_length (a#M)))) ((a#M)!j!(i mod (row_length (a#M)))))"
+\<longrightarrow> ((vec_tensor v (a#M))!j!i) = f (v!(i div (row_length (a#M)))) ((a#M)!j!(i mod (row_length (a#M)))))"
   proof(cases a)
   case Nil
   have "row_length ([]#M) = 0" using row_length_def by auto
   from this have "(length v)*(row_length ([]#M)) = 0" by auto
   from this have "((i<((length v)*(row_length ([]#M))))\<and>(j < (length ([]#M)))) \<longrightarrow> False" by auto
   moreover have "(((i<((length v)*(row_length ([]#M))))\<and>(j < (length ([]#M))))
-  \<longrightarrow> ((list_tensor v ([]#M))!j!i) = f (v!(i div (row_length ([]#M)))) ([]!j!(i mod (row_length ([]#M)))))"
+  \<longrightarrow> ((vec_tensor v ([]#M))!j!i) = f (v!(i div (row_length ([]#M)))) ([]!j!(i mod (row_length ([]#M)))))"
   by (metis calculation)
   from this show ?thesis by (metis Nil `length v * row_length ([] # M) = 0` less_nat_zero_code)
   next
   case (Cons x xs)
   have 1:"(a#M)!(j+1) = M!j" by auto
   have " (((i<((length v)*(row_length M)))\<and>(j < (length M)))\<and> (mat (row_length M) (length M) M)
-  \<longrightarrow> ((list_tensor v M)!j!i) = f (v!(i div (row_length M))) (M!j!(i mod (row_length M))))" 
+  \<longrightarrow> ((vec_tensor v M)!j!i) = f (v!(i div (row_length M))) (M!j!(i mod (row_length M))))" 
   using Cons.hyps by auto
   have 2: "(row_length (a#M)) = (length a)" using row_length_def by auto
   from this have 3:"(i< (row_length (a#M))*(length v)) = (i < (length a)*(length v))" by auto
@@ -794,26 +794,26 @@ theorem list_tensor_elements:
   from this have 4:" \<forall>i.((i < (length a)*(length v)) \<longrightarrow>  
     ((product v a)!i) = f (v!(i div (length a))) (a!(i mod (length a))))" using product_elements Cons.hyps
   using nat_mult_commute by auto
-  have "(list_tensor v (a#M))!0 = (product v a)" using list_tensor.simps(2) by auto
+  have "(vec_tensor v (a#M))!0 = (product v a)" using vec_tensor.simps(2) by auto
   from this 2 4 have 5: " \<forall>i.((i < (row_length (a#M))*(length v)) \<longrightarrow>  
-    ((list_tensor v (a#M))!0!i) = f (v!(i div (row_length (a#M)))) ((a#M)!0!(i mod (row_length (a#M)))))" 
+    ((vec_tensor v (a#M))!0!i) = f (v!(i div (row_length (a#M)))) ((a#M)!0!(i mod (row_length (a#M)))))" 
   by auto 
   have "length (a#M)>0" by auto
   from this 5 have 6: "(j = 0)\<longrightarrow>
    ((((i < (row_length (a#M))*(length v)) \<and>(j < (length (a#M))))
    \<and> (mat (row_length (a#M)) (length (a#M)) (a#M))   \<longrightarrow>  
-   ((list_tensor v (a#M))!j!i) = f (v!(i div (row_length (a#M)))) ((a#M)!j!(i mod (row_length (a#M))))))" 
+   ((vec_tensor v (a#M))!j!i) = f (v!(i div (row_length (a#M)))) ((a#M)!j!(i mod (row_length (a#M))))))" 
    by auto 
   have " (((i < (row_length (a#M))*(length v)) \<and>(j < (length (a#M))))
    \<and> (mat (row_length (a#M)) (length (a#M)) (a#M))   \<longrightarrow>  
-  ((list_tensor v (a#M))!j!i) = f (v!(i div (row_length (a#M)))) ((a#M)!j!(i mod (row_length (a#M)))))" 
+  ((vec_tensor v (a#M))!j!i) = f (v!(i div (row_length (a#M)))) ((a#M)!j!(i mod (row_length (a#M)))))" 
    proof(cases M)
    case Nil
    have "(length (a#[])) = 1" by auto
    from this have "(j<(length (a#[]))) = (j = 0)" by auto
    from this have " ( (((i < (row_length (a#[]))*(length v)) \<and>(j < (length (a#[]))))
    \<and> (mat (row_length (a#[])) (length (a#[])) (a#[]))   \<longrightarrow>  
-   ((list_tensor v (a#[]))!j!i) = f (v!(i div (row_length (a#[])))) ((a#[])!j!(i mod (row_length (a#[]))))))" 
+   ((vec_tensor v (a#[]))!j!i) = f (v!(i div (row_length (a#[])))) ((a#[])!j!(i mod (row_length (a#[]))))))" 
    using 6 Nil by auto
    from this show ?thesis using Nil by auto 
    next
@@ -821,11 +821,11 @@ theorem list_tensor_elements:
    have 7:"(mat  (row_length (a#b#N))  (length (a#b#N)) (a#b#N)) \<longrightarrow> 
     (row_length (a#b#N) = (row_length (b#N)))" 
      using row_length_eq by metis
-   have 8: "(j>0) \<longrightarrow> ((list_tensor v (b#N))!(nat ((int j)+-1))) = (list_tensor v (a#b#N))!j"
-    using list_tensor.simps(2) using list_int_nat by metis
+   have 8: "(j>0) \<longrightarrow> ((vec_tensor v (b#N))!(nat ((int j)+-1))) = (vec_tensor v (a#b#N))!j"
+    using vec_tensor.simps(2) using list_int_nat by metis
    have 9: "(j>0) \<longrightarrow> (((i < (row_length (b#N))*(length v)) \<and>((nat ((int j)+-1)) < (length (b#N))))
            \<and> (mat (row_length (b#N)) (length (b#N)) (b#N))   \<longrightarrow>  
-           ((list_tensor v (b#N))!(nat ((int j)+-1))!i) = f (v!(i div (row_length (b#N)))) 
+           ((vec_tensor v (b#N))!(nat ((int j)+-1))!i) = f (v!(i div (row_length (b#N)))) 
            ((b#N)!(nat ((int j)+-1))!(i mod (row_length (b#N)))))"
            using Cons.hyps Cons nat_mult_commute by metis
    have "(j>0) \<longrightarrow> ((nat ((int j) + -1)) < (length (b#N))) \<longrightarrow> ((nat ((int j) + -1) + 1) < length (a#b#N))"
@@ -834,31 +834,31 @@ theorem list_tensor_elements:
      by auto
    from this have  "(j>0) \<longrightarrow> (((i < (row_length (b#N))*(length v)) \<and> (j < length (a#b#N)))
      \<and> (mat (row_length (b#N)) (length (b#N)) (b#N))   \<longrightarrow>  
-     ((list_tensor v (b#N))!(nat ((int j)+-1))!i) = f (v!(i div (row_length (b#N)))) ((b#N)!(nat ((int j)+-1))!(i mod (row_length (b#N)))))"
+     ((vec_tensor v (b#N))!(nat ((int j)+-1))!i) = f (v!(i div (row_length (b#N)))) ((b#N)!(nat ((int j)+-1))!(i mod (row_length (b#N)))))"
       using Cons.hyps Cons nat_mult_commute by metis
    from this 8 have "(j>0) \<longrightarrow> (((i < (row_length (b#N))*(length v)) \<and> (j < length (a#b#N)))
      \<and> (mat (row_length (b#N)) (length (b#N)) (b#N))   \<longrightarrow>  
-     ((list_tensor v (a#b#N))!j!i) = f (v!(i div (row_length (b#N)))) ((b#N)!(nat ((int j)+-1))!(i mod (row_length (b#N)))))"
+     ((vec_tensor v (a#b#N))!j!i) = f (v!(i div (row_length (b#N)))) ((b#N)!(nat ((int j)+-1))!(i mod (row_length (b#N)))))"
      by auto
    moreover have "(j>0) \<longrightarrow> (b#N)!(nat ((int j)+-1)) = (a#b#N)!j" using list_int_nat by metis
    moreover have " (j>0) \<longrightarrow> (((i < (row_length (b#N))*(length v)) \<and> (j < length (a#b#N)))
      \<and> (mat (row_length (b#N)) (length (b#N)) (b#N))   \<longrightarrow>  
-     ((list_tensor v (a#b#N))!j!i) = f (v!(i div (row_length (b#N)))) ((a#b#N)!j!(i mod (row_length (b#N)))))"
+     ((vec_tensor v (a#b#N))!j!i) = f (v!(i div (row_length (b#N)))) ((a#b#N)!j!(i mod (row_length (b#N)))))"
      by (metis calculation(1) calculation(2))
    from this have  " (j>0) \<longrightarrow> (((i < (row_length (b#N))*(length v)) \<and> (j < length (a#b#N)))
       \<and> (mat (row_length (a#b#N)) (length (a#b#N)) (a#b#N))   \<longrightarrow>  
-      ((list_tensor v (a#b#N))!j!i) = f (v!(i div (row_length (b#N)))) ((a#b#N)!j!(i mod (row_length (b#N)))))"
+      ((vec_tensor v (a#b#N))!j!i) = f (v!(i div (row_length (b#N)))) ((a#b#N)!j!(i mod (row_length (b#N)))))"
       using  reduct_matrix by (metis)
    moreover  have "(mat (row_length (a#b#N)) (length (a#b#N)) (a#b#N))
    \<longrightarrow>(row_length (b#N)) = (row_length (a#b#N))" by (metis "7" Cons)
    moreover have 10:"  (j>0) \<longrightarrow> (((i < (row_length (a#b#N))*(length v)) \<and> (j < length (a#b#N)))
       \<and> (mat (row_length (a#b#N)) (length (a#b#N)) (a#b#N))   \<longrightarrow>  
-      ((list_tensor v (a#b#N))!j!i) = f (v!(i div (row_length (a#b#N)))) ((a#b#N)!j!(i mod (row_length (a#b#N)))))"
+      ((vec_tensor v (a#b#N))!j!i) = f (v!(i div (row_length (a#b#N)))) ((a#b#N)!j!(i mod (row_length (a#b#N)))))"
      by (metis calculation(3) calculation(4))
    have "(j = 0) \<or> (j > 0)" by auto
     from this 6 10 logic have "(((i < (row_length (a#b#N))*(length v)) \<and> (j < length (a#b#N)))
       \<and> (mat (row_length (a#b#N)) (length (a#b#N)) (a#b#N))   \<longrightarrow>  
-     ((list_tensor v (a#b#N))!j!i) = f (v!(i div (row_length (a#b#N)))) ((a#b#N)!j!(i mod (row_length (a#b#N)))))"
+     ((vec_tensor v (a#b#N))!j!i) = f (v!(i div (row_length (a#b#N)))) ((a#b#N)!j!(i mod (row_length (a#b#N)))))"
      using  Cons by metis
      from this show ?thesis by (metis Cons)
    qed
@@ -889,12 +889,12 @@ theorem matrix_tensor_elements:
   from this show ?case by auto
   next
  case (Cons v M)
-  have 0:"(v#M) \<otimes> M2 = (list_tensor v M2)@(tensor M M2)" by auto
-  from this have 1:"(j<(length M2)) \<longrightarrow> ( ((v#M) \<otimes> M2)!j = (list_tensor v M2)!j)" 
-   using append_simpl list_tensor_length by metis
+  have 0:"(v#M) \<otimes> M2 = (vec_tensor v M2)@(tensor M M2)" by auto
+  from this have 1:"(j<(length M2)) \<longrightarrow> ( ((v#M) \<otimes> M2)!j = (vec_tensor v M2)!j)" 
+   using append_simpl vec_tensor_length by metis
   have " (((i<((length a)*(row_length M2)))\<and>(j < (length M2)))\<and>(mat (row_length M2) (length M2) M2)
-  \<longrightarrow> ((list_tensor a M2)!j!i) = f (a!(i div (row_length M2))) (M2!j!(i mod (row_length M2))))"
-  using list_tensor_elements by auto
+  \<longrightarrow> ((vec_tensor a M2)!j!i) = f (a!(i div (row_length M2))) (M2!j!(i mod (row_length M2))))"
+  using vec_tensor_elements by auto
   have "(j < (length M2)) \<longrightarrow> (j div (length M2)) = 0" by auto
   from this have 2:"(j < (length M2)) \<longrightarrow> (v#M)!(j div (length M2)) = v" by auto
   have "(j < (length M2)) \<longrightarrow> (j mod (length M2)) = j" by auto
@@ -903,14 +903,14 @@ theorem matrix_tensor_elements:
    \<and>(j < (length M2) * (length (v#M))))\<and>(mat (row_length M2) (length M2) M2)
    \<longrightarrow> ((tensor (v#M) M2)!j!i) = f ((v#M)!(j div (length M2))!(i div (row_length M2))) 
    (M2!(j mod (length M2))!(i mod (row_length M2))))" 
-   using  2 1  calculation(1) list_tensor_elements by auto
+   using  2 1  calculation(1) vec_tensor_elements by auto
   have step1: "(j < (length M2)) \<longrightarrow> (((i<((row_length (v#M))*(row_length M2)))
    \<and>(j <  (length (v#M))*(length M2)))\<and>(mat (row_length (v#M)) (length (v#M)) (v#M))
        \<and>(mat (row_length M2) (length M2) M2)
    \<longrightarrow> ((tensor (v#M) M2)!j!i) = f ((v#M)!(j div (length M2))!(i div (row_length M2))) 
    (M2!(j mod (length M2))!(i mod (row_length M2))))" using row_length_def  step0 by auto
   from 0 have 3: "(j \<ge> (length M2)) \<longrightarrow> ((v#M) \<otimes> M2)!j = (M \<otimes> M2)!(j - (length M2))" 
-    using  list_tensor_length nat_add_commute append_simpl2 by metis
+    using  vec_tensor_length nat_add_commute append_simpl2 by metis
   have 4:"(j \<ge> (length M2)) \<longrightarrow>
     (((i<((row_length M)*(row_length M2)))\<and>((j-(length M2)) < (length M)*(length M2)))
     \<and>(mat (row_length M) (length M) M)\<and>(mat (row_length M2) (length M2) M2)
@@ -989,15 +989,15 @@ theorem matrix_tensor_elements:
        then have "(j< (length (w#N))) \<longrightarrow> (j div (length (w#N))) = 0" by auto
        from this have Nil3:"(j< (length (w#N))) \<longrightarrow> (v#M)!(j div (length (w#N))) = v" using Nil by auto
        then have Nil4:"(j< (length (w#N))) \<longrightarrow> (j mod (length (w#N))) = j" by auto
-       then have Nil5:"(v#M) \<otimes> (w#N) = list_tensor v (w#N)" using Nil tensor.simps(2) tensor.simps(1)
+       then have Nil5:"(v#M) \<otimes> (w#N) = vec_tensor v (w#N)" using Nil tensor.simps(2) tensor.simps(1)
        by auto
-       from list_tensor_elements have "(((i<((length v)*(row_length (w#N))))
+       from vec_tensor_elements have "(((i<((length v)*(row_length (w#N))))
              \<and>(j < (length (w#N))))\<and>(mat (row_length (w#N)) (length (w#N)) (w#N))
-         \<longrightarrow> ((list_tensor v (w#N))!j!i) = f (v!(i div (row_length (w#N)))) 
+         \<longrightarrow> ((vec_tensor v (w#N))!j!i) = f (v!(i div (row_length (w#N)))) 
                    ((w#N)!j!(i mod (row_length (w#N)))))" by metis
        then have "((i<((row_length (v#M))*(row_length (w#N))))
              \<and>(j < ((length (v#M))*(length (w#N))))\<and>(mat (row_length (w#N)) (length (w#N)) (w#N))
-         \<longrightarrow> ((list_tensor v (w#N))!j!i) = f (v!(i div (row_length (w#N)))) ((w#N)!j!(i mod (row_length (w#N)))))"
+         \<longrightarrow> ((vec_tensor v (w#N))!j!i) = f (v!(i div (row_length (w#N)))) ((w#N)!j!(i mod (row_length (w#N)))))"
                   using Nil1 Nil2 Nil by auto
        then have "((i<((row_length (v#M))*(row_length (w#N))))
             \<and>(j < ((length (v#M))*(length (w#N))))\<and>(mat (row_length (w#N)) (length (w#N)) (w#N))

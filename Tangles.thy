@@ -29,11 +29,12 @@ datatype walls = basic block
 
 text{*Append gives us the block obtained by putting two blocks next to each other*}
 
+(* Rename this concatenate *)
 primrec append_blocks :: "block => block => block" (infixr "\<otimes>" 65) where
 append_blocks_Nil: "(cement x) \<otimes> ys = cons x ys" |
 append_blocks_Cons: "((x#xs)\<otimes>ys) = x#(xs\<otimes>ys)"
 
-text{*Associativity properties of append_blocks*}
+text{*Associativity properties of concatenation*}
 lemma leftright_associativity: "(x\<otimes>y)\<otimes>z = x\<otimes>(y\<otimes>z)"
 apply(induct_tac x)
 apply(auto)
@@ -48,12 +49,14 @@ lemma right_associativity: "x\<otimes>(y\<otimes>z) =x \<otimes> y \<otimes>z"
 apply(auto)
 done
 
-text{*Compose gives us the wall obtained by putting a wall above another*}
+text{*Compose gives us the wall obtained by putting a wall above another, perhaps in an invalid way.
+Should define a Boolean function here, or better still a Option type.
+If we have Option types, compose should act on options.*}
 primrec compose :: "walls => walls => walls" (infixr "\<circ>" 66) where
 compose_Nil: "(basic x) \<circ> ys =  prod x ys" |
 compose_Cons: "((prod x xs)\<circ>ys) = prod x (xs\<circ>ys)"
 
-text{*Associativity properties of compose*}
+text{*Associativity properties of composition*}
 
 lemma compose_leftassociativity: "(((x::walls) \<circ> y) \<circ> z) = (x\<circ>y \<circ>z)"
 apply(induct_tac x)
@@ -84,14 +87,15 @@ text{*brickcount tells us the number of incoming and outgoing strangs of each br
  "brickcount under = (2,2)"
 
 text{*count tells us the number of incoming and outgoing strangs of each block.*}
-
+(* Bad name, should say "boundary" or some such*)
+(* Why pair, not domain and codomain *)
  primrec count::"block \<Rightarrow> int \<times> int "
  where
  "count (cement x) = (brickcount x)"
  |"count (cons x y) = (fst (brickcount x) + fst (count y), snd (brickcount x) + snd (count y))"
 
 text{*wall_count tells us the number of incoming and outgoing strangs of each wall.*}
-
+(* Rename: the name should give the object computed and codomain, not domain*)
 primrec wall_count:: "walls \<Rightarrow> int \<times> int" where
 "wall_count (basic x) = count x"                                               
 |"wall_count (x*ys) = (fst (count x),snd (wall_count ys))"

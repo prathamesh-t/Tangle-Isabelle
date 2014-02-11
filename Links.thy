@@ -21,7 +21,17 @@ However, the moves that would be useful in practise are proved as theorems in
 
 text{*link_uncross*}
 
-definition linkrel_uncross_positiveflip::"diagram \<Rightarrow> diagram \<Rightarrow> bool"
+
+definition linkrel_uncross_positiveflip::"walls \<Rightarrow> walls \<Rightarrow> bool"
+where
+"linkrel_uncross_positiveflip x y \<equiv> (x =  (basic ((cement vert)\<otimes>(cement cup)))
+                                           \<circ>(basic ((cement over)\<otimes>(cement vert)))
+                                           \<circ>(basic ((cement vert)\<otimes>(cement cap))))
+                                    \<and> (y = ((basic ((cement cup)\<otimes>(cement vert)))
+                                            \<circ>(basic ((cement vert)\<otimes>(cement over)))
+                                            \<circ>(basic ((cement cap)\<otimes>(cement vert)))))"
+
+(*definition linkrel_uncross_positiveflip::"diagram \<Rightarrow> diagram \<Rightarrow> bool"
 where
 "linkrel_uncross_positiveflip x y \<equiv> (\<exists>y1.\<exists>z1.\<exists>z2.\<exists>z3.\<exists>w1.\<exists>w2.\<exists>w3.\<exists>y2.(x = Abs_diagram ((y1)
 \<circ>(basic (z1\<otimes>(cement vert)\<otimes>(cement cup)\<otimes>w1)\<circ>(basic (z2\<otimes>(cement over)\<otimes>(cement vert)\<otimes>w2))
@@ -30,7 +40,7 @@ where
 \<circ>(basic (z2\<otimes>(cement vert)\<otimes>(cement over)\<otimes>w2))\<circ>(basic (z3\<otimes>(cement cap)\<otimes>(cement vert)\<otimes>w3))\<circ>(y2)))
 \<and>((snd (count z1)) = (fst (count z2)))
 \<and>((snd (count z2)) = (fst (count z3))) \<and> ((snd (count w1)) = (fst (count w2)))
-\<and>((snd (count w2)) = (fst (count w3))))"
+\<and>((snd (count w2)) = (fst (count w3))))"*)
 
 definition linkrel_uncross_positivestraighten::"diagram \<Rightarrow> diagram \<Rightarrow> bool"
 where

@@ -94,11 +94,58 @@ text{*count tells us the number of incoming and outgoing strangs of each block.*
  "count (cement x) = (brickcount x)"
  |"count (cons x y) = (fst (brickcount x) + fst (count y), snd (brickcount x) + snd (count y))"
 
+(*domain_block tells us the number of incoming strands of a block*)
+
+(*domain tells us the number of incoming strands*)
+ primrec domain::"brick \<Rightarrow> int"
+ where
+ "domain vert = 1"|
+ "domain cup = 0"|
+ "domain cap = 2"|
+ "domain over = 2"|
+ "domain under = 2"
+
+(*co-domain tells us the number of outgoing strands*)
+ primrec codomain::"brick \<Rightarrow> int"
+ where
+ "codomain vert = 1"|
+ "codomain cup = 2"|
+ "codomain cap = 0"|
+ "codomain over = 2"|
+ "codomain under = 2"
+
+ primrec domain_block::"block \<Rightarrow> int "
+ where
+ "domain_block (cement x) = (domain x)"
+ |"domain_block (cons x y) = (domain x + (domain_block y))"
+
+
+(*codomain_block tells us the number of outgoing strands of a block*)
+
+ primrec codomain_block::"block \<Rightarrow> int "
+ where
+ "codomain_block (cement x) = (codomain x)"
+ |"codomain_block (cons x y) = (codomain x + (codomain_block y))"
+
+
 text{*wall_count tells us the number of incoming and outgoing strangs of each wall.*}
 (* Rename: the name should give the object computed and codomain, not domain*)
 primrec wall_count:: "walls \<Rightarrow> int \<times> int" where
 "wall_count (basic x) = count x"                                               
 |"wall_count (x*ys) = (fst (count x),snd (wall_count ys))"
+
+
+(*domain_wall tells us the number of incoming strands of a wall*)
+
+primrec domain_wall:: "walls \<Rightarrow> int" where
+"domain_wall (basic x) = domain_block x"                                               
+|"domain_wall (x*ys) = domain_block x"
+
+(*domain_wall tells us the number of incoming strands of a wall*)
+
+primrec codomain_wall:: "walls \<Rightarrow> int" where
+"codomain_wall (basic x) = codomain_block x"                                               
+|"codomain_wall (x*ys) = codomain_wall ys"
 
 text{*this lemma tells us the number of incoming and outgoing strands of a composition of two walls*}
 lemma wall_count_compose: "wall_count (xs\<circ>ys) = (fst (wall_count (xs)), snd(wall_count (ys)))"
@@ -332,6 +379,15 @@ done
 definition well_defined::"walls \<Rightarrow> bool" where
 "well_defined x \<equiv> ( (list_sum (wall_count_list x)+(abs(fst(wall_count x))
 + abs(snd(wall_count x)))) = 0)"
+
+
+(*domain-co-domain-list*)
+primrec domain_codomain_list:: "walls \<Rightarrow> int list" where
+"domain_codomain_list (basic x) = []"|
+"domain_codomain_list (x * y) =  (abs ((domain_wall y) - (codomain_block x)))#(domain_codomain_list y)"
+
+definition well_defined_tangle::"walls \<Rightarrow> bool" where
+"well_defined_tangle x \<equiv>  (list_sum (wall_count_list x) = 0)"
 
 text{*well_defined walls as a type called diagram. The morphisms Abs_diagram maps a well defined wall to 
 its diagram type and Rep_diagram maps the diagram back to the wall *}

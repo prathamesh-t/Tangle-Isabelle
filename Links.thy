@@ -249,7 +249,7 @@ where
 (*linkrel fitting in diagrams*)
 definition linkrel_diagram_left::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
-"linkrel_diagram_left x y \<equiv> \<exists>A.\<exists>B.\<exists>C.((x =  (A \<otimes> B))\<and> (y = (C \<otimes> B)) 
+"linkrel_diagram_left x y \<equiv> \<exists>A.\<exists>B.\<exists>C.((x =  ((A::walls) \<otimes> B))\<and> (y = (C \<otimes> B)) 
                                      \<and> (linkrel A C))"
 
 definition linkrel_diagram_right::"walls \<Rightarrow> walls \<Rightarrow> bool"
@@ -273,8 +273,8 @@ where
 
 definition linkrel_diagram_middle_left:: "walls \<Rightarrow> walls \<Rightarrow> bool"
 where
-"linkrel_diagram_middle_left x y \<equiv> \<exists>A.\<exists>B1.\<exists>B2.\<exists>C.\<exists>D.((x = (A \<circ> (B1::walls)\<otimes>C \<circ>D))
-                                           \<and> (y = (A \<circ> (B2::walls) \<otimes> C \<circ> D)) 
+"linkrel_diagram_middle_left x y \<equiv> \<exists>A.\<exists>B1.\<exists>B2.\<exists>C.\<exists>D.((x = (A \<circ> ((B1::walls)\<otimes>C) \<circ>D))
+                                           \<and> (y = (A \<circ> ((B2::walls) \<otimes> C) \<circ> D)) 
                                      \<and> (linkrel B1 B2))"
 
 definition linkrel_diagram_middle_right::"walls \<Rightarrow> walls \<Rightarrow> bool"

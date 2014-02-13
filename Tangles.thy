@@ -77,24 +77,6 @@ where
 "block_length (cons x y) = 1 + (block_length y)"
 
 
-text{*brickcount tells us the number of incoming and outgoing strangs of each brick.*}
- primrec brickcount::"brick \<Rightarrow> int \<times> int "
- where
- "brickcount vert = (1,1)"|
- "brickcount cup = (0,2)"|
- "brickcount cap = (2,0)"|
- "brickcount over = (2,2)"|
- "brickcount under = (2,2)"
-
-text{*count tells us the number of incoming and outgoing strangs of each block.*}
-(* Bad name, should say "boundary" or some such*)
-(* Why pair, not domain and codomain *)
- primrec count::"block \<Rightarrow> int \<times> int "
- where
- "count (cement x) = (brickcount x)"
- |"count (cons x y) = (fst (brickcount x) + fst (count y), snd (brickcount x) + snd (count y))"
-
-(*domain_block tells us the number of incoming strands of a block*)
 
 (*domain tells us the number of incoming strands*)
  primrec domain::"brick \<Rightarrow> int"
@@ -114,6 +96,8 @@ text{*count tells us the number of incoming and outgoing strangs of each block.*
  "codomain over = 2"|
  "codomain under = 2"
 
+
+(*domain_block tells us the number of incoming strands of a block*)
  primrec domain_block::"block \<Rightarrow> int "
  where
  "domain_block (cement x) = (domain x)"
@@ -128,13 +112,6 @@ text{*count tells us the number of incoming and outgoing strangs of each block.*
  |"codomain_block (cons x y) = (codomain x + (codomain_block y))"
 
 
-text{*wall_count tells us the number of incoming and outgoing strangs of each wall.*}
-(* Rename: the name should give the object computed and codomain, not domain*)
-primrec wall_count:: "walls \<Rightarrow> int \<times> int" where
-"wall_count (basic x) = count x"                                               
-|"wall_count (x*ys) = (fst (count x),snd (wall_count ys))"
-
-
 (*domain_wall tells us the number of incoming strands of a wall*)
 
 primrec domain_wall:: "walls \<Rightarrow> int" where
@@ -147,11 +124,18 @@ primrec codomain_wall:: "walls \<Rightarrow> int" where
 "codomain_wall (basic x) = codomain_block x"                                               
 |"codomain_wall (x*ys) = codomain_wall ys"
 
+lemma domain_wall_compose: "domain_wall (xs\<circ>ys) = domain_wall xs"
+    apply(induct_tac xs)
+    apply(auto)
+    done
+
+lemma codomain_wall_compose: "codomain_wall (xs\<circ>ys) = codomain_wall ys"
+    apply(induct_tac xs)
+    apply(auto)
+    done 
+
 text{*this lemma tells us the number of incoming and outgoing strands of a composition of two walls*}
-lemma wall_count_compose: "wall_count (xs\<circ>ys) = (fst (wall_count (xs)), snd(wall_count (ys)))"
-apply(induct_tac xs)
-apply(auto)
-done 
+
 
 text{*absolute value*}
 definition abs::"int \<Rightarrow> int" where
@@ -176,7 +160,7 @@ add_nonneg_eq_0_iff assms
 apply metis
 by (metis abs_non_negative add_nonneg_eq_0_iff assms)
 
-
+(*
 text{*the following lemmas are test lemmas*}
 lemma cement_vert_count:" count (cement vert) = (1,1)"
 using brickcount.simps(1) count.simps(1) by metis
@@ -193,91 +177,80 @@ using brickcount.simps(4) count.simps(1) by metis
 
 lemma cement_under_count:" count ((cement under)) = (2,2)"
 using  brickcount.simps(5) count.simps(1) by metis
-
+*)
 
 text{*The following lemmas tell us that the number of incoming and outgoing strands of every brick 
 is a non negative integer*}
-lemma brickcount_nonnegative: "fst (brickcount x) \<ge> 0" 
-by 
-(metis Nat_Transfer.transfer_nat_int_function_closures(6) brick.exhaust brick.simps(26)
- brick.simps(27) brick.simps(28) brick.simps(30) brickcount.simps(4) 
-dbl_def dbl_simps(3) fst_conv less_imp_le one_plus_BitM order_refl semiring_norm(26) 
-zero_less_numeral brickcount_def)
+lemma domain_nonnegative: "(domain x) \<ge> 0" 
+using domain.simps  brick.exhaust le_cases not_numeral_le_zero zero_le_one by (metis)
 
 
-lemma snd_brickcount_nonnegative: "snd (brickcount x) \<ge> 0" 
-apply(simp add: brickcount_def)
-by (metis Nat_Transfer.transfer_nat_int_function_closures(6) brick.exhaust brick.simps(26) 
-brick.simps(27) brick.simps(28) brick.simps(29) brick.simps(30) dbl_simps(3) less_imp_le 
-one_plus_BitM order_refl semiring_norm(26) snd_conv zero_less_numeral)
-
+lemma codomain_nonnegative: "(codomain x) \<ge> 0" 
+      apply(case_tac x)
+      apply(auto)
+      done
 
 text{*The following lemmas tell us that the number of incoming and outgoing strands of every block 
 is a non negative integer*}
-lemma count_nonnegative: "fst (count x) \<ge> 0" 
-apply(induct_tac x)
-apply(auto)
-apply(simp add:brickcount_nonnegative)
-apply(simp add:count_def)
-apply (metis (lifting) add_increasing brickcount_nonnegative)
-done
+lemma domain_block_nonnegative: "domain_block x \<ge> 0" 
+    apply(induct_tac x)
+    apply(auto)
+    apply(simp add:domain_nonnegative)
+    apply (simp add: add_increasing domain_nonnegative)
+    done
 
 
-lemma snd_count_nonnegative: "snd (count x) \<ge> 0" 
-apply(induct_tac x)
-apply(auto)
-apply(simp add:snd_brickcount_nonnegative)
-apply(simp add:count_def)
-apply (metis (lifting) add_increasing snd_brickcount_nonnegative)
-done
+lemma codomain_block_nonnegative: "(codomain_block x) \<ge> 0" 
+    apply(induct_tac x)
+    apply(auto)
+    apply(simp add:codomain_nonnegative)
+    apply (simp add: add_increasing codomain_nonnegative)
+    done
+
 
 text{*The following lemmas tell us that if a block is appended to a block with incoming strands, then
 the resultant block has incoming strands*}
 
-lemma count_positive: "((fst (count (cement x)) > 0) \<or> (fst (count y) > 0)) 
-\<Longrightarrow> (fst (count (x#y)) > 0)" 
+lemma domain_positive: "((domain_block (cement x)) > 0) \<or> ((domain_block y) > 0) 
+\<Longrightarrow> (domain_block (x#y) > 0)" 
 proof-
-have "fst (count (x#y)) =  (fst (brickcount x) + fst (count y))" using count_def by auto
-also have " (fst (brickcount x)) = fst (count (cement x))" using count_def by auto
-then have "((fst (count (cement x))) > 0) = ((fst (brickcount x)) > 0)" using count_def by auto
-then have "((fst (brickcount x) > 0) \<or> (fst (count y) > 0)) \<Longrightarrow> (fst (brickcount x) + fst (count y))>0"
-using count_nonnegative add_nonneg_pos add_pos_nonneg brickcount_nonnegative by metis
-from this  show  "((fst (count (cement x)) > 0) \<or> (fst (count y) > 0)) 
-\<Longrightarrow> (fst (count (x#y)) > 0)" by auto
+ have "(domain_block (x#y)) =  (domain x) + (domain_block y)"  by auto
+ also have " (domain x) = (domain_block (cement x))" by auto
+ then have "(domain_block (cement x) > 0) = (domain x > 0)"  by auto
+ then have "((domain x > 0) \<or> (domain_block y > 0)) \<Longrightarrow> (domain x + domain_block y)>0"
+    using domain_nonnegative add_nonneg_pos add_pos_nonneg domain_block_nonnegative by metis 
+ from this  
+       show "((domain_block(cement x)) > 0) \<or> ((domain_block y) > 0) \<Longrightarrow> (domain_block (x#y) > 0)" 
+            by auto
 qed
   
-lemma fst_count_additive:  "fst (count (x\<otimes>y))= (fst (count x)) + (fst (count y))"
-apply(induct_tac x)
-apply(simp add: count_def)
-apply(auto)
-done
+lemma domain_additive:  "(domain_block (x\<otimes>y))= (domain_block x) + (domain_block y)"
+    apply(induct_tac x)
+    apply(auto)
+    done
 
-lemma snd_count_additive:  "snd (count (x\<otimes>y))= (snd (count x)) + (snd (count y))"
-apply(induct_tac x)
-apply(simp add: count_def)
-apply(auto)
-done
+lemma codomain_additive:   "(codomain_block (x\<otimes>y))= (codomain_block x) + (codomain_block y)"
+    apply(induct_tac x)
+    apply(auto)
+    done
 
-lemma fst_count_zero_sum: assumes "(fst (count x)) + (fst (count y)) = 0"
-shows "fst (count x) = 0" and "fst (count y) = 0"
-using count_positive count_nonnegative add_nonneg_eq_0_iff assms
-apply metis
-by (metis add_nonneg_eq_0_iff assms count_nonnegative)
+lemma domain_zero_sum: assumes "(domain_block x) + (domain_block y) = 0"
+shows "domain_block x = 0" and "domain_block y = 0"
+    using domain_block_nonnegative add_nonneg_eq_0_iff assms
+    apply metis
+    by (metis add_nonneg_eq_0_iff assms domain_block_nonnegative)
 
-lemma fst_count_positive: assumes "fst (count y)>0" or "fst (count x)>0"
-shows "fst (count (x\<otimes>y)) > 0"
-apply (simp add: fst_count_additive)
-by (metis (mono_tags) add_less_cancel_left assms comm_semiring_1_class.normalizing_semiring_rules(6)
- count_nonnegative fst_count_additive le_neq_trans not_le)
+lemma domain_block_positive: assumes "domain_block y>0" or "domain_block y>0"
+shows "(domain_block (x\<otimes>y)) > 0"
+   apply (simp add: domain_additive)
+   by (metis assms(1) domain_additive domain_block_nonnegative domain_zero_sum(2) less_le)
 
-
-lemma snd_count_positive: assumes "snd (count y)>0 " or "snd (count x)>0"
-shows "snd (count (x\<otimes>y)) > 0"
-apply (simp add: snd_count_additive)
-by (metis (hide_lams, no_types) add_nonneg_eq_0_iff assms le_neq_trans snd_count_additive 
-snd_count_nonnegative)
-
-
+lemma codomain_block_positive: assumes "codomain_block y>0" or "codomain_block y>0"
+shows "(codomain_block (x\<otimes>y)) > 0"
+   apply (simp add: codomain_additive)
+   using  assms(1) codomain_additive codomain_block_nonnegative eq_neg_iff_add_eq_0 
+          le_less_trans less_le neg_less_0_iff_less
+   by (metis)
 
 text{*We try to prove that if the first count of a block is zero, then it is composed of cups. In
 order to do that we define the functions brick_is_cup and is_cup which check if a given block is 
@@ -305,45 +278,49 @@ by metis
 
 
 
-lemma brickcount_zero_implies_cup:"(fst (brickcount x)= 0) \<Longrightarrow> (x = cup)"
-apply(case_tac "brickcount x")
-apply(auto)
-apply(case_tac "x")
-apply(auto)
-done
+lemma brickcount_zero_implies_cup:"(domain x= 0) \<Longrightarrow> (x = cup)"
+   apply(case_tac x)
+   apply(auto)
+   done
 
-lemma brickcount_zero_implies_brick_is_cup:"(fst (brickcount x)= 0) \<Longrightarrow> (brick_is_cup x)"
-apply(case_tac "brick_is_cup x")
-apply(simp add: brickcount_zero_implies_cup)
-apply(auto)
-apply(case_tac "x")
-apply(auto)
-done
+lemma brickcount_zero_implies_brick_is_cup:"(domain x= 0) \<Longrightarrow> (brick_is_cup x)"
+ apply(case_tac x)
+ apply(auto)
+ done
 
-lemma count_zero_implies_is_cup:"(fst (count x)= 0) \<Longrightarrow> (is_cup x)"
+lemma domain_zero_implies_is_cup:"(domain_block x= 0) \<Longrightarrow> (is_cup x)"
 proof(induction x)
-case (cement y)
-have "(fst (count (cement y))) = (fst (brickcount y))" by auto
-from this have " (fst (count (cement y)) = 0) \<equiv>((fst (brickcount y))=0)"  by auto
-from this  have " (fst (count (cement y)) = 0)  \<Longrightarrow>(brick_is_cup y)" using brickcount_zero_implies_brick_is_cup
-by auto
-from this have "(fst (count (cement y)) = 0)  \<Longrightarrow>(is_cup (cement y))" by auto 
-from this show ?case using cement.prems by (auto) 
-next
-case (cons a y)
-show ?case 
-proof-
-have step1: "fst (count (a # y)) = fst (brickcount a) + (fst  (count y))" by auto
-from this and fst_count_zero_sum have"fst (count y) = 0" 
-by (metis Tangles.append_blocks.append_blocks_Nil cons.prems fst_count_additive)
-from this have step2: "(is_cup y)" using cons.IH by (auto) 
-from this and step1 and fst_count_zero_sum  have "fst (brickcount a)= 0" by (metis cons.prems count.simps(1))
-from this have "brick_is_cup a" using brickcount_zero_implies_brick_is_cup by auto
-from this and assms have "a=cup" using brick_is_cup_def 
-by (metis `fst (brickcount a) = 0` brickcount_zero_implies_cup)
-from this and step2 have "is_cup (a#y)" using is_cup_def by auto
-from this show ?case by auto
-qed
+ case (cement y)
+  have "(domain_block (cement y)) = (domain y)" 
+       by auto
+  from this have " (domain_block (cement y) = 0) \<equiv>(domain y=0)"  
+       by auto
+  then  have " (domain_block (cement y) = 0)  \<Longrightarrow>(brick_is_cup y)" 
+       using brickcount_zero_implies_brick_is_cup
+       by auto
+  then have "(domain_block (cement y) = 0)  \<Longrightarrow>(is_cup (cement y))" by auto 
+  from this show ?case using cement.prems by (auto) 
+ next
+ case (cons a y)
+   show ?case 
+   proof-
+   have step1: "domain_block (a # y) =  (domain a) + (domain_block y)" 
+               by auto
+   with domain_zero_sum have"domain_block y = 0" 
+               by (metis append_blocks_Nil cons.prems domain_additive)
+   then have step2: "(is_cup y)" 
+               using cons.IH by (auto) 
+   with step1 and domain_zero_sum  
+            have "domain a= 0" 
+                 by (metis cons.prems domain_block.simps(1))
+   then  have "brick_is_cup a" 
+               using brickcount_zero_implies_brick_is_cup by auto
+   with assms have "a=cup" 
+        using brick_is_cup_def by (metis `domain a = 0` brickcount_zero_implies_cup)
+   with step2 have "is_cup (a#y)" 
+        using is_cup_def by auto
+   then show ?case by auto
+ qed
 qed
 
 
@@ -354,31 +331,11 @@ the function wall_count_list gives the list of number of incoming strand of a co
 minus the outgoing strand of the block below*}
 
 
-primrec wall_count_list:: "walls \<Rightarrow> int list" where
-"wall_count_list (basic x) = []"|
-"wall_count_list (x * y) =  (abs (fst(wall_count y) - snd(count x)))#(wall_count_list y)"
-
-lemma wall_count_list_compose: " wall_count_list (x \<circ> y) = 
-(wall_count_list x)@((abs (fst(wall_count y) - snd(wall_count x)))#(wall_count_list y))"
-apply(induct_tac x)
-apply(auto)
-apply(simp add: wall_count_compose)
-done
-
 primrec list_sum::"int list \<Rightarrow> int" 
 where
 "list_sum [] = 0"|
 "list_sum (x#xs) = x+ list_sum xs"
 
-lemma list_sum_non_negative:"list_sum(wall_count_list x) \<ge> 0"
-apply(induct_tac x)
-apply(auto)
-apply(simp add: abs_non_negative)
-done
-
-definition well_defined::"walls \<Rightarrow> bool" where
-"well_defined x \<equiv> ( (list_sum (wall_count_list x)+(abs(fst(wall_count x))
-+ abs(snd(wall_count x)))) = 0)"
 
 
 (*domain-co-domain-list*)
@@ -386,9 +343,28 @@ primrec domain_codomain_list:: "walls \<Rightarrow> int list" where
 "domain_codomain_list (basic x) = []"|
 "domain_codomain_list (x * y) =  (abs ((domain_wall y) - (codomain_block x)))#(domain_codomain_list y)"
 
-definition well_defined_tangle::"walls \<Rightarrow> bool" where
-"well_defined_tangle x \<equiv>  (list_sum (wall_count_list x) = 0)"
 
+lemma domain_codomain_list_compose: " domain_codomain_list (x \<circ> y) = 
+(domain_codomain_list x)@((abs ((domain_wall y) -(codomain_wall x)))#(domain_codomain_list y))"
+       apply(induct_tac x)
+       apply(auto)
+       apply(simp add: domain_wall_compose codomain_wall_compose)
+       done
+
+definition well_defined_tangle::"walls \<Rightarrow> bool" where
+"well_defined_tangle x \<equiv>  (list_sum (domain_codomain_list x) = 0)"
+
+
+definition well_defined::"walls \<Rightarrow> bool" where
+"well_defined x \<equiv> ( (list_sum (domain_codomain_list x)+(abs(domain_wall x))
++ abs(codomain_wall x)) = 0)"
+
+
+lemma list_sum_non_negative:"list_sum(domain_codomain_list x) \<ge> 0"
+apply(induct_tac x)
+apply(auto)
+apply(simp add: abs_non_negative)
+done
 text{*well_defined walls as a type called diagram. The morphisms Abs_diagram maps a well defined wall to 
 its diagram type and Rep_diagram maps the diagram back to the wall *}
 
@@ -414,21 +390,21 @@ using Rep_diagram Abs_diagram_inverse assms mem_Collect_eq  by metis
 
 text{* restating the property of well_defined walls in terms of diagram*}
 lemma well_defined_composition: 
-"((list_sum (wall_count_list (Rep_diagram z))+(abs(fst(wall_count (Rep_diagram z)))
-+ abs(snd(wall_count (Rep_diagram z))))) = 0)"
-using Rep_diagram mem_Collect_eq well_defined_def by (metis (mono_tags))
+"((list_sum (domain_codomain_list (Rep_diagram z))+(abs (domain_wall (Rep_diagram z)))
++ (abs (codomain_wall (Rep_diagram z)))) = 0)"
+   using Rep_diagram mem_Collect_eq well_defined_def by auto
 
 lemma diagram_list_sum: 
-"((list_sum (wall_count_list (Rep_diagram z))) = 0)"
-using well_defined_composition abs_non_negative_sum list_sum_non_negative
-abs_non_negative add_increasing add_nonneg_eq_0_iff
-by metis 
+"((list_sum (domain_codomain_list (Rep_diagram z))) = 0)"
+   using well_defined_composition abs_non_negative_sum list_sum_non_negative
+   abs_non_negative add_increasing add_nonneg_eq_0_iff
+   by metis
 
 lemma diagram_fst_wall_count: 
-"(abs (fst (wall_count (Rep_diagram z))) = 0)"
-using well_defined_composition abs_non_negative_sum list_sum_non_negative
-abs_non_negative add_increasing add_nonneg_eq_0_iff wall_count_def
-by metis
+"(abs (domain_wall (Rep_diagram z)) = 0)"
+   using well_defined_composition abs_non_negative_sum list_sum_non_negative
+   abs_non_negative add_increasing add_nonneg_eq_0_iff
+   by metis
 
  
 text{* In order to locally defined moves, it helps to prove that if composition of two walls is a 
@@ -438,138 +414,165 @@ he number of incoming and outgoing strands are zero*}
 
 lemma well_defined_fst_wall_count: 
 assumes "well_defined x"
-shows "(abs (fst (wall_count x)) = 0)"
-using well_defined_composition abs_non_negative_sum list_sum_non_negative
-abs_non_negative add_increasing add_nonneg_eq_0_iff wall_count_def
- assms well_defined_def
-by (metis)
+shows "(abs (domain_wall x) = 0)"
+   using well_defined_composition abs_non_negative_sum list_sum_non_negative
+         abs_non_negative add_increasing add_nonneg_eq_0_iff assms well_defined_def by metis
+
 
 lemma diagram_snd_wall_count: 
-"(abs (snd (wall_count (Rep_diagram z))) = 0)"
-using well_defined_composition abs_non_negative_sum list_sum_non_negative
-abs_non_negative add_increasing add_nonneg_eq_0_iff wall_count_def
-by metis
+"(abs (domain_wall (Rep_diagram z)) = 0)"
+   using well_defined_composition abs_non_negative_sum list_sum_non_negative
+         abs_non_negative add_increasing add_nonneg_eq_0_iff 
+   by metis
 
 
 lemma well_defined_snd_wall_count: 
 assumes "well_defined x"
-shows "(abs (snd (wall_count x)) = 0)"
-using well_defined_composition abs_non_negative_sum list_sum_non_negative
-abs_non_negative add_increasing add_nonneg_eq_0_iff wall_count_def
- assms well_defined_def
-by (metis)
+shows "(abs (domain_wall x) = 0)"
+    using well_defined_composition abs_non_negative_sum list_sum_non_negative
+          abs_non_negative add_increasing add_nonneg_eq_0_iff 
+          assms well_defined_def
+    by (metis)
 
-lemma wall_count_list_list_sum_non_negative:
-"(list_sum (wall_count_list x)) \<ge> 0"
-apply(induct_tac x) 
-apply(auto)
-apply (simp add: abs_non_negative add_increasing)
-done
+lemma domain_codomain_list_sum_non_negative:
+"(list_sum (domain_codomain_list x)) \<ge> 0"
+     apply(induct_tac x) 
+     apply(auto)
+     apply (simp add: abs_non_negative add_increasing)
+     done
 
 lemma wall_count_list_list_sum_abs:
-"(list_sum (wall_count_list x)) = abs (list_sum (wall_count_list x))"
-using wall_count_list_list_sum_non_negative abs_def by auto
+"(list_sum (domain_codomain_list x)) = abs (list_sum (domain_codomain_list x))"
+     using domain_codomain_list_sum_non_negative abs_def 
+     by auto
 
 
 lemma wall_count_list_list_sum_zero_add:
-assumes "(list_sum (wall_count_list x)) + (list_sum (wall_count_list y)) = 0"
-shows "(list_sum (wall_count_list x)) = 0" and "(list_sum (wall_count_list y)) = 0"
-using abs_non_negative_sum wall_count_list_list_sum_abs assms 
-apply metis 
-by (metis add_nonneg_eq_0_iff assms wall_count_list_list_sum_non_negative)
+assumes "(list_sum (domain_codomain_list x)) + (list_sum (domain_codomain_list y)) = 0"
+shows "(list_sum (domain_codomain_list x)) = 0" and "(list_sum (domain_codomain_list y)) = 0"
+       using abs_non_negative_sum wall_count_list_list_sum_abs assms 
+       apply metis 
+       using add_nonneg_eq_0_iff assms domain_codomain_list_sum_non_negative 
+       by (auto)
 
 lemma list_sum_append_blocks:
 "list_sum (x@y) = (list_sum x) + (list_sum y)"
-apply(induct_tac x)
-apply(auto)
-done
+       apply(induct_tac x)
+       apply(auto)
+       done
 
-lemma wall_count_list_list_sum_compose:
-"(list_sum (wall_count_list (x \<circ> y))) = 
-(list_sum (wall_count_list x)) + (abs ( (fst (wall_count y)) - (snd (wall_count x)))) + 
-(list_sum (wall_count_list y))"
-using wall_count_list_compose list_sum_def append_blocks_def list_sum_append_blocks
-by (metis ab_semigroup_add_class.add_ac(1) list_sum.simps(2))
+lemma domain_codomain_list_sum_compose:
+"(list_sum (domain_codomain_list (x \<circ> y))) = 
+(list_sum (domain_codomain_list x)) + ((abs ((domain_wall y) - (codomain_wall x)))) + 
+(list_sum (domain_codomain_list y))"
+  using domain_codomain_list_compose list_sum_def append_blocks_def list_sum_append_blocks
+  by (metis ab_semigroup_add_class.add_ac(1) list_sum.simps(2))
 
-
-lemma list_sum_compose: assumes "list_sum (wall_count_list x) = 0" and "list_sum (wall_count_list y) = 0"
-and "(snd (wall_count x))= (fst (wall_count y))"
-shows  "list_sum (wall_count_list (x\<circ>y)) = 0"
+lemma list_sum_compose: assumes "list_sum (domain_codomain_list x) = 0" 
+       and "list_sum (domain_codomain_list y) = 0"
+and "(codomain_wall x)= (domain_wall y)"
+shows  "list_sum (domain_codomain_list (x\<circ>y)) = 0"
 proof-
-from  wall_count_list_list_sum_compose and assms and abs_def 
-have "list_sum (wall_count_list (x\<circ>y)) = (list_sum (wall_count_list x))+(list_sum (wall_count_list y))"
-by auto
-from this and assms have "list_sum (wall_count_list (x\<circ>y)) = 0" by auto
-from this show ?thesis by auto
+ from  domain_codomain_list_sum_compose and assms and abs_def 
+  have "list_sum (domain_codomain_list (x\<circ>y)) 
+           = (list_sum (domain_codomain_list x))+(list_sum (domain_codomain_list y))"
+       by auto
+ from this and assms have "list_sum (domain_codomain_list (x\<circ>y)) = 0" by auto 
+ from this show ?thesis by auto
 qed
 
-lemma diagram_wall_count_list:
-assumes "(abs ( (fst (wall_count y)) - (snd (wall_count x))))>0"
-shows "(list_sum (wall_count_list (x\<circ>y)) > 0)"
+lemma diagram_domain_codomain_list:
+assumes "abs ((domain_wall y) - (codomain_wall x))>0"
+shows "(list_sum (domain_codomain_list (x\<circ>y)) > 0)"
 proof-
-have "(list_sum (wall_count_list x) \<ge>0)" and "(list_sum (wall_count_list y)\<ge>  0)"  using 
-wall_count_list_list_sum_non_negative by auto
-then have  "(abs ( (fst (wall_count y)) - (snd (wall_count x))))>0" using assms by auto
-then have "((list_sum (wall_count_list x)) + (abs ( (fst (wall_count y)) - (snd (wall_count x)))) + 
-(list_sum (wall_count_list y))) > 0"
-using abs_non_negative add_increasing add_nonneg_eq_0_iff
-comm_monoid_add_class.add.left_neutral comm_semiring_1_class.normalizing_semiring_rules(24) 
-le_neq_trans not_le order_refl wall_count_list_list_sum_non_negative well_defined_def by (metis add_strict_increasing2)
-then have "(list_sum (wall_count_list (x \<circ> y))) = 
-((list_sum (wall_count_list x)) + (abs ( (fst (wall_count y)) - (snd (wall_count x)))) + 
-(list_sum (wall_count_list y)))" using wall_count_list_list_sum_compose by auto
-then have  "(list_sum (wall_count_list (x \<circ> y))) > 0" 
-by (metis 
-`0 < list_sum (wall_count_list x) + Tangles.abs (fst (wall_count y) - snd (wall_count x)) + 
-list_sum (wall_count_list y)`)
-then show ?thesis by auto
+ have "(list_sum (domain_codomain_list x) \<ge>0)" and "(list_sum (domain_codomain_list y)\<ge>  0)"  
+      using domain_codomain_list_sum_non_negative by auto
+ moreover have  "abs ((domain_wall y) - (codomain_wall x))>0" 
+      using assms by auto
+ ultimately have "
+  ( 
+  (list_sum (domain_codomain_list x)) 
+        + (abs ( (domain_wall y) - (codomain_wall x)))  
+        + (list_sum (domain_codomain_list y))
+           ) 
+             > 0"
+      using  add_le_less_mono add_less_le_mono double_zero_sym by auto
+ moreover then have "(list_sum (domain_codomain_list (x \<circ> y)))  
+             =  ((list_sum (domain_codomain_list x)) 
+                + (abs ( (domain_wall y) - (codomain_wall x)))  
+               + (list_sum (domain_codomain_list y)))" 
+       using domain_codomain_list_sum_compose by auto
+ ultimately show ?thesis by simp
 qed
 
 lemma diagram_wall_count_list_zero:
-assumes "(list_sum (wall_count_list (x\<circ>y)) = 0)"
-shows " (abs ( (fst (wall_count y)) - (snd (wall_count x))))=0"
-using diagram_wall_count_list list_sum_non_negative abs_non_negative assms less_le by (metis)
+assumes "(list_sum (domain_codomain_list (x\<circ>y)) = 0)"
+shows " abs ( (domain_wall y) - (codomain_wall x))=0"
+  using diagram_domain_codomain_list list_sum_non_negative abs_non_negative assms less_le
+  by (metis)
 
 
 
 lemma diagram_list_sum_zero:
  assumes "well_defined x"
-shows "list_sum (wall_count_list x) = 0" 
+shows "list_sum (domain_codomain_list x) = 0" 
 proof-
-have "list_sum (wall_count_list (Rep_diagram (Abs_diagram x))) = 0" using diagram_list_sum by metis
-then have "Rep_diagram (Abs_diagram x) = x" using Abs_diagram_inverse assms mem_Collect_eq
-by (auto)
-then have "list_sum (wall_count_list x) = 0" using `list_sum (wall_count_list (Rep_diagram (Abs_diagram x))) = 0`
-by (metis)
-then show ?thesis by simp  
+ have 1:"list_sum (domain_codomain_list(Rep_diagram (Abs_diagram x))) = 0" 
+        using diagram_list_sum by metis
+ then have "Rep_diagram (Abs_diagram x) = x" 
+        using Abs_diagram_inverse assms mem_Collect_eq by (auto)
+ then show ?thesis using 1 by metis
 qed
 
 
 lemma diagram_compose:
 assumes "well_defined (x\<circ>y)"
-shows " (abs ( (fst (wall_count y)) - (snd (wall_count x))))=0"
-using diagram_list_sum_zero diagram_wall_count_list_zero assms by auto
+shows " (abs ( (domain_wall y) - (codomain_wall x)))=0"
+      using diagram_list_sum_zero diagram_wall_count_list_zero assms 
+      by auto
 
 lemma diagram_fst_equals_snd:
 assumes "well_defined (x\<circ>y)"
-shows " (fst (wall_count y)) = (snd (wall_count x))"
-using diagram_compose abs_zero_equality assms  by auto
+shows " (domain_wall y) = (codomain_wall x)"
+     using diagram_compose abs_zero_equality assms  
+     by auto
 
 
-text{*if composition of two walls is a well defined wall then the two walls define well defined links*}
+text{*if composition of two walls is a well defined wall then the two walls are well defined tangles
+*}
 lemma diagram_list_sum_subsequence:
 assumes "well_defined (x\<circ>y)"
-shows "(list_sum (wall_count_list x) = 0)\<and>(list_sum (wall_count_list y) = 0)"
+shows "(list_sum (domain_codomain_list x) = 0)\<and>(list_sum (domain_codomain_list y) = 0)"
 proof-
-have "(abs ( (fst (wall_count y)) - (snd (wall_count x)))) = 0" using diagram_compose assms
-by auto
-from this have "(list_sum (wall_count_list x)) + (list_sum (wall_count_list y)) = 0" using diagram_list_sum_zero
-wall_count_list_list_sum_compose assms plus_int_code(1)  by metis
-from this have goal1: "(list_sum (wall_count_list x)) = 0" and goal2:"(list_sum (wall_count_list y)) = 0" using 
-wall_count_list_list_sum_zero_add by auto
-from this have "(list_sum (wall_count_list x) = 0)\<and>(list_sum (wall_count_list y) = 0)" by auto
-from this show ?thesis by simp
+  have "abs (( domain_wall y) - (codomain_wall x)) = 0" 
+       using diagram_compose assms by auto
+  then have "(list_sum (domain_codomain_list x)) + (list_sum (domain_codomain_list y)) = 0"
+       using diagram_list_sum_zero domain_codomain_list_sum_compose assms plus_int_code(1) 
+       by metis
+  then have goal1: "(list_sum (domain_codomain_list x)) = 0" 
+        and goal2:"(list_sum (domain_codomain_list y)) = 0" 
+      using wall_count_list_list_sum_zero_add by auto
+  then  have "(list_sum (domain_codomain_list x) = 0)\<and>(list_sum (domain_codomain_list y) = 0)" 
+      by auto
+  from this show ?thesis by simp
 qed
 
-
-end
+lemma assumes "(well_defined_tangle x)" 
+          and "(well_defined_tangle y)" 
+          and "(domain_wall y) = (codomain_wall x)"
+      shows   "well_defined_tangle (x \<circ> y)"
+proof-
+ have "(list_sum (domain_codomain_list (x \<circ> y))) = 
+                     (list_sum (domain_codomain_list x)) 
+                    + ((abs ((domain_wall y) - (codomain_wall x))))  
+                    + (list_sum (domain_codomain_list y))" 
+   unfolding  domain_codomain_list_sum_compose by auto
+ moreover have "((abs ((domain_wall y) - (codomain_wall x))))  = 0" 
+          using assms abs_def by auto
+ moreover have "list_sum (domain_codomain_list x) = 0" 
+              using well_defined_tangle_def assms(1) by auto
+ moreover have  "list_sum (domain_codomain_list y) = 0" 
+              using well_defined_tangle_def assms(2) by auto
+ ultimately have "(list_sum (domain_codomain_list (x \<circ> y))) = 0" by auto
+ then show ?thesis using well_defined_tangle_def by auto
+qed 

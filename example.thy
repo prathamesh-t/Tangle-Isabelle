@@ -2,6 +2,9 @@ theory example
 imports Links
 begin
 
+lemma assumes "well_defined x" shows "Rep_diagram (Abs_diagram x) = x"
+ using Abs_Rep_well_defined assms by auto
+
 text{*We prove that the link diagram with a single crossing is equivalent to the unknot*}
 
 
@@ -83,8 +86,9 @@ proof-
  from this 3 have "linkrel_diagram_middle_left ?X ?Z" by auto
  from this have "linkrel_diagram ?X ?Z" unfolding linkrel_diagram_def by auto
  then have "linkrel_diagram_equiv ?X ?Z" unfolding linkrel_diagram_equiv_def r_into_rtranclp by auto
- have "Rep_diagram (Abs_diagram ?X) = ?X" 
-         proof-
+ have "well_defined ?X"
+      proof-
+      have "wall_list (l   
          
 (*
  (Abs_diagram ?X) (Abs_diagram ?Z)" unfolding link_equiv_def sledgehammer

@@ -1,5 +1,5 @@
 theory Tangles
-imports Datatype Main Typedef tangle_relation
+imports Datatype Main Typedef 
 begin
 
 text{* This theory contains the definition of a Link. A link is defined as Link diagrams upto 
@@ -159,25 +159,6 @@ using abs_def diff_0 abs_non_negative  neg_0_le_iff_le
 add_nonneg_eq_0_iff assms
 apply metis
 by (metis abs_non_negative add_nonneg_eq_0_iff assms)
-
-(*
-text{*the following lemmas are test lemmas*}
-lemma cement_vert_count:" count (cement vert) = (1,1)"
-using brickcount.simps(1) count.simps(1) by metis
-
-lemma cement_cup_count:" count ((cement cup)) = (0,2)"
-using brickcount.simps(2) count.simps(1) by metis
-
-
-lemma cement_cap_count:" count ((cement cap)) = (2,0)"
-using  brickcount.simps(3) count.simps(1) by metis
-
-lemma cement_over_count:" count ((cement over)) = (2,2)"
-using brickcount.simps(4) count.simps(1) by metis
-
-lemma cement_under_count:" count ((cement under)) = (2,2)"
-using  brickcount.simps(5) count.simps(1) by metis
-*)
 
 text{*The following lemmas tell us that the number of incoming and outgoing strands of every brick 
 is a non negative integer*}
@@ -576,3 +557,5 @@ proof-
  ultimately have "(list_sum (domain_codomain_list (x \<circ> y))) = 0" by auto
  then show ?thesis using well_defined_tangle_def by auto
 qed 
+
+end

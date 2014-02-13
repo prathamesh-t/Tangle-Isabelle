@@ -13,14 +13,16 @@ shows "link_equiv x z"
 using rtranclp_trans link_equiv_def linkrel_diagram_equiv_def by (metis (full_types) assms(1) assms(2))
 
 theorem example:
-"link_equiv 
-  (Abs_diagram ((basic (cement cup)) 
+assumes "A = (Abs_diagram ((basic (cement cup)) 
                \<circ>(basic ((cement cup) \<otimes> (cement vert) \<otimes> (cement vert))) 
                \<circ>(basic ((cement vert) \<otimes> (cement over) \<otimes> (cement vert))) 
                \<circ>(basic ((cement cap) \<otimes> (cement vert) \<otimes> (cement vert)))
-               \<circ> (basic (cement cap))))
- (Abs_diagram ((basic (cement cup)) \<circ> (basic (cement cap))))" 
-
+               \<circ> (basic (cement cap))))"
+and "B = (Abs_diagram  ((basic (cement cup))\<circ>((basic ((cement vert)\<otimes>(cement vert)))
+                                      \<circ>(basic ((cement vert)\<otimes>(cement vert)))
+                                      \<circ>(basic ((cement vert)\<otimes>(cement vert)))) 
+                                      \<circ>(basic (cement cap))))" 
+shows "link_equiv A B"
 proof-
  let ?A = "(basic ((cement cup) \<otimes> (cement vert) \<otimes> (cement vert))) 
                \<circ>(basic ((cement vert) \<otimes> (cement over) \<otimes> (cement vert))) 
@@ -85,11 +87,114 @@ proof-
  from 4 have "?Z = ?Y" by auto
  from this 3 have "linkrel_diagram_middle_left ?X ?Z" by auto
  from this have "linkrel_diagram ?X ?Z" unfolding linkrel_diagram_def by auto
- then have "linkrel_diagram_equiv ?X ?Z" unfolding linkrel_diagram_equiv_def r_into_rtranclp by auto
+ then have 5:"linkrel_diagram_equiv ?X ?Z" unfolding linkrel_diagram_equiv_def r_into_rtranclp by auto
+
  have "well_defined ?X"
+    proof-
+     have "domain_codomain_list ?Z = [0,0,0,0]" 
       proof-
-      have "wall_list (l   
-         
-(*
- (Abs_diagram ?X) (Abs_diagram ?Z)" unfolding link_equiv_def sledgehammer
- *)
+         let ?X1 = " (cement cup)"
+         let ?X2 = "((cement cup) \<otimes> (cement vert) \<otimes> (cement vert))"
+         let ?X3 = "((cement vert) \<otimes> (cement over) \<otimes> (cement vert))"
+         let ?X4 =  "((cement cap) \<otimes> (cement vert) \<otimes> (cement vert))"
+         let ?X5 =  " (basic (cement cap))"
+         have "?X = (?X1)*(?X2)*(?X3)*(?X4)*(?X5)" using compose_def by auto
+         have 1:"domain_codomain_list ((?X4)*(?X5)) = [0]" 
+          proof-
+           have "codomain_block (?X4) = 2" by auto
+           moreover have "domain_wall (?X5) = 2" by auto
+           ultimately have "domain_codomain_list ((?X4)*(?X5)) = [0]" 
+                unfolding domain_codomain_list.simps 
+                by (metis Tangles.abs_zero diagram_snd_wall_count diff_self)
+           from this show ?thesis by auto
+          qed
+         have 2:"domain_codomain_list ((?X3)*(?X4)*(?X5)) = [0,0]"           
+           proof-
+            have "codomain_block (?X3) = 4" by auto
+            moreover have "domain_wall ((?X4)*(?X5)) = 4" by auto
+            ultimately  have "domain_codomain_list ((?X3)*(?X4)*(?X5)) = [0,0]" 
+                       unfolding domain_codomain_list.simps 
+                       using 1
+                       by auto
+            from this show ?thesis by auto
+           qed
+         have "domain_codomain_list ((?X2)*(?X3)*(?X4)*(?X5)) = [0,0,0]"
+          proof-
+           have "codomain_block ?X2 = 4" by auto
+           moreover have "domain_wall ((?X3)*(?X4)*(?X5)) = 4" by auto
+           ultimately have "domain_codomain_list ((?X2)*(?X3)*(?X4)*(?X5)) = [0,0,0]" 
+                     unfolding domain_codomain_list.simps 
+                     using 1 2 
+                     by auto
+           from this show ?thesis by auto
+          qed
+        then have "codomain_block ?X1 = 2" by auto
+        moreover have "domain_wall ((?X2)*(?X3)*(?X4)*(?X5)) = 2" by auto
+        ultimately have "domain_codomain_list ?X = [0,0,0,0]"
+                     unfolding domain_codomain_list.simps
+                     using 1 2 by auto
+        then show ?thesis by simp
+   qed
+   moreover have "domain_wall ?X = 0" and "codomain_wall ?X = 0" by auto
+   ultimately have "well_defined ?X" using well_defined_def list_sum_def by auto
+   then show ?thesis by auto
+   qed 
+ then have 6: "Rep_diagram (Abs_diagram ?X) = ?X" 
+        using  Abs_Rep_well_defined by auto
+ have "well_defined ?Z"
+    proof-
+     have "domain_codomain_list ?Z = [0,0,0,0]" 
+      proof-
+         let ?Z1 = "(cement cup)"
+         let ?Z2 = "((cement vert)\<otimes>(cement vert))"
+         let ?Z3 =  "(basic (cement cap))"
+         have "?Z = (?Z1)*(?Z2)*(?Z2)*(?Z2)*(?Z3)" using compose_def by auto
+         have 1:"domain_codomain_list ((?Z2)*(?Z3)) = [0]" 
+          proof-
+           have "codomain_block (?Z2) = 2" by auto
+           moreover have "domain_wall (?Z3) = 2" by auto
+           ultimately have "domain_codomain_list ((?Z2)*(?Z3)) = [0]" 
+                unfolding domain_codomain_list.simps 
+                by (metis Tangles.abs_zero diagram_snd_wall_count diff_self)
+           from this show ?thesis by auto
+          qed
+         have 2:"domain_codomain_list ((?Z2)*(?Z2)*(?Z3)) = [0,0]"           
+           proof-
+            have "codomain_block (?Z2) = 2" by auto
+            moreover have "domain_wall ((?Z2)*(?Z3)) = 2" by auto
+            ultimately  have "domain_codomain_list ((?Z2)*(?Z2)*(?Z3)) = [0,0]" 
+                       unfolding domain_codomain_list.simps 
+                       using 1
+                       by auto
+            from this show ?thesis by auto
+           qed
+         have "domain_codomain_list ((?Z2)*(?Z2)*(?Z2)*(?Z3)) = [0,0,0]"
+          proof-
+           have "codomain_block ?Z2 = 2" by auto
+           moreover have "domain_wall ((?Z2)*(?Z2)*(?Z3)) = 2" by auto
+           ultimately have "domain_codomain_list ((?Z2)*(?Z2)*(?Z2)*(?Z3)) = [0,0,0]" 
+                     unfolding domain_codomain_list.simps 
+                     using 1 2 
+                     by auto
+           from this show ?thesis by auto
+          qed
+        then have "codomain_block ?Z1 = 2" by auto
+        moreover have "domain_wall ((?Z2)*(?Z2)*(?Z2)*(?Z3)) = 2" by auto
+        ultimately have "domain_codomain_list ?Z = [0,0,0,0]"
+                     unfolding domain_codomain_list.simps
+                     using 1 2 by auto
+        then show ?thesis by simp
+   qed
+   moreover have "domain_wall ?Z = 0" and "codomain_wall ?Z = 0" by auto
+   ultimately have "well_defined ?Z" using well_defined_def list_sum_def by auto
+   then show ?thesis by auto
+   qed
+ then have 7: "Rep_diagram (Abs_diagram ?Z) = ?Z" 
+        using  Abs_Rep_well_defined by auto
+ with 5 6 7 have "link_equiv (Abs_diagram ?X) (Abs_diagram ?Z)" unfolding link_equiv_def by auto
+ from this show ?thesis using assms by auto
+ qed
+
+(*need to modify it slightly by adding the relevant moves for compression and proving that the above
+is equal to a circle*)
+end

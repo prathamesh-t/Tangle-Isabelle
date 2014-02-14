@@ -1,5 +1,5 @@
 theory Links
-imports Tangles Tangle_Algebra
+imports Tangles Tangle_Algebra tangle_relation
 begin
 
 
@@ -65,6 +65,7 @@ where
 ((linkrel_uncross_positiveflip x y)\<or>(linkrel_uncross_positivestraighten x y)
 \<or>(linkrel_uncross_negativeflip x y)\<or>(linkrel_uncross_negativestraighten x y))"
 text{*link_uncross ends*}
+
 text{*framed linkrel_uncross*}
 
 definition framed_linkrel_uncross::"walls \<Rightarrow> walls \<Rightarrow> bool"
@@ -246,6 +247,9 @@ where
 \<or>  (linkrel_uncross y x) \<or> (linkrel_pull y x) \<or> (linkrel_straighten y x) 
 \<or>(linkrel_swing y x)\<or>(linkrel_rotate y x) \<or> (linkrel_compress y x) \<or> (linkrel_slide y x))"
 
+text{* the link relations are symmetric*}
+lemma linkrel_symp: "symp linkrel" unfolding linkrel_def symp_def by auto
+
 (*linkrel fitting in diagrams*)
 definition linkrel_diagram_left::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
@@ -398,81 +402,7 @@ using link_equiv_def linkrel_diagram_equiv_def rtranclp_trans by (metis)
 
 text{*we defined the link relations for a framed link, which are the same as those of unframed 
 links excluding the uncross relation which straightens out a cross*}
-(* we need to rewrite the definitions of framed_link_relations and repeat the above for framed_link_relations
-definition framed_linkrel::"walls =>walls\<Rightarrow>bool"
-where
-"framed_linkrel x y = ((framed_linkrel_uncross x y) \<or> (linkrel_pull x y) \<or> (linkrel_straighten x y) 
-\<or>(linkrel_swing x y)\<or>(linkrel_rotate x y) \<or> (linkrel_compress x y) \<or> (linkrel_slide x y)
-\<or>  (framed_linkrel_uncross y x) \<or> (linkrel_pull y x) \<or> (linkrel_straighten y x) 
-\<or>(linkrel_swing y x)\<or>(linkrel_rotate y x) \<or> (linkrel_compress y x) \<or> (linkrel_slide y x))"
 
-text{*Following lemmas asserts that if two framed linked diagrams are equivalent, then the unframed 
-links are equivalent*}
-
-lemma framed_linkrel_implies_linkrel: "(framed_linkrel x y) \<Longrightarrow> (linkrel x y)"
-using framed_uncross_implies_uncross framed_linkrel_def linkrel_def by auto
-
-text{* the link relations are symmetric*}
-lemma linkrel_symp: "symp linkrel" unfolding linkrel_def symp_def by auto
-
-lemma framed_linkrel_symp: "symp framed_linkrel" unfolding framed_linkrel_def symp_def by auto
-
- 
-text{*Linkrel_equiv is the reflexive-transitive closure of the Linkrel*}
-definition linkrel_equiv::"walls\<Rightarrow>walls\<Rightarrow>bool"
-where
-"(linkrel_equiv) = (linkrel)^**" 
-
-
-definition framed_linkrel_equiv::"walls\<Rightarrow>walls\<Rightarrow>bool"
-where
-"(framed_linkrel_equiv) = (framed_linkrel)^**" 
- 
-text{*Following lemmas assert that if two framed link diagrams are related by the linkrel_equiv, then 
-the corresponding link diagrams are equivalent*}
-
-lemma transitive_implication:
-assumes " \<forall>x.\<forall>y.((r x y) \<longrightarrow>(q x y))"
-shows "r^** x y \<Longrightarrow> q^** x y"
-proof(induction rule:rtranclp.induct)
-fix a
-let ?case = "q\<^sup>*\<^sup>* a a"
-show ?case by simp
-next
-fix a b c
-assume rtranclp : "r^** a b" "r b c" "q^** a b"
-let ?case = "q^** a c"
-have "(r b c)\<Longrightarrow> (q b c)" using assms by auto
-from this have "q b c" using assms rtranclp by auto
-from this  have "q^** a c" using rtranclp(3) rtranclp.rtrancl_into_rtrancl by auto
-thus ?case by simp
-qed
-
-theorem framed_equiv_implies_linkequiv: "(framed_linkrel_equiv x y) \<Longrightarrow> (linkrel_equiv x y)"
-using  framed_linkrel_equiv_def linkrel_equiv_def transitive_implication  
-framed_linkrel_implies_linkrel
-by metis
-text{*Linkrel_equiv and Framed_Linkrel_equiv are  equivalence relations*}
-
-lemma reflective: "linkrel_equiv x x" unfolding linkrel_equiv_def by simp
-
-lemma framed_reflective: "framed_linkrel_equiv x x" unfolding framed_linkrel_equiv_def by simp
-
-lemma link_symmetry:"symp linkrel_equiv" using linkrel_symp symmetry3 
-by (metis (full_types) linkrel_equiv_def)
-
-
-lemma link_symmetry2:"(linkrel_equiv x y)\<Longrightarrow> (linkrel_equiv y x)" using link_symmetry sympD
- by metis
-
-lemma framed_link_symmetry:"symp framed_linkrel_equiv" using framed_linkrel_symp symmetry3 
-by (metis (full_types) framed_linkrel_equiv_def)
-
-(*following lemma proves that linkrel_equiv is transitive in the usual sense of the term*)
-lemma linkrel_trans: assumes "linkrel_equiv x y" and "linkrel_equiv y z"
-shows "linkrel_equiv x z"
-using rtranclp_trans linkrel_equiv_def  by (metis (full_types) assms(1) assms(2))
-*)
 text{*links upto equivalence are well defined*}
 text{*Link- Definition and the proof of being well defined*}
 
@@ -484,13 +414,5 @@ show "reflp link_equiv" unfolding reflp_def using link_equiv_def linkrel_diagram
 show "symp link_equiv" by (metis link_equiv_def symm_linkrel_diagram_equiv sympI)
 show "transp link_equiv" unfolding transp_def link_equiv_def rtranclp_trans by (metis linkrel_diagram_equiv_def rtranclp_trans) 
 qed
-(*
-quotient_type Framed_Link = "diagram" / "framed_linkrel_equiv"
- morphisms Rep_framed_links Abs_framed_links
-proof (rule equivpI)
-show "reflp framed_linkrel_equiv" unfolding reflp_def framed_reflective by (metis framed_reflective)
-show "symp framed_linkrel_equiv" using framed_link_symmetry by auto
-show "transp framed_linkrel_equiv" unfolding transp_def framed_linkrel_equiv_def rtranclp_trans by auto  
-qed
-*)
+
 end

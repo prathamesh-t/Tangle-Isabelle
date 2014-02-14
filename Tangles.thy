@@ -17,6 +17,7 @@ datatype brick = vert
                 |cap
                 |over
                 |under
+                |empty
 
 text{*block is obtained by putting bricks next to each other*}
 datatype block = cement brick
@@ -29,10 +30,9 @@ datatype walls = basic block
 
 text{*Append gives us the block obtained by putting two blocks next to each other*}
 
-(* Rename this concatenate *)
-primrec append_blocks :: "block => block => block" (infixr "\<otimes>" 65) where
-append_blocks_Nil: "(cement x) \<otimes> ys = cons x ys" |
-append_blocks_Cons: "((x#xs)\<otimes>ys) = x#(xs\<otimes>ys)"
+primrec concatenate :: "block => block => block" (infixr "\<otimes>" 65) where
+concatenates_Nil: "(cement x) \<otimes> ys = cons x ys" |
+concatenates_Cons: "((x#xs)\<otimes>ys) = x#(xs\<otimes>ys)"
 
 text{*Associativity properties of concatenation*}
 lemma leftright_associativity: "(x\<otimes>y)\<otimes>z = x\<otimes>(y\<otimes>z)"
@@ -85,7 +85,9 @@ where
  "domain cup = 0"|
  "domain cap = 2"|
  "domain over = 2"|
- "domain under = 2"
+ "domain under = 2"|
+ "domain empty = 0"
+
 
 (*co-domain tells us the number of outgoing strands*)
  primrec codomain::"brick \<Rightarrow> int"
@@ -94,7 +96,8 @@ where
  "codomain cup = 2"|
  "codomain cap = 0"|
  "codomain over = 2"|
- "codomain under = 2"
+ "codomain under = 2"|
+ "codomain empty = 0"
 
 
 (*domain_block tells us the number of incoming strands of a block*)
@@ -243,13 +246,14 @@ where
 "brick_is_cup cup = True"|
 "brick_is_cup cap = False"|
 "brick_is_cup over = False"|
-"brick_is_cup under = False"
+"brick_is_cup under = False"|
+"brick_is_cup empty = True"
 
 
 primrec is_cup::"block \<Rightarrow> bool"
 where
 "is_cup (cement x) = brick_is_cup x"|
-"is_cup (x#y) = (if (x= cup) then (is_cup y) else False)"
+"is_cup (x#y) = (if (x= cup)\<or>(x=empty) then (is_cup y) else False)"
 
 
 lemma is_cup_basic: "((is_cup x) = False) \<Longrightarrow> 
@@ -259,7 +263,7 @@ by metis
 
 
 
-lemma brickcount_zero_implies_cup:"(domain x= 0) \<Longrightarrow> (x = cup)"
+lemma brickcount_zero_implies_cup:"(domain x= 0) \<Longrightarrow> (x = cup)\<or> (x = empty)"
    apply(case_tac x)
    apply(auto)
    done
@@ -288,7 +292,7 @@ proof(induction x)
    have step1: "domain_block (a # y) =  (domain a) + (domain_block y)" 
                by auto
    with domain_zero_sum have"domain_block y = 0" 
-               by (metis append_blocks_Nil cons.prems domain_additive)
+               by (metis concatenates_Nil cons.prems domain_additive)
    then have step2: "(is_cup y)" 
                using cons.IH by (auto) 
    with step1 and domain_zero_sum  
@@ -296,7 +300,7 @@ proof(induction x)
                  by (metis cons.prems domain_block.simps(1))
    then  have "brick_is_cup a" 
                using brickcount_zero_implies_brick_is_cup by auto
-   with assms have "a=cup" 
+   with assms have "a=cup \<or> a = empty" 
         using brick_is_cup_def by (metis `domain a = 0` brickcount_zero_implies_cup)
    with step2 have "is_cup (a#y)" 
         using is_cup_def by auto
@@ -436,7 +440,7 @@ shows "(list_sum (domain_codomain_list x)) = 0" and "(list_sum (domain_codomain_
        using add_nonneg_eq_0_iff assms domain_codomain_list_sum_non_negative 
        by (auto)
 
-lemma list_sum_append_blocks:
+lemma list_sum_concatenates:
 "list_sum (x@y) = (list_sum x) + (list_sum y)"
        apply(induct_tac x)
        apply(auto)
@@ -446,7 +450,7 @@ lemma domain_codomain_list_sum_compose:
 "(list_sum (domain_codomain_list (x \<circ> y))) = 
 (list_sum (domain_codomain_list x)) + ((abs ((domain_wall y) - (codomain_wall x)))) + 
 (list_sum (domain_codomain_list y))"
-  using domain_codomain_list_compose list_sum_def append_blocks_def list_sum_append_blocks
+  using domain_codomain_list_compose list_sum_def concatenate_def list_sum_concatenates
   by (metis ab_semigroup_add_class.add_ac(1) list_sum.simps(2))
 
 lemma list_sum_compose: assumes "list_sum (domain_codomain_list x) = 0" 

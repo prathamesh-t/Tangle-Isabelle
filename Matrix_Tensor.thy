@@ -6,9 +6,13 @@ begin
 (*Matrix Tensor begins*)
 
 locale mult = 
+ fixes id::"'a"
  fixes f::" 'a \<Rightarrow> 'a \<Rightarrow> 'a " (infixl "*" 60)
  assumes comm:" f a  b = f b  a "
  assumes assoc:" (f (f a b) c) = (f a (f b c))"
+ assumes left_id:" f id x = x"
+ assumes right_id:"f x id = x"
+
 context mult
 begin   
  
@@ -16,6 +20,17 @@ primrec times:: "'a \<Rightarrow> 'a vec \<Rightarrow> 'a vec"
 where
 "times n [] = []"|
 "times n (y#ys) = (f n y)#(times n ys)"
+
+lemma times_scalar_id: "times id v = v"
+apply(induct_tac v)
+apply(auto)
+apply(simp add: left_id)
+done
+
+
+lemma times_vector_id: "times v [id] = [v]"
+apply(simp add: right_id)
+done
 
 lemma preserving_length: "length (times n y) = (length y)"
 apply(induct_tac y)
@@ -26,6 +41,20 @@ primrec product:: "'a vec \<Rightarrow> 'a vec \<Rightarrow> 'a vec"
 where
 "product [] ys = []"|
 "product (x#xs) ys = (times x ys)@(product xs ys)"
+
+
+lemma product_left_id: "product [id] v = v"
+apply(induct_tac v)
+apply(auto)
+apply(simp add: left_id)
+done
+
+
+lemma product_right_id: "product v [id]  = v"
+apply(induct_tac v)
+apply(auto)
+apply(simp add: right_id)
+done
 
 theorem product_length : 
  "(length(product x y)) = (length x)*(length y)"
@@ -45,6 +74,19 @@ primrec vec_tensor::"'a vec \<Rightarrow> 'a mat \<Rightarrow>'a mat"
 where
 "vec_tensor xs []  = []"|
 "vec_tensor xs (ys#yss) = (product xs ys)#(vec_tensor xs yss)"
+
+
+lemma vec_tensor_vector_id: "vec_tensor [id] v = v"
+apply(induct_tac v)
+apply(auto)
+apply(simp add: times_scalar_id)
+done
+
+lemma vec_tensor_matrix_id: "vec_tensor  v [[id]] = [v]"
+apply(induct_tac v)
+apply(auto)
+apply(simp add: right_id)
+done
 
 
 theorem vec_tensor_length : 
@@ -162,9 +204,23 @@ where
 "tensor (x#xs) ys = (vec_tensor x ys)@(tensor xs ys)"
 
 lemma tensor_null: "xs \<otimes>[] = []" 
-apply(induct_tac xs)
-apply(auto)
-done
+  apply(induct_tac xs)
+  apply(auto)
+  done
+
+(*Tensor commutes with left and right identity*)
+lemma tensor_left_id: "  [[id]] \<otimes> xs = xs"
+  apply(induct_tac xs)
+  apply(auto)
+  apply(simp add:times_scalar_id)
+  done
+
+
+lemma tensor_right_id: "  xs \<otimes> [[id]] = xs"
+  apply(induct_tac xs)
+  apply(auto)
+  apply(simp add: product_right_id)
+  done
 
 lemma hd_append:  assumes "xs \<noteq> []" shows "hd (xs@ys) = hd xs" using hd_def hd_append2 append_def 
 apply(induct_tac ys)

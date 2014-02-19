@@ -276,7 +276,6 @@ definition linkrel_diagram_compose::"walls \<Rightarrow> walls \<Rightarrow> boo
 where
 "linkrel_diagram_compose x y \<equiv>\<exists>A1.\<exists>B1.\<exists>A2.\<exists>B2.(x = A1 \<circ> B1)\<and>(y = A2 \<circ> B2)\<and>(linkrel A1 A2)\<and>(linkrel B1 B2)"
 
-
 definition linkrel_diagram_tensor::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
 "linkrel_diagram_tensor x y \<equiv>\<exists>A1.\<exists>B1.\<exists>A2.\<exists>B2.(x = A1 \<otimes> B1)\<and>(y = A2 \<otimes> B2)\<and>(linkrel A1 A2)\<and>(linkrel B1 B2)"
@@ -335,4 +334,3 @@ show "transp link_equiv" unfolding transp_def link_equiv_def rtranclp_trans by (
 qed
 
 end
-

@@ -353,11 +353,17 @@ done
 text{*well_defined walls as a type called diagram. The morphisms Abs_diagram maps a well defined wall to 
 its diagram type and Rep_diagram maps the diagram back to the wall *}
 
+typedef Tangle = "{(x::walls). well_defined_tangle x}"
+ apply (rule_tac x = "prod (cement cup) (basic (cement cap))" in exI)
+ apply(auto)
+ apply(simp add:abs_def well_defined_tangle_def)
+ done
+
 typedef diagram = "{(x::walls). well_defined x}"
-apply (rule_tac x = "prod (cement cup) (basic (cement cap))" in exI)
-apply(auto)
-apply(simp add:abs_def well_defined_def)
-done
+ apply (rule_tac x = "prod (cement cup) (basic (cement cap))" in exI)
+ apply(auto)
+ apply(simp add:abs_def well_defined_def)
+ done
 
 text{*The next few lemmas list the properties of well defined diagrams*}
 
@@ -561,5 +567,15 @@ proof-
  ultimately have "(list_sum (domain_codomain_list (x \<circ> y))) = 0" by auto
  then show ?thesis using well_defined_tangle_def by auto
 qed 
+
+(*defining compose for diagrams*)
+definition compose_Tangle::"Tangle \<Rightarrow> Tangle \<Rightarrow> Tangle" (infixl "\<circ>" 65)
+ where
+"compose_Tangle x y = Abs_Tangle ((Rep_Tangle x) \<circ> (Rep_Tangle y))"
+
+theorem well_defined_compose: assumes "well_defined_tangle x" and "well_defined_tangle y"
+and "domain_wall x = codomain_wall y"
+shows "(Abs_Tangle x) \<circ> (Abs_Tangle y) = (Abs_Tangle (x \<circ> y))"
+by (metis Abs_Tangle_inverse assms(1) assms(2) compose_Tangle_def mem_Collect_eq)
 
 end

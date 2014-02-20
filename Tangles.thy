@@ -578,4 +578,13 @@ and "domain_wall x = codomain_wall y"
 shows "(Abs_Tangle x) \<circ> (Abs_Tangle y) = (Abs_Tangle (x \<circ> y))"
 by (metis Abs_Tangle_inverse assms(1) assms(2) compose_Tangle_def mem_Collect_eq)
 
+(*defining domain and co-domain of tangles*)
+definition domain_Tangle::"Tangle \<Rightarrow> int"
+where
+"domain_Tangle x = domain_wall(Rep_Tangle x)"
+
+definition codomain_Tangle::"Tangle \<Rightarrow> int"
+where
+"codomain_Tangle x = codomain_wall(Rep_Tangle x)"
+
 end

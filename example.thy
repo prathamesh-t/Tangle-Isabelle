@@ -9,24 +9,54 @@ begin
 lemma left_over_well_defined:"well_defined_tangle left_over"
  proof-
  have "left_over = 
-(((cement cup)\<otimes>(cement vert))*((cement vert)\<otimes>(cement over))*(basic ((cement cap)\<otimes>(cement vert))))" 
-  by auto
+               (((cement cup)\<otimes>(cement vert))
+              *((cement vert)\<otimes>(cement over))
+              *(basic ((cement cap)\<otimes>(cement vert))))" 
+     by auto
  then have "(domain_codomain_list (basic ((cement cap)\<otimes>(cement vert)))) = []" 
- using domain_codomain_list.simps by auto
- moreover have "domain_wall (basic ((cement cap)\<otimes>(cement vert))) = 3" by auto 
- moreover have "codomain_block ((cement vert)\<otimes>(cement over)) = 3" by auto
- ultimately have "domain_codomain_list 
-(((cement vert)\<otimes>(cement over))*(basic ((cement cap)\<otimes>(cement vert))))
-  = [0]" using domain_codomain_list.simps abs_def by auto
- then have "domain_wall (((cement vert)\<otimes>(cement over))*(basic ((cement cap)\<otimes>(cement vert))))
-       = 3" by auto
- moreover have "codomain_block ((cement cup)\<otimes>(cement vert)) = 3" by auto
+     using domain_codomain_list.simps by auto
+ moreover have "domain_wall (basic ((cement cap)\<otimes>(cement vert))) = 3" 
+     by auto 
+ moreover have "codomain_block ((cement vert)\<otimes>(cement over)) = 3" 
+     by auto
+ ultimately 
+   have "domain_codomain_list 
+        (((cement vert)\<otimes>(cement over))*(basic ((cement cap)\<otimes>(cement vert))))
+            = [0]" 
+     using domain_codomain_list.simps abs_def by auto
+ then have 
+  "domain_wall (((cement vert)\<otimes>(cement over))*(basic ((cement cap)\<otimes>(cement vert)))) = 3" 
+     by auto
+ moreover have "codomain_block ((cement cup)\<otimes>(cement vert)) = 3" 
+     by auto
  then have "domain_codomain_list left_over = [0,0]" using domain_codomain_list.simps abs_def
-       by auto
- then have "list_sum (domain_codomain_list left_over) = 0" by auto
+     by auto
+ then have "list_sum (domain_codomain_list left_over) = 0" 
+     by auto
  then show ?thesis unfolding well_defined_tangle_def by auto
  qed
 
+lemma straight_line_well_defined:"well_defined_tangle straight_line"
+ proof-
+ have "straight_line = ((cement vert)*((cement vert)*(basic (cement vert))))"
+        by auto
+ then have "(domain_codomain_list (basic (cement vert))) = []" 
+        using domain_codomain_list.simps by auto
+ moreover have "domain_wall (basic (cement vert)) =1 " 
+        by auto 
+ moreover have "codomain_block (cement vert) = 1" 
+        by auto
+ ultimately have "domain_codomain_list ((cement vert)*(basic (cement vert)))= [0]" 
+        using domain_codomain_list.simps abs_def by auto
+ then have "domain_wall ((cement vert)*(basic (cement vert)))
+       = 1" by auto
+ moreover have "codomain_block (cement vert) = 1" by auto
+ then have "domain_codomain_list straight_line = [0,0]" 
+       using domain_codomain_list.simps abs_def
+       by auto
+ then have "list_sum (domain_codomain_list straight_line) = 0" by auto
+ then show ?thesis unfolding well_defined_tangle_def by auto
+ qed
 
 
 theorem example:"(Abs_Tangle ((basic ((cement cup) \<otimes> (cement cup))) 
@@ -44,7 +74,7 @@ proof-
  have "uncross_negative_straighten left_over straight_line"
         using uncross_negative_straighten_def by auto
  then have "linkrel left_over straight_line" unfolding linkrel_def uncross_def by auto
- then have 1:"(Abs_Tangle (left_over)) = (Abs_Tangle (straight_line))" using equality by auto    
+ then have 1:" (left_over) = (straight_line)" using equality by auto    
  let ?w1 = "(basic ((cement cup) \<otimes> (cement vert) \<otimes> (cement vert))) 
            \<circ>(basic ((cement vert) \<otimes> (cement over) \<otimes> (cement vert))) 
            \<circ>(basic ((cement cap) \<otimes> (cement vert) \<otimes> (cement vert)))"
@@ -75,11 +105,14 @@ proof-
                by auto
     then show ?thesis by auto 
     qed
- have "(domain_codomain_list left_over) = [0,0]" unfolding domain_codomain_list_def
-
-               
+ have "well_defined_tangle (left_over) \<and> (well_defined_tangle straight_line)\<and> (straight_line=left_over)" 
+     using left_over_well_defined straight_line_well_defined 1  by auto
+ then have "(left_over \<otimes> straight_line) = (straight_line \<otimes> straight_line)"
+       using 1  tensor_eq  by auto
+ have "well_defined_tangle (?w1)" unfolding well_defined_tangle_def list_sum_def domain_codomain_list_def
+          concatenate_def by (metis block.distinct(1) right_empty_block)              
  then have  "Abs_Tangle (left_over \<otimes> straight_line) = Abs_Tangle (left_over) \<otimes> Abs_Tangle( straight_line)" 
-    unfolding compose_Tangle_def by auto
+    unfolding compose_Tangle_def
  moreover have "\<exists>A2.\<exists>B2. (?y \<otimes> ?z)= (A2 \<otimes> B2)" by metis
  moreover have "linkrel ?z ?z" unfolding linkrel_def linkrel_reflexive_def by auto
  ultimately have "linkrel_diagram_tensor (?x \<otimes> ?z) (?y \<otimes> ?z)" using 1  linkrel_diagram_tensor_def

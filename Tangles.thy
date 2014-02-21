@@ -24,11 +24,11 @@ datatype block = cement brick
                  |cons brick block  (infixr "#" 60)              
 
 text{*walls are link diagrams obtained by placing a horizontal blocks a top each other*}
-
+(* Consistent number - datatype wall *)
 datatype walls = basic block
                 |prod block  walls  (infixr "*" 66)
 
-text{*Append gives us the block obtained by putting two blocks next to each other*}
+text{*Concatenate gives us the block obtained by putting two blocks next to each other*}
 
 primrec concatenate :: "block => block => block" (infixr "\<otimes>" 65) where
 concatenates_Nil: "(cement x) \<otimes> ys = cons x ys" |
@@ -50,14 +50,12 @@ apply(auto)
 done
 
 text{*Compose gives us the wall obtained by putting a wall above another, perhaps in an invalid way.
-Should define a Boolean function here, or better still a Option type.
-If we have Option types, compose should act on options.*}
+*}
 primrec compose :: "walls => walls => walls" (infixr "\<circ>" 66) where
 compose_Nil: "(basic x) \<circ> ys =  prod x ys" |
 compose_Cons: "((prod x xs)\<circ>ys) = prod x (xs\<circ>ys)"
 
 text{*Associativity properties of composition*}
-
 lemma compose_leftassociativity: "(((x::walls) \<circ> y) \<circ> z) = (x\<circ>y \<circ>z)"
 apply(induct_tac x)
 apply(auto)
@@ -236,7 +234,7 @@ shows "(codomain_block (x\<otimes>y)) > 0"
           le_less_trans less_le neg_less_0_iff_less
    by (metis)
 
-text{*We try to prove that if the first count of a block is zero, then it is composed of cups. In
+text{*We prove that if the first count of a block is zero, then it is composed of cups and empty bricks. In
 order to do that we define the functions brick_is_cup and is_cup which check if a given block is 
 composed of cups or if the blocks are composed of blocks*}
 
@@ -255,10 +253,12 @@ where
 "is_cup (cement x) = brick_is_cup x"|
 "is_cup (x#y) = (if (x= cup)\<or>(x=empty) then (is_cup y) else False)"
 
-
+(* Why three components??? Should not be true: CHECK*)
 lemma is_cup_basic: "((is_cup x) = False) \<Longrightarrow> 
 ((x=(cement vert))\<or>(x=(cement cap))\<or>(x=(cement over))\<or>(x=(cement under)))\<or>(\<exists>y1.\<exists>y2.\<exists>y3.(x=(y1\<otimes>y2\<otimes>y3)\<and> 
-((y1=(cement vert))\<or>(y1=(cement cap))\<or>(y1=(cement over))\<or>(y1=(cement under)))\<or>(y2=(cement vert))\<or>(y2=(cement cap))\<or>(y2=(cement over))\<or>(y2=(cement under)))\<or>((y3=(cement vert))\<or>(y3=(cement cap))\<or>(y3=(cement over))\<or>(y3=(cement under))))"
+((y1=(cement vert))\<or>(y1=(cement cap))\<or>(y1=(cement over))\<or>(y1=(cement under)))
+\<or>(y2=(cement vert))\<or>(y2=(cement cap))\<or>(y2=(cement over))\<or>(y2=(cement under)))
+\<or>((y3=(cement vert))\<or>(y3=(cement cap))\<or>(y3=(cement over))\<or>(y3=(cement under))))"
 by metis
 
 
@@ -315,6 +315,7 @@ blocks are matched and the wall itself has not incoming and outgoing strands. It
 the function wall_count_list gives the list of number of incoming strand of a constituent block 
 minus the outgoing strand of the block below*}
 
+(* Much easier approach, pattern match by single block is fine, constructor check one case*)
 
 primrec list_sum::"int list \<Rightarrow> int" 
 where
@@ -336,6 +337,9 @@ lemma domain_codomain_list_compose: " domain_codomain_list (x \<circ> y) =
        apply(simp add: domain_wall_compose codomain_wall_compose)
        done
 
+
+(* avoid the names well-defined ..., simply say is_lin, is_tangle*)
+
 definition well_defined_tangle::"walls \<Rightarrow> bool" where
 "well_defined_tangle x \<equiv>  (list_sum (domain_codomain_list x) = 0)"
 
@@ -350,6 +354,9 @@ apply(induct_tac x)
 apply(auto)
 apply(simp add: abs_non_negative)
 done
+
+(* Time to split the file: Links and Tangles in another file*)
+
 text{*well_defined walls as a type called diagram. The morphisms Abs_diagram maps a well defined wall to 
 its diagram type and Rep_diagram maps the diagram back to the wall *}
 
@@ -402,6 +409,8 @@ text{* In order to locally defined moves, it helps to prove that if composition 
 well defined wall then the number of outgoing strands of the wall below are equal to the number of 
 incoming strands of the wall above. The following lemmas prove that for a well defined wall, t
 he number of incoming and outgoing strands are zero*}
+
+(* All this should become cleaner with pattern matching *)
 
 lemma well_defined_fst_wall_count: 
 assumes "well_defined x"

@@ -57,18 +57,18 @@ where
 
 definition uncross_negative_flip::relation
 where
-"uncross_negative_flip x y \<equiv> ((x = right_under)\<and>(y =  left_under))"
+"uncross_negative_flip x y \<equiv> ((x = left_under)\<and>(y =  left_under))"
 
 
 definition uncross_negative_straighten::relation
 where
-"uncross_negative_straighten x y \<equiv> ((x = right_over)\<and>(y = straight_line))"
+"uncross_negative_straighten x y \<equiv> ((x = left_over)\<and>(y = straight_line))"
 
 (*The relation uncross*)
-definition uncross::relation
+definition uncross
 where
 "uncross x y \<equiv> ((uncross_positive_straighten x y)\<or>(uncross_positive_flip x y)
-                \<or>(uncross_positive_straighten x y)\<or> (uncross_negative_flip x y))"
+                \<or>(uncross_negative_straighten x y)\<or> (uncross_negative_flip x y))"
 
 
 

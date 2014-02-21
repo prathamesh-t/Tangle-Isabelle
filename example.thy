@@ -1,33 +1,54 @@
 theory example
-imports Tangles Links
+imports Link_Algebra Links
 begin
 
 text{*We prove that the link diagram with a single crossing is equivalent to the unknot*}
+context Equivalence
+begin
+
+lemma left_over_well_defined:"well_defined_tangle left_over"
+ proof-
+ have "left_over = 
+(((cement cup)\<otimes>(cement vert))*((cement vert)\<otimes>(cement over))*(basic ((cement cap)\<otimes>(cement vert))))" 
+  by auto
+ then have "(domain_codomain_list (basic ((cement cap)\<otimes>(cement vert)))) = []" 
+ using domain_codomain_list.simps by auto
+ moreover have "domain_wall (basic ((cement cap)\<otimes>(cement vert))) = 3" by auto 
+ moreover have "codomain_block ((cement vert)\<otimes>(cement over)) = 3" by auto
+ ultimately have "domain_codomain_list 
+(((cement vert)\<otimes>(cement over))*(basic ((cement cap)\<otimes>(cement vert))))
+  = [0]" using domain_codomain_list.simps abs_def by auto
+ then have "domain_wall (((cement vert)\<otimes>(cement over))*(basic ((cement cap)\<otimes>(cement vert))))
+       = 3" by auto
+ moreover have "codomain_block ((cement cup)\<otimes>(cement vert)) = 3" by auto
+ then have "domain_codomain_list left_over = [0,0]" using domain_codomain_list.simps abs_def
+       by auto
+ then have "list_sum (domain_codomain_list left_over) = 0" by auto
+ then show ?thesis unfolding well_defined_tangle_def by auto
+ qed
 
 
-theorem example:"linkrel_equiv (Abs_diagram ((basic ((cement cup) \<otimes> (cement cup))) 
+
+theorem example:"(Abs_Tangle ((basic ((cement cup) \<otimes> (cement cup))) 
 \<circ>(basic ((cement vert) \<otimes> (cement over) \<otimes> (cement vert))) 
-\<circ> (basic ((cement cap) \<otimes> (cement cap)))))
- (Abs_diagram ((basic (cement cup)) \<circ> (basic (cement cap))))" 
+\<circ> (basic ((cement cap) \<otimes> (cement cap)))))= 
+ (Abs_Tangle ((basic (cement cup)) \<circ> (basic (cement cap))))" 
 
 proof-
- let ?x =  "((basic ((cement cup)\<otimes>(cement vert)))
+ have "left_over =  ((basic ((cement cup)\<otimes>(cement vert)))
            \<circ>(basic ((cement vert)\<otimes>(cement over)))
-           \<circ>(basic ((cement cap)\<otimes>(cement vert))))"
-
- let ?y = "(basic (cement vert))
+           \<circ>(basic ((cement cap)\<otimes>(cement vert))))" by auto
+ have "straight_line = (basic (cement vert))
           \<circ>(basic (cement vert))
-          \<circ>(basic (cement vert))"
- 
- have "linkrel_uncross_positivestraighten ?x ?y"
-        using linkrel_uncross_positivestraighten_def by auto
- then have 1:"linkrel ?x ?y" unfolding linkrel_def linkrel_uncross_def by auto
-
- let ?z = "(basic (cement vert)) \<circ> (basic (cement vert))\<circ> (basic (cement vert))"
+          \<circ>(basic (cement vert))" by auto
+ have "uncross_negative_straighten left_over straight_line"
+        using uncross_negative_straighten_def by auto
+ then have "linkrel left_over straight_line" unfolding linkrel_def uncross_def by auto
+ then have 1:"(Abs_Tangle (left_over)) = (Abs_Tangle (straight_line))" using equality by auto    
  let ?w1 = "(basic ((cement cup) \<otimes> (cement vert) \<otimes> (cement vert))) 
            \<circ>(basic ((cement vert) \<otimes> (cement over) \<otimes> (cement vert))) 
            \<circ>(basic ((cement cap) \<otimes> (cement vert) \<otimes> (cement vert)))"
- have 2:"?x \<otimes> ?z = ?w1" 
+ have 2:"left_over \<otimes> straight_line = ?w1" 
      proof-
      have "basic ((cement cap) \<otimes> (cement vert)) \<otimes> (basic (cement vert)) 
                   =   (basic ((cement cap) \<otimes> (cement vert) \<otimes> (cement vert)))"
@@ -43,7 +64,7 @@ proof-
  let ?w2 = "basic ((cement vert) \<otimes> (cement vert)) 
            \<circ>(basic ((cement vert) \<otimes> (cement vert))) 
            \<circ>(basic ((cement vert) \<otimes> (cement vert)))"
- have 3:"?y \<otimes> ?z = ?w2"
+ have 3:"straight_line \<otimes> straight_line = (?w2)"
      proof-
      have "(basic (cement vert)) \<otimes> (basic (cement vert)) = (basic ((cement vert) \<otimes> (cement vert)))"
           by auto
@@ -52,9 +73,13 @@ proof-
              = (basic ((cement vert) \<otimes> (cement vert))) 
                \<circ>(basic ((cement vert) \<otimes> (cement vert)))"
                by auto
-    then show ?thesis by auto
+    then show ?thesis by auto 
     qed
- have "\<exists>A1.\<exists>B1. (?x \<otimes> ?z)= (A1 \<otimes> B1)" by metis
+ have "(domain_codomain_list left_over) = [0,0]" unfolding domain_codomain_list_def
+
+               
+ then have  "Abs_Tangle (left_over \<otimes> straight_line) = Abs_Tangle (left_over) \<otimes> Abs_Tangle( straight_line)" 
+    unfolding compose_Tangle_def by auto
  moreover have "\<exists>A2.\<exists>B2. (?y \<otimes> ?z)= (A2 \<otimes> B2)" by metis
  moreover have "linkrel ?z ?z" unfolding linkrel_def linkrel_reflexive_def by auto
  ultimately have "linkrel_diagram_tensor (?x \<otimes> ?z) (?y \<otimes> ?z)" using 1  linkrel_diagram_tensor_def
@@ -330,4 +355,5 @@ have 1:"codomain_block (cement cap) = 0"  by auto
                         using step1 rtranclp_trans linkrel_equiv_def by metis
  from this show ?thesis by auto
  qed
+*)
 end

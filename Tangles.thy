@@ -30,6 +30,7 @@ datatype walls = basic block
 
 text{*Append gives us the block obtained by putting two blocks next to each other*}
 
+
 primrec concatenate :: "block => block => block" (infixr "\<otimes>" 65) where
 concatenates_Nil: "(cement x) \<otimes> ys = cons x ys" |
 concatenates_Cons: "((x#xs)\<otimes>ys) = x#(xs\<otimes>ys)"

@@ -1,0 +1,519 @@
+theory new
+imports Tangles
+begin
+
+text{* We prove a set of theorems which prove equivalence of certain class of link diagrams. These
+equivalences are useful in practise to prove equivalence of two given link diagrams. These theorems
+also enable to understand why the defined relations are sufficient*}
+
+text {* The following function constructs a block of n-vertical strands for a given n. *}
+
+primrec make_vert_block:: "nat \<Rightarrow> block"
+where
+"make_vert_block 0 = (cement vert)"
+|"make_vert_block (Suc n) = vert#(make_vert_block n)"
+
+lemma strand_make_vert_block: " strands (make_vert_block n)" 
+  apply(induct_tac n)
+  apply(auto)
+  done
+
+lemma test_00: "(make_vert_block (n+1)) = vert#(make_vert_block n)" by auto
+
+lemma test_0: "(make_vert_block (n+1)) = (cement vert)\<otimes>(make_vert_block n)" 
+                   using test_00 append_blocks_Nil by metis
+
+
+lemma test_1: "(make_vert_block (n+1)) = (make_vert_block n)\<otimes>(cement vert)" 
+  apply(induct_tac n)
+  apply(auto)
+  apply (metis Tangles.append_blocks.append_blocks_Nil leftright_associativity)
+  done
+
+type_synonym convert = "block => nat"
+
+definition fstcount:: convert  where "(fstcount x) = (nat (abs ((fst (count x)))))"
+
+definition sndcount:: convert  where "(sndcount x) = (nat (snd (count x)))"
+
+lemma make_vert_block_fstequality:"(fst (count (make_vert_block n))) = (int n)+1" 
+  apply (induct_tac n)
+  apply(auto)
+  done
+
+
+lemma int_nat_condition:"(x>y) \<Longrightarrow> int (nat (x + - y)) - z = x + -y - z" 
+  by auto
+
+lemma make_vert_block_sndequality:"(snd (count (make_vert_block n))) = (int n)+1" 
+  apply (induct_tac n)
+  apply(auto)
+  done
+
+
+lemma make_vert_block_fstsndequality:
+"(fst (count (make_vert_block n))) = (snd (count (make_vert_block n)))" 
+   apply (induct_tac n)
+   apply(auto)
+   done
+
+lemma nat_int:" ((int n)\<ge> 0)" by auto
+
+lemma make_vert_blocks_positiveblock_length:"(fst (count (make_vert_block n)))>0" 
+  using  nat_int make_vert_block_fstequality
+  by auto
+
+
+
+text{* Given a link diagram which represents a wall of the form (x1 \<circ> basic y1 \<circ>z1), where y1 is a 
+block with outgoing strands, the following theorem proves that it is equivalent to the link 
+diagram obtained by adding two blocks of vertical strands above y1*}
+
+(*non seperating block refers to a block which has outgoing strands. In other words, it is not 
+block which seperates two disjoint components of a link*)
+
+
+lemma linkrel_trans: assumes "linkrel_equiv x y" and "linkrel_equiv y z"
+shows "linkrel_equiv x z"
+using rtranclp_trans linkrel_equiv_def  by (metis (full_types) assms(1) assms(2))
+
+
+
+definition non_seperating_block::"block \<Rightarrow> bool"
+where
+"non_seperating_block x \<equiv> (snd (count x)>1) "
+
+theorem linkrel_doublecompress_top: 
+assumes "non_seperating_block y1" 
+  and "(z4 = make_vert_block (nat ((snd (count y1)) + (-2))+1))"
+shows "linkrel_equiv (Abs_diagram (x1 \<circ> basic y1 \<circ> basic z4\<circ> basic z4\<circ>z1)) 
+                            (Abs_diagram (x1 \<circ> basic y1 \<circ>z1))" 
+
+proof-
+ let ?k = " (nat ((snd (count y1))+ (-2) ))" 
+ let ?x2 = "x1 \<circ> (basic y1)"
+ have 1: " (z4 = make_vert_block (?k+1))" using assms by auto
+ also have "((snd (count y1))+(-1))>0" 
+         using assms non_seperating_block_def by auto
+ then have 2:"((snd (count y1))+(-2))\<ge>0" using assms by auto
+ have  3:"strands z4" using 1 strand_make_vert_block by auto
+ have  4:"snd (wall_count ?x2) = snd (wall_count (basic y1))" 
+           using wall_count_compose by auto
+ have  "... = snd (count y1)" using wall_count_compose by auto
+ then have 5:"snd (wall_count ?x2) > 0"
+            using  assms less_trans 4  zero_less_one non_seperating_block_def by auto
+ then have 6: "fst (count (z4)) = fst (count (make_vert_block (?k+1)))"  
+            using 1 make_vert_block_fstequality by auto
+ have  "fst (count (make_vert_block (?k+1))) = int(?k+1)+1"  
+            using make_vert_block_fstequality by auto
+ then have 7: "fst (count (z4)) =  int(?k)+2" 
+           using 6  by auto
+ have  "int (nat (snd (count y1) + -2)) = (snd (count y1)) + -2" 
+           using int_nat_eq 2  by auto
+ then have  "snd (count y1) = int(?k)+2" 
+           by auto
+ then have  "fst (count (z4)) = (snd (count y1))" 
+           using 7 by auto
+ have  
+"(linkrel_compress_null ((Abs_diagram (?x2\<circ>(basic z4)\<circ>z1))) (Abs_diagram (?x2\<circ>z1)))" 
+           using linkrel_compress_null_def 3 5  by metis
+ then have 8: 
+ "(linkrel_equiv ((Abs_diagram (?x2\<circ>(basic z4)\<circ>z1))) (Abs_diagram (?x2\<circ>z1)))" 
+           using r_into_rtranclp  linkrel_equiv_def linkrel_def  
+           linkrel_compress_def by (metis)
+ have
+ "(linkrel_compress_null ((Abs_diagram ((?x2 \<circ> basic z4)\<circ>(basic z4)\<circ>z1))) 
+                            (Abs_diagram ((?x2 \<circ> basic z4)\<circ>z1)))" 
+               using linkrel_compress_null_def  3  5 compose_leftassociativity
+                    by (metis)
+ then have 
+ "(linkrel_equiv ((Abs_diagram ((?x2 \<circ> basic z4)\<circ>(basic z4)\<circ>z1))) 
+                            (Abs_diagram ((?x2 \<circ> basic z4)\<circ>z1)))" 
+               using linkrel_compress_def linkrel_def linkrel_equiv_def
+               r_into_rtranclp   
+                    by (metis)
+ then have 
+"linkrel_equiv ((Abs_diagram ((?x2 \<circ> basic z4)\<circ>(basic z4)\<circ>z1))) 
+                            (Abs_diagram ((?x2 \<circ>z1)))" 
+               using linkrel_equiv_def rtranclp_trans 8
+               compose_leftassociativity
+                            by (metis) 
+ then have 
+ "linkrel_equiv (Abs_diagram (x1 \<circ> basic y1 \<circ> basic z4\<circ>basic z4\<circ>z1)) 
+                            (Abs_diagram (x1 \<circ> basic y1 \<circ>z1))" 
+               using compose_leftassociativity  
+               by auto
+ then show ?thesis by simp
+ qed
+
+text{* Given a link diagram which represents a wall of the form (x1 \<circ> basic y1 \<circ>z1), where y1 is a 
+block with outgoing strands, the following theorem proves that it is equivalent to the link 
+diagram obtained by adding two blocks of vertical strands below y1*}
+
+theorem linkrel_doublecompress_below:
+ assumes "(snd (wall_count x1))>1" 
+ and "(z4 = make_vert_block (nat ((snd (wall_count x1)) + (-2))+1))"
+ shows "linkrel_equiv (Abs_diagram (x1 \<circ> basic z4\<circ>basic z4 \<circ> basic y1\<circ>z1)) 
+                            (Abs_diagram (x1 \<circ> (basic y1)\<circ>z1))" 
+ proof-    
+ let ?k = " (nat ((snd (wall_count x1))+ (-2) ))" 
+ have 1: " (z4 = make_vert_block (?k+1))" using assms by auto
+ then have 2: "strands z4" using strand_make_vert_block by auto
+ let ?x2 = "x1 \<circ> (basic y1)"
+ have 3:"((snd (wall_count x1))+(-2))\<ge>0" using assms by auto
+ also have 4: "fst (count (z4)) = fst (count (make_vert_block (?k+1)))"  
+            using 1 make_vert_block_fstequality
+            by auto
+ also have 5: "fst (count (make_vert_block (?k+1))) = int(?k+1)+1"  
+            using make_vert_block_fstequality
+            by auto
+ then have 6:"fst (count (z4)) =  int(?k)+2" 
+           using 4 5 
+           by auto
+ have  "int (nat (snd (wall_count x1) + -2)) = (snd (wall_count x1)) + -2" 
+           using 3 int_nat_eq 
+           by auto
+ then have  "snd (wall_count x1) = int(?k)+2" 
+                by auto
+ then have  7:"fst (count (z4)) = (snd (wall_count x1))" 
+           using 6 
+           by auto
+  also have 
+ "(linkrel_compress_null ((Abs_diagram (x1\<circ>(basic z4)\<circ>(basic y1)\<circ>z1))) 
+           (Abs_diagram (x1\<circ>(basic y1)\<circ>z1)))" 
+            using linkrel_compress_null_def 2   1 
+           comm_semiring_1_class.normalizing_semiring_rules(24) make_vert_block_fstequality 
+           monoid_add_class.add.left_neutral of_nat_Suc zless_iff_Suc_zadd 7 by (metis)
+ then have "(linkrel ((Abs_diagram (x1\<circ>(basic z4)\<circ>(basic y1)\<circ>z1))) 
+           (Abs_diagram (x1\<circ>(basic y1)\<circ>z1)))" 
+          unfolding linkrel_def linkrel_compress_def by auto
+ then have 8:"(linkrel_equiv ((Abs_diagram (x1\<circ>(basic z4)\<circ>(basic y1)\<circ>z1))) 
+           (Abs_diagram (x1\<circ>(basic y1)\<circ>z1)))" 
+          unfolding linkrel_equiv_def by auto
+ let ?z2 = "((basic z4)\<circ>(basic y1)\<circ>z1)"
+ have 
+ "(linkrel_compress_null (Abs_diagram (x1 \<circ> (basic z4)\<circ>(?z2)))
+                           (Abs_diagram (x1\<circ>(?z2))))"
+               using linkrel_compress_null_def  1
+                comm_semiring_1_class.normalizing_semiring_rules(24) 
+               int_one_le_iff_zero_less make_vert_block_fstequality 2 
+                zle_iff_zadd 7
+               by metis
+ then have 
+ "linkrel_equiv (Abs_diagram (x1 \<circ> (basic z4)\<circ>(?z2))) 
+                            (Abs_diagram (x1 \<circ> (?z2)))" 
+               using linkrel_equiv_def linkrel_compress_def r_into_rtranclp linkrel_def
+                        by (metis (full_types) )
+ then  have 
+ "linkrel_equiv (Abs_diagram (x1 \<circ> basic z4\<circ>basic z4 \<circ> basic y1\<circ>z1)) 
+                            (Abs_diagram (x1 \<circ> (basic z4)\<circ>(basic y1)\<circ>z1))" 
+               using compose_leftassociativity
+               by auto
+ then have 
+ "linkrel_equiv (Abs_diagram (x1 \<circ> basic z4\<circ>basic z4 \<circ> basic y1\<circ>z1)) 
+                            (Abs_diagram (x1 \<circ> (basic y1)\<circ>z1))" 
+               using compose_leftassociativity rtranclp_trans 8  linkrel_trans by metis              
+ then show ?thesis  by simp
+ qed
+
+(*metaequivalence moves*)
+
+text{* Given a link diagram which represents a wall of the form (x1 \<circ> basic y1 \<circ>z1), where y1 is a 
+block with outgoing strands, the following theorem proves that it is equivalent to a link 
+diagram in which there exists a block appended to the left of y1 *}
+
+theorem metaequivalence_left: 
+ assumes "non_seperating_block y1" 
+(*y1 has outgoing strands*)
+ and  "w4 = make_vert_block  (nat ((snd (count y1)) + (-2)))"
+(*w4 is the block with only vert strands with a strand less than y1*) 
+ shows "linkrel_equiv 
+ (Abs_diagram ((x1)\<circ>(basic ((cement cup)\<otimes>y1))\<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))
+             (Abs_diagram (x1 \<circ> basic y1 \<circ>z1))" 
+(*every diagram is equivalent to the diagram obtained by stretching it and pulling a string below 
+on the left of the stretched part*)   
+proof-
+(* proof is broken into three steps- the first step involves stretching the strand, the second step
+involves pulling a strand below. The third step involves combining the first two steps*)
+ let ?x2 = "x1 \<circ> (basic y1)"
+ let ?z4 = "make_vert_block (nat ((snd (count y1)) + (-2))+1)"                                                                                           
+ let ?k = " (nat ((snd (count y1))+ (-2) ))" 
+(*Step 1 tells us that the diagram that the wall x1 \<circ> basic y1 \<circ> z1 gives rise to, is equivalent to 
+the diagram obtained by stretching the diagram above the block y1*)
+ have step1: 
+"linkrel_equiv (Abs_diagram (x1 \<circ> basic y1 \<circ> basic ?z4\<circ>basic ?z4\<circ>z1)) 
+                            (Abs_diagram (x1 \<circ> basic y1 \<circ>z1))" 
+               using compose_leftassociativity linkrel_doublecompress_top assms 
+               non_seperating_block_def by auto
+ (*Step 2 tells us that the diagram obtained above by stretching is equivalent to the diagram 
+obtained by perturbing it a bit as to induce a cup and a cap on the left portion of the diagram*)
+ have step2: "linkrel_equiv (Abs_diagram (x1\<circ>basic y1\<circ>(basic ((cement cup)\<otimes>?z4))
+                                          \<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1)) 
+              (Abs_diagram (x1\<circ>basic y1 \<circ>(basic ?z4)\<circ>(basic (?z4))\<circ>z1))"
+ proof-
+  {
+     have w_subst: "w4 = (make_vert_block ?k)" using assms by auto
+     have step2_subresult0: 
+              "(make_vert_block (?k+1)) = ((cement vert)\<otimes>(make_vert_block ?k))" by simp
+     have step2_subresult1:"?z4 = (cement vert)\<otimes>(make_vert_block ?k)" using step2_subresult0 by auto
+     have step2_subresult2: 
+               "(Abs_diagram (?x2 \<circ> (basic ?z4) \<circ>(basic ?z4)\<circ>z1)) =
+                (Abs_diagram (?x2  \<circ> (basic ((cement vert)\<otimes>w4))\<circ> (basic ((cement vert) \<otimes>w4))\<circ>z1))" 
+                        using w_subst step2_subresult1 by auto
+     have step2_subresult3: "(snd (count w4)) = (fst (count w4))" 
+               using make_vert_block_fstsndequality w_subst by auto
+     let ?x = "(Abs_diagram (?x2 \<circ>(basic ((cement cup)\<otimes>(cement vert)\<otimes>w4))
+                        \<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))"
+     let ?y = "(Abs_diagram (?x2 \<circ>(basic ((cement vert)\<otimes>w4))\<circ>(basic ((cement vert)\<otimes>w4))\<circ>z1))"
+     have step2_subresult4:
+       "\<exists>y1.\<exists>y2.\<exists>w1.\<exists>w2.
+        (?x = Abs_diagram (y1 \<circ> (basic ((cement cup) \<otimes> (cement vert) \<otimes> w1)) 
+                  \<circ> (basic ((cement vert) \<otimes> (cement cap) \<otimes> w2)) \<circ> y2))"
+              using exI by auto
+      have step2_subresult5:
+       "\<exists>y1.\<exists>y2.\<exists>w1.\<exists>w2.
+        (?y = Abs_diagram (y1 \<circ> (basic ((cement vert) \<otimes> w1)) \<circ> (basic ((cement vert) \<otimes> w2)) \<circ> y2))"
+              using exI by auto
+      have step2_subresult6: 
+       "(\<exists>y1.\<exists>w1.\<exists>w2.\<exists>y2.
+     ((?x = Abs_diagram ((y1)\<circ>(basic ((cement cup)\<otimes>(cement vert)\<otimes>w1)
+           \<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w2)))\<circ>(y2)))
+    \<and>(?y = Abs_diagram ((y1)\<circ>(basic ((cement vert)\<otimes>w1))\<circ>(basic ((cement vert)\<otimes>w2))\<circ>(y2))))
+    \<and> ((snd (count w1)) = (fst (count w2))))"
+     using  step2_subresult3 exI by auto
+    have step2_subresult7:
+     " linkrel_straighten_rightdowntop ?x ?y"
+     using linkrel_straighten_rightdowntop_def step2_subresult6 by auto
+    have step2_subresult8:"linkrel ?x ?y" 
+     using linkrel_def linkrel_straighten_def step2_subresult7 by auto
+    have step2_subresult9: "linkrel (Abs_diagram ((?x2) \<circ>(basic ((cement cup)\<otimes>(cement vert)\<otimes>w4))
+                             \<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1)) 
+              (Abs_diagram ((?x2) \<circ>(basic ((cement vert)\<otimes>w4))\<circ>(basic ((cement vert)\<otimes>w4))\<circ>z1))"
+               using step2_subresult8 by auto 
+    have step2_equiv1: "linkrel_equiv (Abs_diagram (x1\<circ>basic y1\<circ>(basic ((cement cup)\<otimes>(cement vert)\<otimes>w4))
+                              \<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1)) 
+              (Abs_diagram (x1\<circ>basic y1 \<circ>(basic ((cement vert)\<otimes>w4))\<circ>(basic ((cement vert)\<otimes>w4))\<circ>z1))"
+               using step2_subresult9 compose_leftassociativity r_into_rtranclp 
+               linkrel_equiv_def
+                     by metis
+   have "linkrel_equiv (Abs_diagram (x1\<circ>basic y1\<circ>(basic ((cement cup)\<otimes>?z4))
+                                    \<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1)) 
+                       (Abs_diagram (x1\<circ>basic y1 \<circ>(basic ?z4)\<circ>(basic (?z4))\<circ>z1))"
+               using  step2_subresult9 compose_leftassociativity r_into_rtranclp 
+               linkrel_equiv_def step2_subresult1 w_subst
+                     by (metis)
+     then show ?thesis by auto
+     }
+     qed
+(* Step3 tells us that that perturbed diagram introduced in the step above is equivalent to the 
+ the diagram obtained by pulling the cup to the left of the block y1*)
+ have step3: 
+ "linkrel_equiv 
+   (Abs_diagram ((x1)\<circ>(basic ((cement cup)\<otimes>y1))
+        \<circ>(basic ((cement vert)\<otimes>(cement vert)\<otimes>(cement vert)\<otimes>w4))
+        \<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))
+   (Abs_diagram (((x1)\<circ>(basic y1))\<circ>(basic ((cement cup) \<otimes> ?z4))
+         \<circ> (basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))"  
+ proof-
+   {
+   have step3_preliminary1: "fst (count (v\<otimes>w)) = fst (count (cup#(v\<otimes>w)))" using count_def brickcount_def
+   by auto
+   have step3_preliminary2 : 
+   "count ((cup)#((cement cup)\<otimes>w4)) = (fst (brickcount (cup)) + fst (count ((cement cup)\<otimes>w4)),
+   snd (brickcount (cup)) + snd (count ((cement cup)\<otimes>w4)))"
+      using count_def by auto
+   have step3_preliminary3: 
+     "((cement cup)\<otimes>((cement vert)\<otimes>w4)) = cup#((cement vert)\<otimes>w4)" using append_blocks_Nil by metis
+   have step3_subresult0 : 
+    "fst (count ((cup)#((cement cup)\<otimes>w4)))=(fst (brickcount(cup)) + fst (count ((cement cup)\<otimes>w4)))"
+      using count_def  brickcount_def by auto
+   have step3_preliminary4 : 
+   "(fst (brickcount (cup)) + fst (count ((cement cup)\<otimes>w4))) = fst (count ((cement cup)\<otimes>w4))"
+     using brickcount_def by auto
+   have step3_preliminary5:
+  "fst (count (cup#((cement cup)\<otimes>w4))) =  fst (count ((cement cup)\<otimes>w4))"
+      using  step3_preliminary4 step3_subresult0 by auto
+   have step3_preliminary6:
+    "fst (count (((cement cup))\<otimes>((cement cup)\<otimes>w4))) =  fst (count (cup#((cement cup)\<otimes>w4)))"
+      using step3_preliminary3 by (metis Tangles.append_blocks.append_blocks_Nil)
+   have step3_preliminary7:
+   "fst (count (((cement cup))\<otimes>((cement cup)\<otimes>w4))) =  fst (count ((cement cup)\<otimes>w4))"
+      using step3_preliminary5  step3_preliminary6 by auto
+   have step3_subresult1 :"fst (wall_count (basic ((cement cup)\<otimes>(cement vert)\<otimes>w4))) 
+                  = fst (wall_count (basic ((cement vert)\<otimes>w4))) " 
+      using wall_count_def step3_preliminary7  
+      by (metis append_blocks.append_blocks_Nil add_diff_cancel 
+          comm_monoid_add_class.add.left_neutral count.simps(2) fst_conv wall_count.simps(1))
+   have w_subst: "w4 = (make_vert_block ?k)" using assms by auto
+   moreover have step2_subresult0: "(make_vert_block (?k+1)) = ((cement vert)\<otimes>(make_vert_block ?k))" 
+      by simp
+   moreover have step2_subresult1:"?z4 = (cement vert)\<otimes>(make_vert_block ?k)" 
+      using step2_subresult0 by auto
+   moreover have "  fst (count (make_vert_block (nat (snd (count y1) + -2) + 1))) =
+                    int (nat (snd (count y1) + -2) + 1) + 1" 
+          unfolding count.simps make_vert_block_fstequality by auto
+   moreover have "int (nat (snd (count y1) + -2) + 1)  = (snd (count y1)) + -1" 
+          using non_seperating_block_def assms(1) int_nat_condition by auto
+  moreover then have " int (nat (snd (count y1) + -2) + 1) + 1 = snd(count y1)" by auto
+  ultimately have "fst (count (make_vert_block (nat (snd (count y1) + -2) + 1))) = 
+              (snd (count y1))"  by auto
+  moreover have "fst (wall_count (basic ((cement cup)\<otimes>(cement vert)\<otimes>w4))) 
+                =  fst (count (make_vert_block (nat (snd (count y1) + -2) + 1)))"
+                          using step2_subresult1  w_subst step3_subresult1 wall_count.simps(1) 
+                          by (metis)
+  ultimately have step3_subresult3: "fst (wall_count (basic ((cement cup)\<otimes>(cement vert)\<otimes>w4))) 
+                                       = snd (count y1)" 
+               using step3_subresult1  by auto 
+  moreover have  "fst (wall_count (basic ((cement vert)\<otimes>w4))) = snd (wall_count ?x2)" 
+               using step3_subresult3 wall_count.simps 
+               by (metis snd_conv step3_subresult1 wall_count_compose) 
+  then have step3_subresult5: "fst (wall_count (basic ((cement vert)\<otimes>w4))) 
+          = snd (wall_count (x1\<circ>(basic y1)))" 
+               using  wall_count_def by auto
+  have step3_subresult6: "fst (brickcount cup) =  0" using brickcount_def by auto
+  have step3_subresult7: "fst (count (cement cup)) =  0" using  count_def step3_subresult6 
+    by (metis count.simps(1))
+  have step3_subresult8: "strands (vert#(cement vert))" using  append_blocks_def strands_def  
+   brickstrand.simps(1) strands.simps(1) strands.simps(2) 
+                       by metis
+  have step3_subresult9: "(vert#(cement vert)) = ((cement vert)\<otimes>(cement vert))" using append_blocks_Nil 
+                        by metis
+  have step3_subresult10: "strands ((cement vert)\<otimes>(cement vert))" 
+       using step3_subresult8 step3_subresult9 by metis
+  let ?a0 = "(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1"
+  let ?b0 = "((cement vert)\<otimes>(cement vert))"
+  let  ?a =  "Abs_diagram ((x1)\<circ>(basic ((cement cup)\<otimes>y1))\<circ>(basic (?b0\<otimes>((cement vert)\<otimes>w4)))
+        \<circ>((basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))"
+  let ?b = "Abs_diagram ((x1)\<circ>(basic y1)\<circ>(basic ((cement cup) \<otimes> ((cement vert) \<otimes> w4)))
+        \<circ>((basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))"
+  have step3_subresult11: "  \<exists>y1.\<exists>w1.\<exists>w2.\<exists>A.\<exists>B.\<exists>y2.(?a = Abs_diagram
+   ((y1)\<circ>(basic (A\<otimes>w1))\<circ>(basic (B\<otimes>w2))\<circ>(y2)))"
+    using exI by metis
+  have step3_subresult12: " \<exists>y1.\<exists>w1.\<exists>w2.\<exists>A.\<exists>B.\<exists>y2.(
+    ?b = (Abs_diagram  ((y1)\<circ>(basic (w1))\<circ>(basic (A\<otimes>w2))\<circ>(y2))))"
+           using exI 
+          by metis
+  then have step3_subresult13: "  \<exists>y1.\<exists>w1.\<exists>w2.\<exists>A.\<exists>B.\<exists>y2.((?a = Abs_diagram
+   ((y1)\<circ>(basic (A\<otimes>w1))\<circ>(basic (B\<otimes>w2))\<circ>(y2))) \<and>
+   (?b = Abs_diagram
+   ((y1)\<circ>(basic (w1))\<circ>(basic (A\<otimes>w2))\<circ>(y2)))
+    \<and>((snd (count w1)) = (fst (count w2)))
+    \<and>((fst (count A)) = 0)
+    \<and>(strands B))" 
+    using step3_subresult11 step3_subresult12 compose_leftassociativity step3_subresult5 
+    step3_subresult7 step3_subresult10 exI assms leftright_associativity  step3_subresult1 
+    step3_subresult3 wall_count.simps(1) by (metis)
+  have step3_subresult14: "linkrel_compbelow_centerright ?a ?b" using step3_subresult13 
+      linkrel_compbelow_centerright_def by auto
+ have step3_subresult15: "linkrel_compress ?a ?b" using step3_subresult14 linkrel_compress_def 
+       linkrel_compbelow_def by auto
+  have step3_subresult16: "linkrel ?a ?b" using step3_subresult15 linkrel_def by auto
+  have step3_subresult17: "linkrel_equiv ?a ?b"
+    using step3_subresult16 linkrel_equiv_def r_into_rtranclp
+       by (metis (full_types) r_into_rtranclp)
+ have step3_subresult18: "linkrel_equiv 
+   (Abs_diagram ((x1)\<circ>(basic ((cement cup)\<otimes>y1))\<circ>(basic (((cement vert)\<otimes>(cement vert))
+  \<otimes>((cement vert)\<otimes>w4)))\<circ>((basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1)))
+  (Abs_diagram ((x1)\<circ>(basic y1)\<circ>(basic ((cement cup) \<otimes> ((cement vert) \<otimes> w4)))\<circ>((basic ((cement vert)
+  \<otimes>(cement cap)\<otimes>w4))\<circ>z1)))"
+    using step3_subresult17
+ by metis
+ have step3: 
+ "linkrel_equiv 
+   (Abs_diagram ((x1)\<circ>(basic ((cement cup)\<otimes>y1))
+        \<circ>(basic ((cement vert)\<otimes>(cement vert)\<otimes>(cement vert)\<otimes>w4))
+        \<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))
+ (Abs_diagram (((x1)\<circ>(basic y1))\<circ>(basic ((cement cup) \<otimes> ?z4))
+         \<circ> (basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))" 
+      using step3_subresult18 leftright_associativity w_subst step2_subresult1 left_associativity
+          compose_leftassociativity by auto
+ then show ?thesis by simp
+ }
+ qed
+(*step 4 involves compressing the diagram obtained in step3 by pulling the cap below*)
+ have step4: 
+ "linkrel_equiv
+  (Abs_diagram ((x1)\<circ>(basic ((cement cup)\<otimes>y1))\<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))
+  (Abs_diagram ((x1)\<circ>(basic ((cement cup)\<otimes>y1))
+   \<circ>(basic ((cement vert) \<otimes> (cement vert) \<otimes> (cement vert) \<otimes> w4))
+   \<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))" 
+ proof-
+ {
+  let ?p = "(x1)\<circ>(basic ((cement cup)\<otimes>y1))"
+  let ?q = "(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1"
+  let ?r = " basic ((cement vert) \<otimes> (cement vert) \<otimes> (cement vert) \<otimes> w4)"
+  have step4_subresult1: "strands ((cement vert) \<otimes> (cement vert) \<otimes> (cement vert) \<otimes> w4)"
+     using assms(2)  append_blocks.append_blocks_Nil  
+     strands.simps(2) by (metis strand_make_vert_block)
+  have step4_subresult2: "snd (count ((cement cup)\<otimes>y1)) =  snd (count (cup#y1))" 
+     using append_blocks.append_blocks_Nil count_def  by (metis)
+  have step4_subresult3: " snd (count (cup#y1)) =  2+ snd (count (y1))"
+     using step4_subresult2 count_def brickcount_def by auto
+  have step4_subresult4: "snd (count ((cement cup)\<otimes>y1)) > snd (count (y1))"
+     using step4_subresult2 step4_subresult3 add_strict_increasing dbl_def 
+     dbl_simps(3) order_refl zero_less_two by auto
+  have step4_subresult5: "snd (count ((cement cup)\<otimes>y1)) > 1"
+     using step4_subresult4 assms non_seperating_block_def by auto
+  have step4_subresult6: "snd (wall_count ?p) = (snd (count ((cement cup)\<otimes>y1)))"
+     using wall_count_def  snd_conv wall_count.simps(1) wall_count_compose by auto
+  have step4_subresult7: "snd (wall_count ?p) > 0"
+    using step4_subresult5 step4_subresult6 assms by auto
+  have step4_subresult8: 
+   "linkrel_compress_null 
+     (Abs_diagram (?p\<circ>(basic ((cement vert) \<otimes> (cement vert) \<otimes> (cement vert) \<otimes> w4))\<circ>?q))
+     (Abs_diagram (?p\<circ>?q))"
+       using step4_subresult1 step4_subresult7 linkrel_compress_null_def by metis
+  have step4_subresult9: 
+     "linkrel_compress
+      (Abs_diagram (?p\<circ>(basic ((cement vert) \<otimes> (cement vert) \<otimes> (cement vert) \<otimes> w4))\<circ>?q))
+      (Abs_diagram (?p\<circ>?q))"
+        using step4_subresult8 linkrel_compress_def by auto
+  have step4_subresult10: 
+   "linkrel (Abs_diagram (?p\<circ>?q))
+   (Abs_diagram (?p\<circ>(basic ((cement vert) \<otimes> (cement vert) \<otimes> (cement vert) \<otimes> w4))\<circ>?q))"
+      using step4_subresult9 step4_subresult8 linkrel_def by auto
+  have step4_subresult11: 
+   "linkrel_equiv
+    (Abs_diagram (?p\<circ>?q))
+    (Abs_diagram (?p\<circ>(basic ((cement vert) \<otimes> (cement vert) \<otimes> (cement vert) \<otimes> w4))\<circ>?q))"
+     using step4_subresult10 linkrel_equiv_def compose_leftassociativity 
+     leftright_associativity r_into_rtranclp  by (metis (full_types))
+  then have step4: 
+  "linkrel_equiv
+   (Abs_diagram ((x1)\<circ>(basic ((cement cup)\<otimes>y1))\<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))
+   (Abs_diagram ((x1)\<circ>(basic ((cement cup)\<otimes>y1))
+                \<circ>(basic ((cement vert) \<otimes> (cement vert) \<otimes> (cement vert) \<otimes> w4))
+                \<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))"
+     using step4_subresult10 linkrel_equiv_def compose_leftassociativity 
+     leftright_associativity r_into_rtranclp  by metis
+  then show ?thesis by simp
+  }
+  qed
+ (*we now obtain the result by combining the steps*)                    
+ have "linkrel_equiv
+  (Abs_diagram ((x1)\<circ>(basic ((cement cup)\<otimes>y1))\<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))
+             (Abs_diagram (x1 \<circ> basic y1 \<circ>z1))"
+ proof- 
+ {
+   have combine_vert: 
+  "linkrel_equiv 
+    (Abs_diagram (x1\<circ>basic y1\<circ>(basic ((cement cup)\<otimes>?z4))
+            \<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1)) 
+    (Abs_diagram (x1 \<circ> basic y1 \<circ>z1))" 
+               using step1 step2 rtranclp_trans linkrel_equiv_def by metis
+   have combine_cup:
+   "linkrel_equiv (Abs_diagram ((x1)\<circ>(basic ((cement cup)\<otimes>y1))
+    \<circ>(basic ((cement vert)\<otimes>(cement vert)\<otimes>?z4))\<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))
+             (Abs_diagram (x1 \<circ> basic y1 \<circ>z1))" 
+           using step3 combine_vert linkrel_equiv_def rtranclp_trans compose_leftassociativity 
+           leftright_associativity step2   linkrel_trans 
+            by (metis (full_types) append_blocks_Nil assms(2) test_00) 
+   have combine_compress:"linkrel_equiv
+   (Abs_diagram ((x1)\<circ>(basic ((cement cup)\<otimes>y1))\<circ>(basic ((cement vert)\<otimes>(cement cap)\<otimes>w4))\<circ>z1))
+             (Abs_diagram (x1 \<circ> basic y1 \<circ>z1))" 
+   using combine_cup step4 combine_vert linkrel_equiv_def rtranclp_trans compose_leftassociativity 
+   leftright_associativity step2 linkrel_trans  by (metis assms(2) link_symmetry2 test_0)
+   then show ?thesis by simp}
+   qed
+ then show ?thesis by auto
+qed

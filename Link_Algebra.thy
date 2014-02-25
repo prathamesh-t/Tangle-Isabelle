@@ -11,7 +11,7 @@ locale empty_tensor=
 assumes left: "(x \<otimes> (basic (cement empty))) ~ x"
     and right:"((basic (cement empty)) \<otimes> x) ~ x"
 context empty_tensor
- begin
+begin
 
 text{*The fact that this property holds true for tensor between walls implies that it holds true 
 for blocks *}
@@ -95,8 +95,8 @@ where
 "Equivalent_Links x y \<equiv> (Link x) \<and> (Link y) \<and> (x = y)"
 
 
-lemma "basic (cement empty) = (basic (cement empty)) \<circ> (basic (cement empty))"
- by (metis domain.simps(6) domain_block.simps(1) domain_compose domain_wall.simps(1))
+lemma "basic (cement empty) ~ (basic (cement empty)) \<circ> (basic (cement empty))"
+by (metis (full_types) codomain.simps(6) codomain_block.simps(1) codomain_compose codomain_wall.simps(1) sym)
 end
 
 sublocale Tangle_Equivalence < Equivalence
@@ -104,7 +104,16 @@ sublocale Tangle_Equivalence < Equivalence
 
 locale Tangle_Invariant = Equivalence +
 fixes funct::"walls \<Rightarrow> 'a" 
-assumes "(x = y) \<Longrightarrow> (funct x) = (funct y)"
+assumes inv:"(rel x y) \<Longrightarrow> (funct x) = (funct y)"
+begin
+
+
+lemma "((funct x) \<noteq> (funct y)) \<longrightarrow> \<not> (rel (x::walls)  y)"
+proof-
+ have  "(rel (x::walls)  y) \<longrightarrow> (funct x) = (funct y)" using inv by auto 
+ then have "((funct x) \<noteq> (funct y)) \<longrightarrow> \<not> (rel (x::walls)  y)" by auto
+ then show ?thesis by auto
+qed
 
 end
 

@@ -68,9 +68,9 @@ shows "(abs (domain_wall x) = 0)"
 
 
 lemma is_link_fst_wall_count: 
-assumes "is_link x"
+assumes "is_link_diagram x"
 shows "(abs (domain_wall x) = 0)"
-  using abs_non_negative_sum(1) assms is_link_def by metis
+  using abs_non_negative_sum(1) assms is_link_diagram_def by metis
 
 lemma diagram_snd_wall_count: 
 "(abs (domain_wall (Rep_diagram z)) = 0)"
@@ -89,9 +89,9 @@ shows "(abs (codomain_wall x) = 0)"
 
 
 lemma is_link_snd_wall_count: 
-assumes "is_link x"
+assumes "is_link_diagram x"
 shows "(abs (codomain_wall x) = 0)"
-   using assms comm_monoid_add_class.add.left_neutral is_link_def is_link_fst_wall_count by (metis)
+   using assms comm_monoid_add_class.add.left_neutral is_link_diagram_def is_link_fst_wall_count by (metis)
 
 lemma domain_codomain_list_sum_non_negative:
 "(list_sum (domain_codomain_list x)) \<ge> 0"
@@ -126,15 +126,49 @@ lemma domain_codomain_list_sum_compose:
 (list_sum (domain_codomain_list y))"
   using domain_codomain_list_compose list_sum_def concatenate_def list_sum_concatenates
   by (metis ab_semigroup_add_class.add_ac(1) list_sum.simps(2))
-(*
-lemma is_tangle_compose: assumes "is_tangle (x \<circ> y)"
-shows "is_tangle x" 
-unfolding is_tangle_def sledgehammer
-proof (induct_tac x)
-fix x y z
- have "is_tangle (basic x)" using is_tangle.simps(1)  by auto
-then show thesis
-*)
+
+(*is_tangle_compose*)
+lemma is_tangle_left_compose: 
+ "is_tangle_diagram (x \<circ> y) \<Longrightarrow> is_tangle_diagram x" 
+proof (induct x)
+ case (basic z)
+   have "is_tangle_diagram (basic z)" using is_tangle_diagram.simps(1)  by auto
+   then show ?case using basic by auto
+ next
+ case (prod z zs)
+   have "(z*zs)\<circ>y = (z*(zs \<circ> y))" by auto
+   then have " is_tangle_diagram (z*(zs\<circ>y))" using assms prod by auto
+   moreover then have 1: "is_tangle_diagram zs" 
+        using is_tangle_diagram.simps(2) prod.hyps prod.prems  by metis
+  ultimately have "domain_wall (zs \<circ> y) = codomain_block z"
+         by (metis is_tangle_diagram.simps(2))  
+  moreover have "domain_wall (zs \<circ> y) = domain_wall zs" 
+         using domain_wall_def domain_wall_compose by auto
+  ultimately have "domain_wall zs = codomain_block z" by auto
+  then have "is_tangle_diagram (z*zs)" 
+    by (metis "1" is_tangle_diagram.simps(2))
+  then show ?case by auto
+ qed
+
+lemma is_tangle_right_compose: 
+ "is_tangle_diagram (x \<circ> y) \<Longrightarrow> is_tangle_diagram y"
+proof (induct x)
+ case (basic z)
+  have "(basic z) \<circ> y = (z*y) " using basic  by auto
+  then have "is_tangle_diagram y" 
+         unfolding is_tangle_diagram.simps(2) using basic.prems by (metis is_tangle_diagram.simps(2))
+  then show ?case using basic.prems by auto 
+ next
+ case (prod z zs)
+  have "((z*zs) \<circ> y) = (z *(zs \<circ> y))" by auto
+  then have " is_tangle_diagram (z*(zs \<circ> y))" using assms prod by auto
+  then have "is_tangle_diagram (zs \<circ> y)" using is_tangle_diagram.simps(2) by metis
+  then have "is_tangle_diagram y"  using prod.hyps by auto 
+  then show ?case by auto
+ qed
+
+
+
 lemma list_sum_compose: assumes "list_sum (domain_codomain_list x) = 0" 
        and "list_sum (domain_codomain_list y) = 0"
 and "(codomain_wall x)= (domain_wall y)"
@@ -224,6 +258,22 @@ proof-
   from this show ?thesis by simp
 qed
 
+lemma assumes"is_tangle_diagram y" 
+shows "((is_tangle_diagram x)\<and>(domain_wall x = codomain_wall y)) \<Longrightarrow> is_tangle_diagram (x \<circ> y)"
+proof(induct x)
+ case (basic z)
+ have "domain_block z = domain_wall (basic z)" 
+    using domain_wall_def by auto
+ moreover have "(basic z)\<circ>y= z*y" 
+     using compose_def by auto
+ ultimately have "domain_block z = codomain_wall y" 
+          using basic.prems by auto 
+ moreover have "is_tangle_diagram y" 
+   using assms by auto
+ have "(domain_block z = codomain_wall y)\<and> (is_tangle_diagram y)\<Longrightarrow> is_tangle_diagram (z*y)" 
+    unfolding is_tangle_diagram_def sledgehammer
+
+     
 lemma assumes "(well_defined_tangle x)" 
           and "(well_defined_tangle y)" 
           and "(domain_wall y) = (codomain_wall x)"
@@ -262,4 +312,4 @@ where
 definition codomain_Tangle::"Tangle \<Rightarrow> int"
 where
 "codomain_Tangle x = codomain_wall(Rep_Tangle x)"
-end
+end*)

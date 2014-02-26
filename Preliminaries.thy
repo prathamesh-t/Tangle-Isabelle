@@ -344,15 +344,17 @@ lemma domain_codomain_list_compose: " domain_codomain_list (x \<circ> y) =
 definition well_defined_tangle::"walls \<Rightarrow> bool" where
 "well_defined_tangle x \<equiv>  (list_sum (domain_codomain_list x) = 0)"
 
-primrec is_tangle::"walls \<Rightarrow>  bool"
+primrec is_tangle_diagram::"walls \<Rightarrow>  bool"
 where
-"is_tangle (basic x) = True"
-|"is_tangle (x*xs) = (if is_tangle xs then (codomain_block x = domain_wall xs) else False)"
+"is_tangle_diagram (basic x) = True"
+|"is_tangle_diagram (x*xs) = (if is_tangle_diagram xs then (codomain_block x = domain_wall xs) else False)"
 
 
-definition is_link::"walls \<Rightarrow>  bool"
+definition is_link_diagram::"walls \<Rightarrow>  bool"
 where
-"is_link x \<equiv> (if (is_tangle x) then (abs (domain_wall x) + abs(codomain_wall x) = 0) else False)"
+"is_link_diagram x \<equiv> (if (is_tangle_diagram x) 
+                        then (abs (domain_wall x) + abs(codomain_wall x) = 0) 
+                         else False)"
 
 definition well_defined::"walls \<Rightarrow> bool" where
 "well_defined x \<equiv> ( (list_sum (domain_codomain_list x)+(abs(domain_wall x))

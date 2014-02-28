@@ -291,7 +291,7 @@ proof(induct xs)
     qed
    then show ?case by auto
  qed
-
+(*
 (*tensor product of two tangle diagrams is a tangle diagram*)
 theorem is_tangle_diagramness:
  shows"(is_tangle_diagram x)\<and>(is_tangle_diagram y)\<longrightarrow>is_tangle_diagram (tensor x y)"
@@ -347,7 +347,7 @@ theorem is_tangle_diagramness:
         is_tangle_diagram (zs \<otimes> basic (make_vert_block (nat (codomain_block w))))) \<Longrightarrow>
        is_tangle_diagram (z * zs) \<and> is_tangle_diagram (basic w) \<longrightarrow> is_tangle_diagram (z * zs \<otimes> basic w)"
         by auto
- 
+ *)
   
 
 (*
@@ -414,3 +414,4 @@ case (basic z)
                using C by auto
    
 *)        
+end

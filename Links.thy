@@ -20,30 +20,30 @@ However, the moves that would be useful in practise are proved as theorems in
  Link_Equivalence_Theorems.thy *}
 
 
-type_synonym relation = "wall \<Rightarrow> wall \<Rightarrow> bool" 
+type_synonym relation = "walls \<Rightarrow> walls \<Rightarrow> bool" 
 
 text{* Link uncross*}
-abbreviation right_over::"wall"
+abbreviation right_over::"walls"
 where
 "right_over \<equiv> ((basic ((cement vert)\<otimes>(cement cup))) \<circ> (basic ((cement over)\<otimes>(cement vert)))
 \<circ> (basic ((cement vert)\<otimes> (cement cap))))"
 
-abbreviation left_over::"wall"
+abbreviation left_over::"walls"
 where
 " left_over \<equiv> ((basic ((cement cup)\<otimes>(cement vert))) \<circ> (basic ((cement vert)\<otimes>(cement over)))
 \<circ> (basic ((cement cap)\<otimes> (cement vert))))"
 
-abbreviation right_under::"wall"
+abbreviation right_under::"walls"
 where
 "right_under \<equiv>  ((basic ((cement vert)\<otimes>(cement cup))) \<circ> (basic ((cement under)\<otimes>(cement vert)))
 \<circ> (basic ((cement vert)\<otimes> (cement cap))))"
 
-abbreviation left_under::"wall"
+abbreviation left_under::"walls"
 where
 "left_under \<equiv>  ((basic ((cement cup)\<otimes>(cement vert))) \<circ> (basic ((cement vert)\<otimes>(cement under)))
 \<circ> (basic ((cement cap)\<otimes> (cement vert))))"
 
-abbreviation straight_line::"wall"
+abbreviation straight_line::"walls"
 where
 "straight_line \<equiv> (basic (cement vert)) \<circ> (basic (cement vert)) \<circ> (basic (cement vert))"
 
@@ -74,34 +74,34 @@ where
 
 text{*swing begins*}
 
-abbreviation r_over_braid::"wall"
+abbreviation r_over_braid::"walls"
 where
 "r_over_braid  \<equiv>  ((basic ((cement over)\<otimes>(cement vert))\<circ>(basic ((cement vert)\<otimes>(cement over)))
                  \<circ>(basic ((cement over)\<otimes>(cement vert)))))"
 
 
 
-abbreviation l_over_braid::"wall"
+abbreviation l_over_braid::"walls"
 where
 "l_over_braid  \<equiv>   (basic ((cement vert)\<otimes>(cement over))\<circ>(basic ((cement over)\<otimes>(cement vert)))
                     \<circ>(basic ((cement vert)\<otimes>(cement over))))"
 
 
-abbreviation r_under_braid::"wall"
+abbreviation r_under_braid::"walls"
 where
 "r_under_braid  \<equiv>  ((basic ((cement under)\<otimes>(cement vert))\<circ>(basic ((cement vert)\<otimes>(cement under)))
                  \<circ>(basic ((cement under)\<otimes>(cement vert)))))"
 
-abbreviation l_under_braid::"wall"
+abbreviation l_under_braid::"walls"
 where
 "l_under_braid  \<equiv>   (basic ((cement vert)\<otimes>(cement under))\<circ>(basic ((cement under)\<otimes>(cement vert)))
                     \<circ>(basic ((cement vert)\<otimes>(cement under))))"
 
-definition swing_pos::"wall \<Rightarrow> wall \<Rightarrow> bool"
+definition swing_pos::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
 "swing_pos x y \<equiv> (x = r_over_braid)\<and>(y = l_over_braid)"
 
-definition swing_neg::"wall \<Rightarrow> wall \<Rightarrow> bool"
+definition swing_neg::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
 "swing_neg x y \<equiv>(x = r_under_braid)\<and>(y=l_under_braid)"
 
@@ -166,7 +166,7 @@ where
                              \<and> (y = ((basic ((cement under)\<otimes>(cement vert))
                                      \<circ>(basic ((cement vert)\<otimes>(cement cap)))))))"
 
-definition rotate_topneg::"wall \<Rightarrow> wall \<Rightarrow> bool"
+definition rotate_topneg::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
 "rotate_topneg x y \<equiv> ((x = ((basic ((cement vert)\<otimes>(cement under)))
                                      \<circ>(basic ((cement cap)\<otimes>(cement vert)))))
@@ -174,7 +174,7 @@ where
                                      \<circ>(basic ((cement vert)\<otimes>(cement cap)))))))"
 
 
-definition rotate_downpos::"wall \<Rightarrow> wall \<Rightarrow> bool"
+definition rotate_downpos::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
 "rotate_downpos x y \<equiv>  ((x = ((basic ((cement cap)\<otimes>(cement vert)))
                                      \<circ>(basic ((cement vert)\<otimes>(cement over)))))
@@ -183,7 +183,7 @@ where
 
 
 
-definition rotate_downneg::"wall \<Rightarrow> wall \<Rightarrow> bool"
+definition rotate_downneg::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
 "rotate_downneg x y \<equiv>  ((x = ((basic ((cement cap)\<otimes>(cement vert)))
                                      \<circ>(basic ((cement vert)\<otimes>(cement under)))))
@@ -194,7 +194,7 @@ where
 text{*rotate definition*}
 
 
-definition rotate::"wall \<Rightarrow> wall \<Rightarrow> bool"
+definition rotate::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
 "rotate x y \<equiv> ((rotate_toppos x y) \<or> (rotate_topneg x y)
 \<or> (rotate_downpos x y) \<or> (rotate_downneg x y))"
@@ -207,41 +207,41 @@ and compabove. compbelow and compabove are further written as disjunction of man
 Compbelow refers to when the bottom row is extended or compressed. Compabove refers to when the 
 row above is extended or compressed*}
 
-definition compress_top::"wall \<Rightarrow> wall \<Rightarrow> bool"
+definition compress_top::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
 "compress_top x y \<equiv>  \<exists>B.((x = (basic (make_vert_block (nat (domain_wall B - 1))))\<circ> B)
                               \<and>(y = (B \<circ> (basic (cement empty))))\<and>(codomain_wall B = 0))"
 
 
-definition compress_bottom::"wall \<Rightarrow> wall \<Rightarrow> bool"
+definition compress_bottom::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
 "compress_bottom x y \<equiv>   \<exists>B.((x = B \<circ> (basic (make_vert_block (nat (domain_wall B - 1)))))
                               \<and>(y = ((basic (cement empty) \<circ> B)))\<and>(domain_wall B = 0))"
 (*linkrel_compress*)
-definition compress::"wall \<Rightarrow> wall \<Rightarrow> bool"
+definition compress::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
 "compress x y = ((compress_top x y) \<or> (compress_bottom x y))"
 
 text{*slide relation refer to the relation where a crossing is slided over a vertical strand*}
-definition slide::"wall \<Rightarrow> wall \<Rightarrow> bool"
+definition slide::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
 "slide x y \<equiv>  \<exists>B.((x = ((basic (make_vert_block (nat (domain_block B - 1))))\<circ>(basic B)))
                \<and>(y = ((basic B)\<circ>(basic (make_vert_block (nat (domain_block B - 1)))))))"
 
 text{*linkrel_definition*}
 
-definition linkrel::"wall =>wall \<Rightarrow>bool"
+definition linkrel::"walls =>walls \<Rightarrow>bool"
 where
 "linkrel x y = ((uncross x y) \<or> (pull x y) \<or> (straighten x y) 
 \<or>(swing x y)\<or>(rotate x y) \<or> (compress x y) \<or> (slide x y))"
 
 
-definition framed_uncross::"wall \<Rightarrow> wall \<Rightarrow> bool"
+definition framed_uncross::"walls \<Rightarrow> walls \<Rightarrow> bool"
 where
 "framed_uncross x y \<equiv> ((uncross_positive_flip x y)\<or>(uncross_negative_flip x y))"
 
 
-definition framed_linkrel::"wall =>wall \<Rightarrow>bool"
+definition framed_linkrel::"walls =>walls \<Rightarrow>bool"
 where
 "framed_linkrel x y = ((framed_uncross x y) \<or> (pull x y) \<or> (straighten x y) 
 \<or>(swing x y)\<or>(rotate x y) \<or> (compress x y) \<or> (slide x y))"

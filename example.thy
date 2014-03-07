@@ -1,22 +1,129 @@
 theory example
-imports Tangles Link_Equivalence_Theorems
+imports Link_Algebra Links
 begin
 
 text{*We prove that the link diagram with a single crossing is equivalent to the unknot*}
+context Equivalence
+begin
+
+lemma left_over_well_defined:"well_defined_tangle left_over"
+ proof-
+ have "left_over = 
+               (((cement cup)\<otimes>(cement vert))
+              *((cement vert)\<otimes>(cement over))
+              *(basic ((cement cap)\<otimes>(cement vert))))" 
+     by auto
+ then have "(domain_codomain_list (basic ((cement cap)\<otimes>(cement vert)))) = []" 
+     using domain_codomain_list.simps by auto
+ moreover have "domain_wall (basic ((cement cap)\<otimes>(cement vert))) = 3" 
+     by auto 
+ moreover have "codomain_block ((cement vert)\<otimes>(cement over)) = 3" 
+     by auto
+ ultimately 
+   have "domain_codomain_list 
+        (((cement vert)\<otimes>(cement over))*(basic ((cement cap)\<otimes>(cement vert))))
+            = [0]" 
+     using domain_codomain_list.simps abs_def by auto
+ then have 
+  "domain_wall (((cement vert)\<otimes>(cement over))*(basic ((cement cap)\<otimes>(cement vert)))) = 3" 
+     by auto
+ moreover have "codomain_block ((cement cup)\<otimes>(cement vert)) = 3" 
+     by auto
+ then have "domain_codomain_list left_over = [0,0]" using domain_codomain_list.simps abs_def
+     by auto
+ then have "list_sum (domain_codomain_list left_over) = 0" 
+     by auto
+ then show ?thesis unfolding well_defined_tangle_def by auto
+ qed
+
+lemma straight_line_well_defined:"well_defined_tangle straight_line"
+ proof-
+ have "straight_line = ((cement vert)*((cement vert)*(basic (cement vert))))"
+        by auto
+ then have "(domain_codomain_list (basic (cement vert))) = []" 
+        using domain_codomain_list.simps by auto
+ moreover have "domain_wall (basic (cement vert)) =1 " 
+        by auto 
+ moreover have "codomain_block (cement vert) = 1" 
+        by auto
+ ultimately have "domain_codomain_list ((cement vert)*(basic (cement vert)))= [0]" 
+        using domain_codomain_list.simps abs_def by auto
+ then have "domain_wall ((cement vert)*(basic (cement vert)))
+       = 1" by auto
+ moreover have "codomain_block (cement vert) = 1" by auto
+ then have "domain_codomain_list straight_line = [0,0]" 
+       using domain_codomain_list.simps abs_def
+       by auto
+ then have "list_sum (domain_codomain_list straight_line) = 0" by auto
+ then show ?thesis unfolding well_defined_tangle_def by auto
+ qed
 
 
-lemma linkrel_trans: assumes "linkrel_equiv x y" and "linkrel_equiv y z"
-shows "linkrel_equiv x z"
-using rtranclp_trans linkrel_equiv_def  by (metis (full_types) assms(1) assms(2))
-
-theorem example:"linkrel_equiv (Abs_diagram ((basic ((cement cup) \<otimes> (cement cup))) \<circ>(basic ((cement vert) \<otimes> (cement over) \<otimes> (cement vert))) 
-\<circ> (basic ((cement cap) \<otimes> (cement cap)))))
- (Abs_diagram ((basic (cement cup)) \<circ> (basic (cement cap))))" 
+theorem example:"(Abs_Tangle ((basic ((cement cup) \<otimes> (cement cup))) 
+\<circ>(basic ((cement vert) \<otimes> (cement over) \<otimes> (cement vert))) 
+\<circ> (basic ((cement cap) \<otimes> (cement cap)))))= 
+ (Abs_Tangle ((basic (cement cup)) \<circ> (basic (cement cap))))" 
 
 proof-
- have 1:"snd (count (cement cap)) = 0" using count.simps by auto
- have 2: "strands ((cement vert) \<otimes> (cement vert))" using strands.simps  append.simps 
- by (metis append_blocks_Nil brickstrand.simps(1))
+ have "left_over =  ((basic ((cement cup)\<otimes>(cement vert)))
+           \<circ>(basic ((cement vert)\<otimes>(cement over)))
+           \<circ>(basic ((cement cap)\<otimes>(cement vert))))" by auto
+ have "straight_line = (basic (cement vert))
+          \<circ>(basic (cement vert))
+          \<circ>(basic (cement vert))" by auto
+ have "uncross_negative_straighten left_over straight_line"
+        using uncross_negative_straighten_def by auto
+ then have "linkrel left_over straight_line" unfolding linkrel_def uncross_def by auto
+ then have 1:" (left_over) = (straight_line)" using equality by auto    
+ let ?w1 = "(basic ((cement cup) \<otimes> (cement vert) \<otimes> (cement vert))) 
+           \<circ>(basic ((cement vert) \<otimes> (cement over) \<otimes> (cement vert))) 
+           \<circ>(basic ((cement cap) \<otimes> (cement vert) \<otimes> (cement vert)))"
+ have 2:"left_over \<otimes> straight_line = ?w1" 
+     proof-
+     have "basic ((cement cap) \<otimes> (cement vert)) \<otimes> (basic (cement vert)) 
+                  =   (basic ((cement cap) \<otimes> (cement vert) \<otimes> (cement vert)))"
+                 unfolding tensor.simps  by auto
+     then have "((basic ((cement vert)\<otimes>(cement over)))
+           \<circ>(basic ((cement cap)\<otimes>(cement vert)))) 
+       \<otimes>  ((basic (cement vert))\<circ> (basic (cement vert)))
+    = (basic ((cement vert) \<otimes> (cement over) \<otimes> (cement vert))) 
+           \<circ>(basic ((cement cap) \<otimes> (cement vert) \<otimes> (cement vert)))"
+            unfolding tensor.simps by auto
+     then show ?thesis by auto
+     qed
+ let ?w2 = "basic ((cement vert) \<otimes> (cement vert)) 
+           \<circ>(basic ((cement vert) \<otimes> (cement vert))) 
+           \<circ>(basic ((cement vert) \<otimes> (cement vert)))"
+ have 3:"straight_line \<otimes> straight_line = (?w2)"
+     proof-
+     have "(basic (cement vert)) \<otimes> (basic (cement vert)) = (basic ((cement vert) \<otimes> (cement vert)))"
+          by auto
+     then have "((basic (cement vert))\<circ>(basic (cement vert)))
+                \<otimes>((basic (cement vert))\<circ>(basic (cement vert))) 
+             = (basic ((cement vert) \<otimes> (cement vert))) 
+               \<circ>(basic ((cement vert) \<otimes> (cement vert)))"
+               by auto
+    then show ?thesis by auto 
+    qed
+ have "well_defined_tangle (left_over) \<and> (well_defined_tangle straight_line)\<and> (straight_line=left_over)" 
+     using left_over_well_defined straight_line_well_defined 1  by auto
+ then have "(left_over \<otimes> straight_line) = (straight_line \<otimes> straight_line)"
+       using 1  tensor_eq  by auto
+ have "well_defined_tangle (?w1)" unfolding well_defined_tangle_def list_sum_def domain_codomain_list_def
+          concatenate_def by (metis block.distinct(1) right_empty_block)              
+ then have  "Abs_Tangle (left_over \<otimes> straight_line) = Abs_Tangle (left_over) \<otimes> Abs_Tangle( straight_line)" 
+    unfolding compose_Tangle_def
+ moreover have "\<exists>A2.\<exists>B2. (?y \<otimes> ?z)= (A2 \<otimes> B2)" by metis
+ moreover have "linkrel ?z ?z" unfolding linkrel_def linkrel_reflexive_def by auto
+ ultimately have "linkrel_diagram_tensor (?x \<otimes> ?z) (?y \<otimes> ?z)" using 1  linkrel_diagram_tensor_def
+            by metis
+ then have "linkrel_diagram_tensor ?w1 ?w2" using 2 3 by auto
+ then have "linkrel_diagram ?w1 ?w2" unfolding linkrel_diagram_def by auto
+ then have 
+have 1:"codomain_block (cement cap) = 0"  by auto
+ have 2: "make_vert_block (nat (domain_block (cement cap))) = ((cement vert) \<otimes> (cement vert))" 
+     using concatenate.simps
+     sledgehammer
  let ?B = "(cement cap)"
  let ?A = "(cement vert) \<otimes> (cement vert)"
  let ?x = "(Abs_diagram ((basic ((cement cup) \<otimes> (cement cup))) 
@@ -281,4 +388,5 @@ proof-
                         using step1 rtranclp_trans linkrel_equiv_def by metis
  from this show ?thesis by auto
  qed
+*)
 end

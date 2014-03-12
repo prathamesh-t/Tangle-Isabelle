@@ -2,8 +2,8 @@ theory Preliminaries
 imports Datatype Main Typedef 
 begin
 
-text{* This theory contains the definition of a Link. A link is defined as Link diagrams upto 
- equivalence moves. Link diagrams are defined in terms of the constituent tangles*}
+text{* This theory Constains the definition of a Link. A link is defined as Link diagrams upto 
+ equivalence moves. Link diagrams are defined in terms of the Constituent tangles*}
 
 text{*each  block is a horizontal block built by putting basic link bricks next to each other.
 (1) vert is the straight line
@@ -19,8 +19,8 @@ datatype brick = vert
                 |under
          
 text{*block is obtained by putting bricks next to each other*}
-datatype block = empty_block
-                 |cons brick block  (infixr "#" 60)              
+
+type_synonym block = "brick list"
 
 text{*wall are link diagrams obtained by placing a horizontal blocks a top each other*}
 (* Consistent number - datatype wall *)
@@ -31,15 +31,15 @@ text{*Concatenate gives us the block obtained by putting two blocks next to each
 
 
 primrec concatenate :: "block => block => block" (infixr "\<otimes>" 65) where
-concatenates_Nil: "(empty_block) \<otimes> ys = ys" |
+concatenates_Nil: "[] \<otimes> ys = ys" |
 concatenates_Cons: "((x#xs)\<otimes>ys) = x#(xs\<otimes>ys)"
 
-lemma empty_concatenate: "xs \<otimes> empty_block = xs"
+lemma empty_concatenate: "xs \<otimes> Nil = xs"
  apply(induct_tac xs)
  apply(auto)
  done
 
-text{*Associativity properties of concatenation*}
+text{*Associativity properties of Conscatenation*}
 lemma leftright_associativity: "(x\<otimes>y)\<otimes>z = x\<otimes>(y\<otimes>z)"
 apply(induct_tac x)
 apply(auto)
@@ -76,8 +76,8 @@ done
 text{*block_length of a block is the number of bricks in a given block*}
 primrec block_length::"block \<Rightarrow> nat"
 where
-"block_length (empty_block) = 0"|
-"block_length (cons x y) = 1 + (block_length y)"
+"block_length [] = 0"|
+"block_length (Cons x y) = 1 + (block_length y)"
 
 
 
@@ -102,16 +102,16 @@ where
 (*domain_block tells us the number of incoming strands of a block*)
  primrec domain_block::"block \<Rightarrow> int "
  where
- "domain_block (empty_block) = 0"
- |"domain_block (cons x y) = (domain x + (domain_block y))"
+ "domain_block [] = 0"
+ |"domain_block (Cons x y) = (domain x + (domain_block y))"
 
 
 (*codomain_block tells us the number of outgoing strands of a block*)
 
  primrec codomain_block::"block \<Rightarrow> int "
  where
- "codomain_block (empty_block) = 0"
- |"codomain_block (cons x y) = (codomain x + (codomain_block y))"
+ "codomain_block [] = 0"
+ |"codomain_block (Cons x y) = (codomain x + (codomain_block y))"
 
 
 (*domain_wall tells us the number of incoming strands of a wall*)
@@ -192,16 +192,16 @@ lemma codomain_block_nonnegative: "(codomain_block x) \<ge> 0"
 text{*The following lemmas tell us that if a block is appended to a block with incoming strands, then
 the resultant block has incoming strands*}
 
-lemma domain_positive: "((domain_block (x#empty_block)) > 0) \<or> ((domain_block y) > 0) 
+lemma domain_positive: "((domain_block (x#Nil)) > 0) \<or> ((domain_block y) > 0) 
 \<Longrightarrow> (domain_block (x#y) > 0)" 
 proof-
  have "(domain_block (x#y)) =  (domain x) + (domain_block y)"  by auto
- also have " (domain x) = (domain_block (x#empty_block))" by auto
- then have "(domain_block (x#empty_block) > 0) = (domain x > 0)"  by auto
+ also have " (domain x) = (domain_block (x#Nil))" by auto
+ then have "(domain_block (x#Nil) > 0) = (domain x > 0)"  by auto
  then have "((domain x > 0) \<or> (domain_block y > 0)) \<Longrightarrow> (domain x + domain_block y)>0"
     using domain_nonnegative add_nonneg_pos add_pos_nonneg domain_block_nonnegative by metis 
  from this  
-       show "((domain_block(x#empty_block)) > 0) \<or> ((domain_block y) > 0) \<Longrightarrow> (domain_block (x#y) > 0)" 
+       show "((domain_block(x#Nil)) > 0) \<or> ((domain_block y) > 0) \<Longrightarrow> (domain_block (x#y) > 0)" 
             by auto
 qed
   
@@ -248,7 +248,7 @@ where
 
 primrec is_cup::"block \<Rightarrow> bool"
 where
-"is_cup (empty_block) = True"|
+"is_cup [] = True"|
 "is_cup (x#y) = (if (x= cup) then (is_cup y) else False)"
 (*
 (* Why three components??? Should not be true: CHECK*)
@@ -273,21 +273,21 @@ lemma brickcount_zero_implies_brick_is_cup:"(domain x= 0) \<Longrightarrow> (bri
 
 lemma domain_zero_implies_is_cup:"(domain_block x= 0) \<Longrightarrow> (is_cup x)"
 proof(induction x)
- case empty_block
+ case Nil
   show ?case by auto
   next
- case (cons a y)
+ case (Cons a y)
    show ?case 
    proof-
    have step1: "domain_block (a # y) =  (domain a) + (domain_block y)" 
                by auto
    with domain_zero_sum have"domain_block y = 0" 
-               by (metis (full_types) cons.prems domain_block_nonnegative domain_positive leD neq_iff)
+               by (metis (full_types) Cons.prems domain_block_nonnegative domain_positive leD neq_iff)
    then have step2: "(is_cup y)" 
-               using cons.IH by (auto) 
+               using Cons.IH by (auto) 
    with step1 and domain_zero_sum  
             have "domain a= 0" 
-              by (metis `domain_block y = 0` comm_monoid_add_class.add.right_neutral cons.prems)
+              by (metis `domain_block y = 0` comm_monoid_add_class.add.right_neutral Cons.prems)
    then  have "brick_is_cup a" 
                using brickcount_zero_implies_brick_is_cup by auto
    with assms have "a=cup" 
@@ -300,12 +300,12 @@ qed
 
 
 text{* We need a function that checks if a wall represents a knot diagram. The function well_defined 
-serves this purpose. It ensures that all the incoming strands and outgoing strands of constituend 
+serves this purpose. It ensures that all the incoming strands and outgoing strands of Constituend 
 blocks are matched and the wall itself has not incoming and outgoing strands. It is defined using 
-the function wall_count_list gives the list of number of incoming strand of a constituent block 
+the function wall_count_list gives the list of number of incoming strand of a Constituent block 
 minus the outgoing strand of the block below*}
 
-(* Much easier approach, pattern match by single block is fine, constructor check one case*)
+(* Much easier approach, pattern match by single block is fine, Constructor check one case*)
 (*
 primrec list_sum::"int list \<Rightarrow> int" 
 where

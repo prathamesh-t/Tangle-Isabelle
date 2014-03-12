@@ -21,12 +21,12 @@ where
 (*Each of the blocks are assigned a list of strand types*)
 primrec block_to_strand::"block \<Rightarrow> strand list"
 where
-"block_to_strand (cement x) = (strand_list x)"
-|"block_to_strand (cons x xs) = (strand_list x)@(block_to_strand xs)"
+"block_to_strand [] = []"
+|"block_to_strand (x#xs) = (strand_list x)@(block_to_strand xs)"
 
 (*Each wall is assigned a list of list of strands - this definition automatically gives us
 a way to allot positions to strand types in the wall*)
-primrec strand_list_list ::"walls \<Rightarrow> strand list list"
+primrec strand_list_list ::"wall \<Rightarrow> strand list list"
 where
 "strand_list_list (basic x) = [(block_to_strand x)]"
 |"strand_list_list (prod x xs) = (block_to_strand x)#(strand_list_list xs)"
@@ -46,11 +46,11 @@ definition list_filter_out_cap::"strand list \<Rightarrow> strand list"
 where
 "list_filter_out_cap x = (filter (filter_out_cap_prop)  x)"
 
-definition filter_out_cap::"walls \<Rightarrow> nat \<times> nat \<Rightarrow> strand list"
+definition filter_out_cap::"wall \<Rightarrow> nat \<times> nat \<Rightarrow> strand list"
 where
 "filter_out_cap w x \<equiv> list_filter_out_cap (drop ((fst x)+1) ((strand_list_list w)!(snd x)))"
 
-definition cap_minus_count::"walls \<Rightarrow> nat \<times> nat \<Rightarrow> nat"
+definition cap_minus_count::"wall \<Rightarrow> nat \<times> nat \<Rightarrow> nat"
 where
 "cap_minus_count w x = size (filter_out_cap w x)"
 
@@ -65,24 +65,24 @@ definition list_filter_out_cup::"strand list \<Rightarrow> strand list"
 where
 "list_filter_out_cup x = (filter (filter_out_cup_prop) x)"
 
-definition filter_out_cup::"walls \<Rightarrow> nat \<times> nat \<Rightarrow> strand list"
+definition filter_out_cup::"wall \<Rightarrow> nat \<times> nat \<Rightarrow> strand list"
 where
 "filter_out_cup w x \<equiv> list_filter_out_cup (drop ((fst x)+1) ((strand_list_list w)!(snd x)))"
 
-definition cup_minus_count::"walls \<Rightarrow> nat \<times> nat \<Rightarrow> nat"
+definition cup_minus_count::"wall \<Rightarrow> nat \<times> nat \<Rightarrow> nat"
 where
 "cup_minus_count w x = size (filter_out_cup w x)"
 
 (*returns true if x=(s,i,j) for a given wall w such that s represents the strand in the position 
 (i,j) of the strand array of w *)
-definition well_defined_strand::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow>  bool"
+definition well_defined_strand::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow>  bool"
 where
 "well_defined_strand w x \<equiv> ((strand_list_list w)!(snd (snd x))!(fst (snd x)) = (fst x))"
 
 
 (*returns true if x=(s',i,j) for a given wall w such that s represents the strand in the position 
 (i,j) of the strand array of w  and s = s'*)
-definition strand_check::"walls \<Rightarrow> strand \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition strand_check::"wall \<Rightarrow> strand \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "strand_check w s x \<equiv> (((strand_list_list w)!(snd (snd x))!(fst (snd x))) = s)
 \<and>((fst x)= s)"
@@ -94,7 +94,7 @@ w!i1!j1 is s1.
 (3) if y (=(s2,i2,j2)) represents the strand s2 such that in the strand array of the given wall w, 
 w!i2!j2 is s2.
 (4) end points of the strands match *)
-definition relation_vert::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition relation_vert::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "relation_vert w x y \<equiv> (strand_check w str_vert x) \<and> (well_defined_strand w y)
 \<and> ((snd (snd y))+ 1= snd (snd x)) \<and> (cap_minus_count w (snd y) = cup_minus_count w (snd x))
@@ -103,7 +103,7 @@ where
 
 (*returns true if  x =(s1,i1,j1) and  y = (s2, i2,j2) represent the adjacent strands 
 -left cap and right cap respectively, *)
-definition relation_lcap_rcap::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition relation_lcap_rcap::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "relation_lcap_rcap w x y \<equiv>(strand_check w str_lcap x)\<and> (strand_check w str_rcap y)
 \<and>((snd (snd y)) = (snd (snd x))) \<and> ((fst (snd y) +1 = fst (snd x)))"
@@ -115,7 +115,7 @@ w!i1!j1 is s1.
 (3) if y (=(s2,i2,j2)) represents the strand s2 such that in the strand array of the given wall w, 
 w!i2!j2 is s2.
 (4) end points of the strands match *)
-definition relation_lcap_below::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition relation_lcap_below::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "relation_lcap_below w x y \<equiv>(strand_check w str_lcap x)\<and>
 (well_defined_strand w y)
@@ -131,7 +131,7 @@ w!i1!j1 is s1.
 w!i2!j2 is s2.
 (4) end points of the strands match *)
 
-definition relation_rcap_below::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition relation_rcap_below::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "relation_rcap_below w x y \<equiv>(strand_check w str_rcap x)\<and>
 (well_defined_strand w y)
@@ -141,7 +141,7 @@ where
 
 (*returns true  if  x =(s1,i1,j1) and  y = (s2, i2,j2) represent the adjacent strands 
 -left cap and right cap respectively, *)
-definition relation_lcup_rcup::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition relation_lcup_rcup::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "relation_lcup_rcup w x y \<equiv>(strand_check w str_lcup x)\<and> (strand_check w str_rcup y)
 \<and>((snd (snd y)) = (snd (snd x))) \<and> ((fst (snd y) +1 = fst (snd x)))"
@@ -157,7 +157,7 @@ w!i1!j1 is s1.
 (3) if y (=(s2,i2,j2)) represents the strand s2 such that in the strand array of the given wall w, 
 w!i2!j2 is s2.
 (4) end points of the strands match *)
-definition relation_rover::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition relation_rover::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "relation_rover w x y \<equiv> (strand_check w str_rover x)\<and> (well_defined_strand w y)
 \<and>(snd (snd y)) + 1= (snd (snd x)) \<and> (cap_minus_count w (snd y) = cup_minus_count w (snd x) + 1)
@@ -173,7 +173,7 @@ w!i1!j1 is s1.
 (3) if y (=(s2,i2,j2)) represents the strand s2 such that in the strand array of the given wall w, 
 w!i2!j2 is s2.
 (4) end points of the strands match *)
-definition relation_runder::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition relation_runder::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "relation_runder w x y \<equiv> (strand_check w str_runder x)\<and> (well_defined_strand w y)
 \<and>(snd (snd y)) + 1= (snd (snd x)) \<and> (cap_minus_count w (snd y) = cup_minus_count w (snd x) + 1)
@@ -188,7 +188,7 @@ w!i1!j1 is s1.
 (3) if y (=(s2,i2,j2)) represents the strand s2 such that in the strand array of the given wall w, 
 w!i2!j2 is s2.
 (4) end points of the strands match *)
-definition relation_lover::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition relation_lover::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "relation_lover w x y \<equiv> 
 (strand_check w str_lover x)\<and> (well_defined_strand w y)\<and>
@@ -204,7 +204,7 @@ w!i1!j1 is s1.
 (3) if y (=(s2,i2,j2)) represents the strand s2 such that in the strand array of the given wall w, 
 w!i2!j2 is s2.
 (4) end points of the strands match *)
-definition relation_lunder::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition relation_lunder::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "relation_lunder w x y \<equiv> (strand_check w str_lunder x)\<and> (well_defined_strand w y)\<and>
 (snd (snd y)) + 1= (snd (snd x)) \<and> (cap_minus_count w (snd y) + 1 = cup_minus_count w (snd x))
@@ -212,7 +212,7 @@ where
 
 
 (*Returns true if two strands are related by any of the above relations*)
-definition strand_rel::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition strand_rel::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "strand_rel w x y \<equiv> ((relation_lcap_rcap w x y)
 \<or>(relation_lcup_rcup w x y) \<or> (relation_vert w x y) \<or>(relation_lcap_below w x y)
@@ -226,38 +226,38 @@ where
 
 
 (*symmetric variant of the strand relation*)
-definition relation::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition relation::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "relation w \<equiv> (symmetrize (strand_rel w))"
 
 
 (*Reflexive transitive closure of the above relation*)
-definition strand_equivalence::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
+definition strand_equivalence::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow> bool"
 where
 "strand_equivalence w \<equiv> (relation w)^**"
 
 
 (*orbit of a given element of (strand \<times> nat \<times> nat), which is the set of elements which are related 
 to it *)
-definition orbit::"walls \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow>(strand \<times> nat \<times> nat) set"
+definition orbit::"wall \<Rightarrow> strand \<times> nat \<times> nat \<Rightarrow>(strand \<times> nat \<times> nat) set"
 where
 "orbit w x = {y. strand_equivalence w x y = True}"
 
 (*orbit space- the set of components - it is obtained by taking the orbit of all the 
 well defined strands for a give wall w*)
-definition orbit_space::"walls \<Rightarrow> (strand \<times> nat \<times> nat) set set"
+definition orbit_space::"wall \<Rightarrow> (strand \<times> nat \<times> nat) set set"
 where
 "orbit_space w \<equiv> {(orbit w x)| x. well_defined_strand w x }"
 
 (*the cardinality of orbit space gives the component_number of the wall*)
-definition component_number::"walls \<Rightarrow> nat"
+definition component_number::"wall \<Rightarrow> nat"
 where
 "component_number w \<equiv> card (orbit_space w)"
 
 (*is a knot diagram only if the number of components are 1*)
-definition is_Knot_diagram::"diagram \<Rightarrow> bool"
+definition is_Knot_diagram::"Link_Diagram \<Rightarrow> bool"
 where
-"is_Knot_diagram K \<equiv> (component_number (Rep_diagram K) = 1)"
+"is_Knot_diagram K \<equiv> (component_number (Rep_Link_Diagram K) = 1)"
 
 
 (*

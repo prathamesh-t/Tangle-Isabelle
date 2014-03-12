@@ -9,12 +9,12 @@ text{*well_defined wall as a type called diagram. The morphisms Abs_diagram maps
 its diagram type and Rep_diagram maps the diagram back to the wall *}
 
 typedef Tangle_Diagram = "{(x::wall). is_tangle_diagram x}"
- apply (rule_tac x = "prod (cup#empty_block) (basic (cap#empty_block))" in exI)
+ apply (rule_tac x = "prod (cup#[]) (basic (cap#[]))" in exI)
  apply(auto)
  done
 
 typedef Link_Diagram = "{(x::wall). is_link_diagram x}"
- apply (rule_tac x = "prod (cup#empty_block) (basic (cap#empty_block))" in exI)
+ apply (rule_tac x = "prod (cup#[]) (basic (cap#[]))" in exI)
  apply(auto)
  apply(simp add:is_link_diagram_def abs_def)
  done

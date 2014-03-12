@@ -10,8 +10,8 @@ returns the same wall*}
 
 locale empty_compose = 
  fixes rel::"wall \<Rightarrow> wall \<Rightarrow> bool" (infixl "~" 65)
-assumes domain_compose: "(domain_wall x = 0) \<Longrightarrow>(basic (empty_block)) \<circ> x ~ x"
-and codomain_compose: "(codomain_wall x = 0) \<Longrightarrow>(x \<circ> (basic (empty_block))) ~  x"
+assumes domain_compose: "(domain_wall x = 0) \<Longrightarrow>(basic []) \<circ> x ~ x"
+and codomain_compose: "(codomain_wall x = 0) \<Longrightarrow>(x \<circ> (basic [])) ~  x"
 
 text{*If two wall are related by linkrel, then they give rise to the same tangles in this locale*}
 
@@ -64,10 +64,10 @@ definition Equivalent_Links::"Tangle_Diagram \<Rightarrow> Tangle_Diagram  \<Rig
 where
 "Equivalent_Links x y \<equiv> (Link x) \<and> (Link y) \<and> (x ~ y)"
 
-lemma domain_wall_empty:"domain_wall (basic (empty_block)) = 0"
+lemma domain_wall_empty:"domain_wall (basic []) = 0"
   by auto
 
-lemma "basic (empty_block) \<circ> (basic (empty_block)) ~ basic (empty_block) "
+lemma "basic ([]) \<circ> (basic ([])) ~ basic ([]) "
   using domain_block.simps(1) domain_compose domain_wall.simps(1) by auto
   
 end

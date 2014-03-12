@@ -26,29 +26,28 @@ text{* Link uncross*}
 
 abbreviation right_over::"wall"
 where
-"right_over \<equiv>   ((basic (vert#cup#empty_block)) \<circ> (basic (over#vert#empty_block))
-\<circ> (basic (vert#cap#empty_block)))"
+"right_over \<equiv>   ((basic [vert,cup]) \<circ> (basic [over,vert])\<circ>(basic [vert,cap]))"
 
 
 abbreviation left_over::"wall"
 where
-" left_over \<equiv> ((basic (cup#vert#empty_block)) \<circ> (basic (vert#over#empty_block))
-\<circ> (basic (cap#vert#empty_block)))"
+" left_over \<equiv> ((basic (cup#vert#[])) \<circ> (basic (vert#over#[]))
+\<circ> (basic (cap#vert#[])))"
 
 abbreviation right_under::"wall"
 where
-"right_under \<equiv>   ((basic (vert#cup#empty_block)) \<circ> (basic (under#vert#empty_block))
-\<circ> (basic (vert#cap#empty_block)))"
+"right_under \<equiv>   ((basic (vert#cup#[])) \<circ> (basic (under#vert#[]))
+\<circ> (basic (vert#cap#[])))"
 
 
 abbreviation left_under::"wall"
 where
-" left_under \<equiv> ((basic (cup#vert#empty_block)) \<circ> (basic (vert#under#empty_block))
-\<circ> (basic (cap#vert#empty_block)))"
+" left_under \<equiv> ((basic (cup#vert#[])) \<circ> (basic (vert#under#[]))
+\<circ> (basic (cap#vert#[])))"
 
 abbreviation straight_line::"wall"
 where
-"straight_line \<equiv> (basic (vert#empty_block)) \<circ> (basic (vert#empty_block)) \<circ> (basic (vert#empty_block))"
+"straight_line \<equiv> (basic (vert#[])) \<circ> (basic (vert#[])) \<circ> (basic (vert#[]))"
 
 definition uncross_positive_flip::relation
 where
@@ -79,26 +78,26 @@ text{*swing begins*}
 
 abbreviation r_over_braid::"wall"
 where
-"r_over_braid  \<equiv>  ((basic ((over#vert#empty_block))\<circ>(basic ((vert#over#empty_block)))
-                 \<circ>(basic (over# vert#empty_block))))"
+"r_over_braid  \<equiv>  ((basic ((over#vert#[]))\<circ>(basic ((vert#over#[])))
+                 \<circ>(basic (over# vert#[]))))"
 
 
 
 abbreviation l_over_braid::"wall"
 where
-"l_over_braid  \<equiv>   (basic (vert#over#empty_block))\<circ>(basic (over#vert#empty_block))
-                    \<circ>(basic (vert#over#empty_block))"
+"l_over_braid  \<equiv>   (basic (vert#over#[]))\<circ>(basic (over#vert#[]))
+                    \<circ>(basic (vert#over#[]))"
 
 
 abbreviation r_under_braid::"wall"
 where
-"r_under_braid  \<equiv>   ((basic ((under#vert#empty_block))\<circ>(basic ((vert#under#empty_block)))
-                 \<circ>(basic (under# vert#empty_block))))"
+"r_under_braid  \<equiv>   ((basic ((under#vert#[]))\<circ>(basic ((vert#under#[])))
+                 \<circ>(basic (under# vert#[]))))"
 
 abbreviation l_under_braid::"wall"
 where
-"l_under_braid  \<equiv>   (basic (vert#under#empty_block))\<circ>(basic (under#vert#empty_block))
-                    \<circ>(basic (vert#under#empty_block))"
+"l_under_braid  \<equiv>   (basic (vert#under#[]))\<circ>(basic (under#vert#[]))
+                    \<circ>(basic (vert#under#[]))"
 
 definition swing_pos::"wall \<Rightarrow> wall \<Rightarrow> bool"
 where
@@ -116,16 +115,16 @@ text{*pull begins*}
 
 definition pull_posneg::relation
 where
-"pull_posneg x y \<equiv>  ((x = ((basic (over#empty_block))\<circ>(basic  (under#empty_block))))
-                            \<and>(y = ((basic (vert#vert#empty_block)))
-                                   \<circ>(basic ((vert#vert#empty_block)))))"
+"pull_posneg x y \<equiv>  ((x = ((basic (over#[]))\<circ>(basic  (under#[]))))
+                            \<and>(y = ((basic (vert#vert#[])))
+                                   \<circ>(basic ((vert#vert#[])))))"
 
 
 definition pull_negpos::relation
 where
-"pull_negpos x y \<equiv>  ((x = ((basic (under#empty_block))\<circ>(basic  (over#empty_block))))
-                          \<and>(y = ((basic (vert#vert#empty_block)))
-                                   \<circ>(basic ((vert#vert#empty_block)))))"
+"pull_negpos x y \<equiv>  ((x = ((basic (under#[]))\<circ>(basic  (over#[]))))
+                          \<and>(y = ((basic (vert#vert#[])))
+                                   \<circ>(basic ((vert#vert#[])))))"
 
 text{* pull definition*}
 definition pull::relation
@@ -137,17 +136,17 @@ text{*linkrel_straighten*}
 
 definition straighten_topdown::relation
 where
-"straighten_topdown x y \<equiv>  ((x =((basic ((vert#cup#empty_block)))
-                                         \<circ>(basic ((cap#vert#empty_block)))))
-                                   \<and>(y = ((basic (vert#empty_block))\<circ>(basic (vert#empty_block)))))"
+"straighten_topdown x y \<equiv>  ((x =((basic ((vert#cup#[])))
+                                         \<circ>(basic ((cap#vert#[])))))
+                                   \<and>(y = ((basic (vert#[]))\<circ>(basic (vert#[])))))"
 
 
 
 definition straighten_downtop::relation
 where
-"straighten_downtop x y \<equiv>  ((x =((basic ((cup# vert#empty_block)))
-                                         \<circ>(basic ((vert# cap#empty_block)))))
-                                   \<and>(y = ((basic (vert#empty_block))\<circ>(basic (vert#empty_block)))))"
+"straighten_downtop x y \<equiv>  ((x =((basic ((cup# vert#[])))
+                                         \<circ>(basic ((vert# cap#[])))))
+                                   \<and>(y = ((basic (vert#[]))\<circ>(basic (vert#[])))))"
 
 
 
@@ -164,34 +163,34 @@ text{* rotate moves*}
 
 definition rotate_toppos::relation
 where
-"rotate_toppos x y \<equiv>  ((x = ((basic ((vert #over#empty_block)))
-                                     \<circ>(basic ((cap# vert#empty_block)))))
-                             \<and> (y = ((basic ((under#vert#empty_block))
-                                     \<circ>(basic ((vert#cap#empty_block)))))))"
+"rotate_toppos x y \<equiv>  ((x = ((basic ((vert #over#[])))
+                                     \<circ>(basic ((cap# vert#[])))))
+                             \<and> (y = ((basic ((under#vert#[]))
+                                     \<circ>(basic ((vert#cap#[])))))))"
 
 definition rotate_topneg::"wall \<Rightarrow> wall \<Rightarrow> bool"
 where
-"rotate_topneg x y \<equiv>  ((x = ((basic ((vert #under#empty_block)))
-                                     \<circ>(basic ((cap# vert#empty_block)))))
-                             \<and> (y = ((basic ((over#vert#empty_block))
-                                     \<circ>(basic ((vert#cap#empty_block)))))))"
+"rotate_topneg x y \<equiv>  ((x = ((basic ((vert #under#[])))
+                                     \<circ>(basic ((cap# vert#[])))))
+                             \<and> (y = ((basic ((over#vert#[]))
+                                     \<circ>(basic ((vert#cap#[])))))))"
 
 
 definition rotate_downpos::"wall \<Rightarrow> wall \<Rightarrow> bool"
 where
-"rotate_downpos x y \<equiv>  ((x = ((basic (cap#vert#empty_block))
-                                     \<circ>(basic (vert#over#empty_block))))
-                             \<and> (y = ((basic ((vert#cap#empty_block)))
-                                    \<circ>(basic ((under#vert#empty_block))))))"
+"rotate_downpos x y \<equiv>  ((x = ((basic (cap#vert#[]))
+                                     \<circ>(basic (vert#over#[]))))
+                             \<and> (y = ((basic ((vert#cap#[])))
+                                    \<circ>(basic ((under#vert#[]))))))"
 
 
 
 definition rotate_downneg::"wall \<Rightarrow> wall \<Rightarrow> bool"
 where
-"rotate_downneg x y \<equiv>  ((x = ((basic (cap#vert#empty_block))
-                                     \<circ>(basic (vert#under#empty_block))))
-                             \<and> (y = ((basic ((vert#cap#empty_block)))
-                                    \<circ>(basic ((over#vert#empty_block))))))"
+"rotate_downneg x y \<equiv>  ((x = ((basic (cap#vert#[]))
+                                     \<circ>(basic (vert#under#[]))))
+                             \<and> (y = ((basic ((vert#cap#[])))
+                                    \<circ>(basic ((over#vert#[]))))))"
 
 
 text{*rotate definition*}
@@ -213,13 +212,13 @@ row above is extended or compressed*}
 definition compress_top::"wall \<Rightarrow> wall \<Rightarrow> bool"
 where
 "compress_top x y \<equiv>  \<exists>B.((x = (basic (make_vert_block (nat (domain_wall B))))\<circ> B)
-                              \<and>(y = (B \<circ> (basic (empty_block))))\<and>(codomain_wall B = 0))"
+                              \<and>(y = (B \<circ> (basic ([]))))\<and>(codomain_wall B = 0))"
 
 
 definition compress_bottom::"wall \<Rightarrow> wall \<Rightarrow> bool"
 where
 "compress_bottom x y \<equiv>   \<exists>B.((x = B \<circ> (basic (make_vert_block (nat (codomain_wall B)))))
-                              \<and>(y = ((basic (empty_block) \<circ> B)))\<and>(domain_wall B = 0))"
+                              \<and>(y = ((basic ([]) \<circ> B)))\<and>(domain_wall B = 0))"
 (*linkrel_compress*)
 definition compress::"wall \<Rightarrow> wall \<Rightarrow> bool"
 where

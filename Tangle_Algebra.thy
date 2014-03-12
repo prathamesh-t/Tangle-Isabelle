@@ -5,7 +5,7 @@ begin
 (*the following definition enables construction of a block*)
 primrec make_vert_block:: "nat \<Rightarrow> block"
 where
-"make_vert_block 0 = empty_block"
+"make_vert_block 0 = []"
 |"make_vert_block (Suc n) = vert#(make_vert_block n)"
  
 
@@ -35,16 +35,15 @@ where
                               )"
 |4:"tensor (x*xs) (y*ys) = (x \<otimes> y)* (xs \<otimes> ys)"
 
-lemma empty_block_left_tensor:"xs \<otimes> (basic (empty_block)) = xs"
+lemma Nil_left_tensor:"xs \<otimes> (basic ([])) = xs"
  apply(case_tac xs)
- apply(simp add:empty_concatenate)
  apply(auto)
+ apply(simp add:empty_concatenate)
  apply(simp add:empty_concatenate)
  done
 
-lemma empty_block_right_tensor:"(basic (empty_block)) \<otimes> xs = xs"
+lemma Nil_right_tensor:"(basic ([])) \<otimes> xs = xs"
  apply(case_tac xs)
- apply(simp add: concatenate_def)
  apply(auto)
  done
  

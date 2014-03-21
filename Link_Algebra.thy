@@ -1,12 +1,14 @@
 theory Link_Algebra
 imports Tangles Tangle_Algebra Links
 begin
-
+(*
 text{*We use locales to describe the axiomatic properties of the empty brick, which state that
 empty brick commutes with regards to the tensor product. This properties holds true in the locale
 empty_tensor*}
 text{* It is assumed in the following locale that the composition of a wall with the empty wall 
 returns the same wall*}
+
+
 
 locale empty_compose = 
  fixes rel::"wall \<Rightarrow> wall \<Rightarrow> bool" (infixl "~" 65)
@@ -85,6 +87,24 @@ lemma "((funct x) \<noteq> (funct y)) \<longrightarrow> \<not> (x ~ y)"
     using invariance by auto
 
 end
+*)
+
+inductive Tangle_Equivalence :: "wall \<Rightarrow> wall  \<Rightarrow> bool"   (infixl "~" 64)
+where
+  refl [intro!, Pure.intro!, simp]: " a ~  a"
+ |equality [Pure.intro]: "linkrel a b \<Longrightarrow>  a ~ b"
+ |domain_compose:"(domain_wall a = 0) \<Longrightarrow>  a ~  ((basic empty_block)\<circ>a)"
+ |codomain_compose:"(codomain_wall a = 0) \<Longrightarrow> a ~ (a \<circ> (basic empty_block))"
+ |compose_eq:"((B::wall) ~ D) \<and> ((A::wall) ~ C)
+         \<and>(is_tangle_diagram A)\<and>(is_tangle_diagram B)
+         \<and>(is_tangle_diagram C)\<and>(is_tangle_diagram D) 
+         \<and>(domain_wall B)= (codomain_wall A)
+         \<and>(domain_wall D)= (codomain_wall C)
+                \<Longrightarrow>((A::wall) \<circ> B) ~ (C \<circ> D)"
+ |trans: "A~B \<Longrightarrow> B~C \<Longrightarrow> A ~ C"
+ |sym:"A~ B \<Longrightarrow> B ~C"
+ |tensor_eq: "((B::wall) ~ D) \<and> ((A::wall) ~ C) \<and>(is_tangle_diagram A)\<and>(is_tangle_diagram B)
+ \<and>(is_tangle_diagram C)\<and>(is_tangle_diagram D) \<Longrightarrow>((A::wall) \<otimes> B) ~ (C \<otimes> D)" 
 
 end
 

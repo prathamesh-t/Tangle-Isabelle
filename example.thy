@@ -4,8 +4,6 @@ begin
 
 text{*We prove that a link diagram with a single crossing is equivalent to the unknot*}
 
-context Tangle_Equivalence
-begin
 lemma prelim_cup_compress:
  " ((basic (cup#[])) \<circ> (basic (vert # vert # []))) ~
       ((basic [])\<circ>(basic (cup#[])))"  
@@ -40,8 +38,8 @@ lemma cup_compress:
       ((basic [])\<circ>(basic (cup#[])))"  
          using prelim_cup_compress  by auto
  moreover have "((basic [])\<circ>(basic (cup#[]))) ~  (basic (cup#[]))"
-         using domain_compose by auto
- ultimately show ?thesis using transitivity by metis
+         using domain_compose by (metis refl sym)
+ ultimately show ?thesis using trans by metis
  qed
  
 abbreviation x::"wall"
@@ -156,9 +154,9 @@ moreover have 5:"  (basic [cup])\<circ> (straight_line \<otimes> straight_line)
     then have "((basic (cup#[])) \<circ> ?x1) ~
            ((basic(cup#[]))\<circ>(basic(vert#vert#[])))"
       by auto
-    then show ?thesis using cup_compress transitivity by (metis (full_types)) 
+    then show ?thesis using cup_compress trans by (metis (full_types)) 
    qed
-   from 0 1 2 show ?thesis using trans transp_def transitivity  compose_Nil by (metis (full_types))
+   from 0 1 2 show ?thesis using trans transp_def trans  compose_Nil by (metis (full_types))
    qed
  let ?y = "((basic ([])) \<circ> (basic (cup#[])))  "
  let ?temp = "(basic (vert#over#vert#[]))\<circ>(basic (cap#vert#vert#[])) "  
@@ -202,11 +200,11 @@ moreover have 5:"  (basic [cup])\<circ> (straight_line \<otimes> straight_line)
                proof-
                have "domain_wall (basic (cup#cup#[])) = 0"
                     by auto
-                then show ?thesis using domain_compose by auto
+                then show ?thesis using domain_compose by (metis sym)
                 qed
   ultimately have "(?y) \<otimes> ((basic (cup#[])) \<circ>(basic (vert#vert#[])))
              ~  (basic (cup#cup#[]))"
-                using transitivity by (metis) 
+                using trans by (metis) 
   then have " (basic(cup#[]))\<circ>(basic(cup#vert#vert#[]))~(basic(cup#cup#[]))" 
            by auto
   moreover have "?temp ~ ?temp"
@@ -320,12 +318,12 @@ moreover have 5:"  (basic [cup])\<circ> (straight_line \<otimes> straight_line)
  moreover  have "((?z) \<circ> ((basic(cap#cap#[]))) \<circ> (basic ([]))) 
                 ~ ((?z) \<circ> (basic(cap#cap#[])))"
                using codomain_compose
-       by (metis `is_tangle_diagram (basic [cap, cap] \<circ> basic [])` codomain_wall_compose compose_leftassociativity converse_composition_of_tangle_diagrams domain_wall_empty)
+by (metis refl sym)
  ultimately have "(?z) \<circ>  ((basic(cap#vert#vert#[])) \<circ> (basic (cap#[])))
                      ~ ((?z) \<circ> (basic(cap#cap#[])))"
-             using trans transp_def by metis
+             using trans transp_def by (metis (full_types) sym)
  then have "((?z) \<circ> (basic(cap#cap#[]))) ~ ((basic (cup#[]))\<circ>(basic (cap#[])))"
-        using 9 10 trans transp_def by (metis sym transitivity)
+        using 9 10 trans transp_def by (metis sym trans)
  then show ?thesis by auto
 qed
      

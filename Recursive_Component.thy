@@ -68,51 +68,6 @@ where
 "swap i j (x#xs) =  (if (x = j) then i else if (x=i) then j else x)#(swap i j xs)"
 
 
-
-primrec vert_action::"nat \<Rightarrow> endpt list \<Rightarrow> endpt list"
-where
-"vert_action n [] = [codom (n+1)]"
-|"vert_action n (x#xs) = (x#xs)"
-(*replace action in over and under also required*)
-function over_action::"nat \<Rightarrow> endpt list \<Rightarrow> endpt list"
-where
-"over_action n [] = [dom (n+1),dom n]"
-|"over_action n [x] = [x,dom (n+1)]"
-|"over_action n (x#y#zs) = (swap (zs!0) (zs!1) (take (length (zs) - 2) (y#x#zs)))@[zs!0, zs!1]"
-  apply (metis (hide_lams, no_types) neq_Nil_conv prod.exhaust)
-  by auto
-
-function under_action::"nat \<Rightarrow> endpt list \<Rightarrow> endpt list"
-where
-"under_action n [] = [dom (n+1),dom n]"
-|"under_action n [x] = [x, dom (n+1)]"
-|"under_action n (x#y#zs) =  (swap (zs!0) (zs!1) (take (length (zs) - 2) (y#x#zs)))@(take (length zs) (y#x#zs))@[zs!0, zs!1]"
-  apply (metis (hide_lams, no_types) neq_Nil_conv prod.exhaust)
-  by auto
-
-function cap_action::"nat \<Rightarrow> endpt list \<Rightarrow> endpt list"
-where
-"cap_action n [] = []"
-|"cap_action n ([x]) = []"
-|"cap_action n  (x#y#zs) = replace (dom (n+1)) (zs!0) (replace (dom n) (zs!1) ((take ((length zs) - (n+2)) (x#y#zs))@(drop (n+2) (x#y#zs))))"
-  apply (metis (hide_lams, no_types) neq_Nil_conv prod.exhaust)
-  by auto
-
-
-primrec cup_action::"nat \<Rightarrow> endpt list \<Rightarrow> endpt list"
-where
-"cup_action n [] = [(codom n), (codom (n+1))]"
-|"cup_action n (x#xs) = (codom_right_shift (codom_right_shift (x#xs)))@[(codom n), (codom (n+1))]"
-
-
-primrec detect::"nat \<Rightarrow> brick \<Rightarrow> endpt  list \<Rightarrow>  endpt list"
-where
-"detect n vert xs = vert_action n xs"
-|"detect n over xs = over_action n xs"
-|"detect n under xs =under_action n xs"  
-|"detect n cup xs = cup_action n xs"  
-|"detect n cap xs = cup_action n xs"  
-
 definition vert_act::"int \<Rightarrow>endpt list \<Rightarrow> endpt list"
 where
 "vert_act n xs \<equiv> (if ((length xs)>nat n) then
@@ -167,18 +122,34 @@ where
 (codomain_split_decrease ((replace (codom ((length xs) - (nat n) - 2)) (xs!((length xs)- (nat n) - 2)) 
   ((take ((length xs)- (nat n) - 2) xs)@(drop ((length xs) - (nat n)) xs)))) (nat n))))"
 
+definition adjacency::"endpt \<Rightarrow> endpt \<Rightarrow> endpt list \<Rightarrow> bool"
+where
+"adjacency a b xs \<equiv> (if (\<exists>n.((xs!n)=a) \<longrightarrow> ((xs!(n+1) = b)\<or>((xs!(n+1)) = b))) 
+                        then True
+                          else False)"
 
 (*the over strand checks if the number of incoming strands are more than the codomain of the adjacent
 block and then subsequently either morphs, adds or permutes the strands*)
-primrec block_action::"block \<Rightarrow> endpt  list  \<Rightarrow>  endpt list "
+primrec block_action::"block \<Rightarrow> (endpt  list) \<times> nat  \<Rightarrow>  (endpt list) \<times> nat"
 where
-"block_action [] ls = []"
+"block_action [] ls = ([],snd ls)"
 |"block_action (x#xs) ls = 
    (case x of
-     vert \<Rightarrow> ((vert_act (codomain_block xs) (block_action xs ls)))
-    |over \<Rightarrow> (swap_act (codomain_block xs)  (block_action xs ls))
-|under \<Rightarrow> (swap_act (codomain_block xs)  (block_action xs ls))
-|cup \<Rightarrow>    (cup_act (codomain_block xs)  (block_action xs ls))  
-|cap \<Rightarrow>  (cap_act (codomain_block xs)  (block_action xs ls)))"
+     vert \<Rightarrow> ((vert_act  (codomain_block xs) (fst (block_action xs  ls))),(snd ls))
+    |over \<Rightarrow> ((swap_act (codomain_block xs)  (fst (block_action xs  ls)),(snd ls)))
+|under \<Rightarrow> ((swap_act (codomain_block xs)  (fst (block_action xs ls))),(snd ls))
+|cup \<Rightarrow>    ((cup_act (codomain_block xs)  (fst (block_action xs  ls))),(snd ls))
+|cap \<Rightarrow>  ((cap_act  (codomain_block xs)  (fst (block_action xs  ls))), 
+ if (adjacency (codom (nat (codomain_block xs))) (codom (nat ((codomain_block xs))+1)) (fst (block_action xs  ls)))
+       then ((snd ls)+1) else (snd ls)))"
+   
+primrec wall_action::"wall \<Rightarrow> (endpt)  list \<times> nat  \<Rightarrow>  (endpt) list \<times> nat"
+where
+"wall_action (basic x) ls = block_action x ls"
+|"wall_action (w*ws) ls = block_action w (wall_action ws ls)"
+
+definition component_number::"wall \<Rightarrow> nat"
+where 
+"(component_number w) \<equiv> snd (wall_action w ([],0))"
    
 end

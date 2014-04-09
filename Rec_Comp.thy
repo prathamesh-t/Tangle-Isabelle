@@ -180,18 +180,23 @@ where
 "first_occurance a [] = None"
 |"first_occurance a (x#xs) = (if (((fst x)= a)\<or>((snd x)=a)) then Some 0 else  (1+first_occurance a xs))"
  
-(*if a is one of the two elements, then the following gives the other element else it gives
-the first element*) 
+(*if a is one of the two elements, then the following gives the other coefficient of the tuple else it gives
+the same element*) 
 definition other_end::" endpt \<Rightarrow>  (endpt \<times> endpt) \<Rightarrow> endpt"
 where
 "other_end a x \<equiv> (if (fst x)= a then (snd x) else if (snd  x = a) then (fst x) else a)"
 
+
+(*if a is one of the two elements, then the following gives other coefficient of the tuple in the first
+occurance  else it returns the same element*) 
 primrec other_end_list::"endpt \<Rightarrow> (endpt \<times> endpt) list \<Rightarrow> endpt"
 where
 "other_end_list a [] = a"
 |"other_end_list a (x#xs) = 
            (if ((other_end_list a xs) \<noteq> a) then (other_end_list a xs) else (other_end a x))" 
 
+(*It deletes every tuple in the list which contains the element as one of the constituent elements of
+the tuple*)
 primrec delete_containing::"endpt \<Rightarrow> (endpt \<times> endpt) list \<Rightarrow> (endpt \<times> endpt) list"
 where
 "delete_containing a [] = []"
@@ -202,7 +207,7 @@ where
 definition cap_check::"nat \<Rightarrow> (endpt \<times> endpt) list  \<Rightarrow> (endpt \<times> endpt) list"
 where
 "cap_check n xs = (other_end_list (codom n) xs, other_end_list (codom (n+1)) xs)
-                     #(delete_containing (codom (n+1)) (delete_containing (codom n) xs))"
+                     #( split_codom_double_right_shift  (\<lambda>x.(type x=codomain)\<and>(snd x>(n+1))) (delete_containing (codom (n+1)) (delete_containing (codom n) xs)))"
 
 (*return a blank list if the some condition is not satisfied and finish the function*)
 definition cap_act::"nat \<Rightarrow> (endpt \<times> endpt) list \<Rightarrow> (endpt \<times> endpt) list"

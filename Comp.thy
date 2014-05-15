@@ -1,4 +1,4 @@
-theory Rec_Comp
+theory Comp
 imports Link_Algebra
 begin
 
@@ -64,7 +64,14 @@ where
                             codomain \<Rightarrow> (max (str_number x) (codom_Max_list xs))
                                               |domain\<Rightarrow> (codom_Max_list xs))"
 
+(*
+definition max_in_set::"endpt set \<Rightarrow> nat"
+where
+"max_in_set xs \<equiv> ((Max  {n.(codom n) \<in> xs}))"
 
+*)
+
+   
 lemma codom_cons:"(codom_Max_list ((codom n)#xs)) \<ge> n"
       using codom_Max_list.simps type_def max_def
       by (metis endpt.simps(6) endtype.simps(4) eq_iff str_number_def)
@@ -373,8 +380,7 @@ where
 definition cap_act::"nat \<Rightarrow> (endpt \<times> endpt) list \<Rightarrow> (endpt \<times> endpt) list"
 where
 "cap_act n xs \<equiv> 
-[(codom (n+1), codom n) ,(codom n, codom (n+1))]
-@(split_codom_double_left_shift (codom_geq_n n) xs)"
+[(codom (n+1), codom n) ,(codom n, codom (n+1))]@(split_codom_double_left_shift (codom_geq_n n) xs)"
 
 value "set [1,122,a,7,5,33,8,6,4,111,19] = set [a,19,33,122,111,4,7,6,1,5,8]"
 (*
@@ -577,5 +583,192 @@ where
 "symmetric [] = True"
 |"symmetric (x#xs) = (belongs_to (snd x,fst x) xs)"
 *)
+(*new definitions*)
 
-end
+
+definition codom_set_filter::"(endpt \<times> endpt) set \<Rightarrow> nat set"
+where
+"codom_set_filter xs \<equiv> {n. \<exists>x.((x,codom n) \<in> xs)\<or>((codom n, x) \<in> xs)}"
+
+
+definition dom_set_filter::"(endpt \<times> endpt) set \<Rightarrow> nat set"
+where
+"dom_set_filter xs \<equiv> {n. \<exists>x.((x,dom n) \<in> xs)\<or>((dom n, x) \<in> xs)}"
+
+lemma "codom_set_filter {(codom 1, dom 0), (codom 2, codom 3),(codom 5, codom 6)} = {1,2,3,5,6}"
+ using codom_set_filter_def by auto  
+
+
+lemma "dom_set_filter {(codom 1, dom 0), (codom 2, codom 3),(codom 5, dom 6)} = {0,6}"
+ using dom_set_filter_def by auto  
+
+definition max_codom::"(endpt \<times> endpt) set \<Rightarrow> nat"
+where
+"max_codom xs \<equiv> (if (xs = {}) then 0 else Max (codom_set_filter xs))"
+
+
+definition max_dom::"(endpt \<times> endpt) set \<Rightarrow> nat"
+where
+"max_dom xs \<equiv>  (if (xs = {}) then 0 else Max (codom_set_filter xs))"
+
+lemma "max_codom {(codom 1,codom 2), (codom 3, dom 4)} = 3"
+proof-
+     have 1:"codom_set_filter {(codom 1,codom 2), (codom 3, dom 4)} = {1,2,3}"
+                using codom_set_filter_def by auto
+     then show ?thesis using max_codom_def 1 by auto       
+qed
+
+definition replace_if_with::"endpt \<Rightarrow> endpt \<Rightarrow> endpt \<Rightarrow> endpt"
+where
+"replace_if_with x i j  \<equiv> (if (x = i) then j else  x)"
+
+lemma "replace_if_with i i j = j"
+      using replace_if_with_def by auto
+  
+primrec replace_in::"endpt \<Rightarrow> endpt \<Rightarrow> (endpt \<times> endpt) list \<Rightarrow> (endpt \<times> endpt) list"
+where
+"replace_in i j []=  []"|
+"replace_in i j (x#xs) =  (replace_if_with (fst x) i j,replace_if_with (snd x) i j)
+                                     #(replace_in i j xs)"
+
+primrec block_act::"block \<Rightarrow> (endpt \<times> endpt)  set"
+where
+"block_act []  = {}"
+|"block_act (x#xs) = 
+   (case x of
+     vert \<Rightarrow> {(codom ((max_codom (block_act xs))+1), dom (max_dom (block_act xs)+1))}
+                        \<union>(block_act xs)
+    |over \<Rightarrow> {(codom ((max_codom (block_act xs))+1), dom ((max_dom (block_act xs))+2))
+               ,(codom ((max_codom (block_act xs))+2), dom ((max_dom (block_act xs))+1))}
+               \<union>(block_act xs)
+    |under \<Rightarrow> {(codom ((max_codom (block_act xs))+1), dom ((max_dom (block_act xs))+2))
+               ,(codom ((max_codom (block_act xs))+2), dom ((max_dom (block_act xs))+1))}
+               \<union>(block_act xs)
+    |cup \<Rightarrow>  {(codom ((max_codom (block_act xs))+2),codom ((max_codom (block_act xs))+1))}
+               \<union>(block_act xs) 
+    |cap \<Rightarrow>  {(dom ((max_dom (block_act xs))+2), dom ((max_dom (block_act xs))+1))}
+               \<union>(block_act xs))"
+
+value "Max {}"
+lemma "block_act [vert] = {(codom 1, dom 1)}"
+     proof-
+ have "block_act [vert] = {(codom ((max_codom {})+1), dom (max_dom  {}+1))}
+                        \<union>{}"
+                  using block_act.simps by auto
+ then have "block_act [vert] = {(codom ((max_codom {})+1), dom (max_dom  {}+1))}"
+                    by auto
+ moreover have  "(codom_set_filter {}) ={}"
+                   using max_codom_def codom_set_filter_def by auto 
+ moreover have  "(dom_set_filter {}) ={}"
+                     using dom_set_filter_def by auto
+ ultimately have "(max_codom {} = 0)\<and>(max_dom {}) = 0 "
+                          using max_codom_def max_dom_def by auto
+ then have "block_act [vert] = {(codom 1, dom 1)}" 
+                          by auto  
+ then show ?thesis by simp
+qed
+
+inductive_set
+  connect :: "(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set"  
+  for xs :: "(endpt \<times> endpt) set" and ys :: "(endpt \<times> endpt) set"
+where
+  intro1[intro]: "((dom n, dom m) \<in> xs)  
+                         \<Longrightarrow>(dom n, dom m) \<in> (connect xs ys)"
+  |intro2:"((codom n, codom m) \<in> ys)  
+                         \<Longrightarrow>(codom n, codom m) \<in> (connect xs ys)"
+  |"((dom m, dom n) \<in> (connect xs ys))\<and>((codom n, codom k) \<in> (connect xs ys)) 
+                         \<Longrightarrow> (dom m, codom k) \<in> (connect xs ys)"
+  |"((dom m, codom n) \<in> (connect xs ys))\<and>((dom n, dom k) \<in> (connect xs ys)) 
+                         \<Longrightarrow> (dom m, dom k) \<in> (connect xs ys)"
+  |"((codom n, dom m) \<in> (connect xs ys))\<and>((codom m, codom k) \<in> (connect xs ys)) 
+                         \<Longrightarrow> (codom n, codom k) \<in> (connect xs ys)"
+
+lemma "(dom 1, codom 3) \<in> connect {(dom 1, dom 2)} {(codom 2, codom 3)}"
+proof-
+let ?X = "{(dom 1, dom 2)}"
+let ?Y = " {(codom 2, codom 3)}" 
+have "(codom 2, codom 3) \<in> connect ?X ?Y"
+            using intro2 by auto
+then have "(dom 1, dom 2) \<in> connect ?X ?Y"
+           using intro1 by auto
+then have "(dom 1, codom 3) \<in> connect ?X ?Y"
+              using connect.induct by (metis `(codom 2, codom 3) \<in> connect {(endpt.dom 1, endpt.dom 2)} {(codom 2, codom 3)}` connect.intros(3))
+then show ?thesis by auto
+qed
+
+definition endpt_act::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set"
+where
+"endpt_act xs ys \<equiv> {(codom m, codom n) | m n. (codom m, codom n) \<in> xs} 
+                    \<union> {(dom m, dom n) | m n. (dom m, dom n) \<in> xs} 
+                      \<union> {(codom m, codom n) | m n k1 k2. (((codom m, dom k1) \<in> connect xs ys)
+                                            \<and> ((dom k1, dom k2) \<in> connect xs ys) \<and> 
+                                              ((dom k2, codom n) \<in> connect xs ys))}  "
+                       
+(*
+|(codom m , dom n)  \<Rightarrow> 
+          (if (belongs_to_list (codom n) (linearize xs))
+                  then (replace_in (codom n) (codom m) xs)
+                  else (codom m, dom n)#xs)
+|(dom m, codom n)  \<Rightarrow>  (if (belongs_to_list (codom m) (linearize xs))
+                  then (replace_in (codom m) (codom n) xs)
+                  else ((dom m, codom n)#xs))
+|(dom m, dom n)  \<Rightarrow>  if (find_both (codom m) (codom n) xs)
+                         then ((other_end_list (codom m) xs, other_end_list (codom n) xs)
+                              #(delete_containing (codom m) (delete_containing (codom n) xs)))
+                         else xs)"
+(* ((other_end (codom m) xs, other_end (codom n) xs)
+                              #(delete_containing (codom m) (delete_containing (codom n) xs)))
+                         else xs*)
+primrec endlist_act::"(endpt \<times> endpt) list \<Rightarrow> (endpt \<times> endpt) list \<Rightarrow> (endpt \<times> endpt) list"
+where
+"endlist_act [] ys = ys" 
+|"endlist_act (x#xs) ys = (endpt_act x (endlist_act xs ys))"
+(*
+lemma "endlist_act xs (endlist_act ys zs) = (endlist_act (endlist_act xs ys) zs)"       
+proof(induction xs)
+case Nil
+ show ?case by auto
+next
+case (Cons x xs)
+ have "endlist_act xs (endlist_act ys zs) = (endlist_act (endlist_act xs ys) zs)"
+                 using Cons by auto
+ then have "endlist_act (x#xs) (endlist_act ys zs) 
+                      = endpt_act x (endlist_act xs (endlist_act ys zs))"
+                     using endlist_act.simps(2) by auto
+ then have "endlist_act (x#xs) (endlist_act ys zs) 
+                            = endpt_act x (endlist_act (endlist_act xs ys) zs)"
+                          using Cons by auto
+ then have "endlist_act (x#xs) (endlist_act ys zs)
+                            = endlist_act (x#(endlist_act xs ys)) zs"
+                           by auto
+ then have ?case sledgehammer 
+          apply(induct_tac xs)
+          apply(auto)
+          sledgehammer
+           apply(simp add:endlist_act_def)
+           apply(auto) *)
+
+primrec wall_act::"wall \<Rightarrow> (endpt \<times> endpt) list"
+where
+"wall_act (basic bs) = (block_act bs)"
+|"wall_act (b*bs) = (endlist_act (block_act b) (wall_act bs))" 
+
+lemma "(wall_act (w1 \<circ> w2)) = (endlist_act (wall_act w1) (wall_act w2))"
+proof(induction w1)
+case (basic b)
+ show ?case using basic by auto
+next
+case (prod b bs)
+ have "wall_act (b*(bs \<circ> w2)) = (endlist_act (block_act b) (wall_act (bs \<circ> w2)))"
+         by auto      
+ then have "(endlist_act (block_act b) (wall_act (bs \<circ> w2))
+                       = (endlist_act (block_act b) (endlist_act (wall_act bs) (wall_act w2))))"
+                          using prod by auto
+ then have "(endlist_act (block_act b) (endlist_act (wall_act bs) (wall_act w2)))
+               = (endlist_act (wall_act (b*bs)) (wall_act w2))"
+                    using endlist_act.simps wall_act.simps sledgehammer
+ then show ?case using prod  sledgehammer      
+
+value "endpt_act (dom 1, codom 1) [(dom 2, codom 3)]"
+ *)
+end 

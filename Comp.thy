@@ -1,79 +1,51 @@
 theory Comp
-imports Link_Algebra Rec_Comp
+imports Link_Algebra 
 begin
 
 
-(*new definitions*)
+(*we begin by defining two different types of an end of a strand, domain refers to the fact the 
+other end of a strand lies in the domain of the wall and codomain refers to the fact that other end
+of a strand lies in the codomain*) 
+datatype endtype = domain | codomain 
 
 
-definition codom_tuple_filter::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set"
+(*endpoint of a strand is given by the type of the end point and a natural number which refers
+to the  position of the other end of the strand*)  
+
+datatype endpt = dom nat|codom nat
+
+(*the function type tells us the endtype of an endpt*)
+definition type::"endpt \<Rightarrow> endtype"
 where
-"codom_tuple_filter xs \<equiv> {(codom m, codom n) |m n. ((codom m, codom n) \<in> xs)}"
+"type x = (case x of dom n \<Rightarrow> domain|codom n \<Rightarrow> codomain)"
 
+lemma type_uniqueness:"type x \<noteq> type y \<Longrightarrow> x \<noteq> y"
+     using type_def by auto
 
-lemma "codom_tuple_filter {(codom 1, codom 3), (codom 4, dom 5)}
-                  = {(codom 1, codom 3)}"
-      using codom_tuple_filter_def by auto
-
-
-definition dom_tuple_filter::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set"
+(*the function str_number tells us the strand number of an endpt*)
+definition str_number::"endpt \<Rightarrow> nat"
 where
-"dom_tuple_filter xs \<equiv> {(dom m, dom n) |m n. ((dom m, dom n) \<in> xs)}"
+"str_number x = (case x of dom n \<Rightarrow> n|codom n \<Rightarrow> n)"
+
+(*lemmas about str_number*)
+
+lemma str_number_uniqueness:"str_number x \<noteq> str_number y \<Longrightarrow> (x \<noteq> y)"
+       using str_number_def by auto
 
 
-lemma "dom_tuple_filter {(codom 1, codom 3), (dom 4, dom 5)}
-                  = {(dom 4, dom 5)}"
-      using dom_tuple_filter_def by auto
-
-primrec ascending_list::"(endpt \<times> endpt) list \<Rightarrow> bool"
-where
-"ascending_list [] = True"
-|"ascending_list (x#xs) = (if (xs = []) 
-                           then True 
-                           else (str_number (snd x)=str_number (fst (hd xs)))\<and>(ascending_list xs))"
-
-definition dom_tuple::"(endpt \<times> endpt) \<Rightarrow> bool"
-where
-"dom_tuple x \<equiv> (type (fst x) = domain)\<and>(type (snd x) = domain)"
+lemma endpt_reconstruction: "(x = (if ((type x)= domain) then dom (str_number x) else codom (str_number x)))"
+      unfolding type_def str_number_def 
+      using  endpt.exhaust endpt.simps(5) endpt.simps(6) endtype.distinct(1) by (metis)
 
 
-definition codom_tuple::"(endpt \<times> endpt) \<Rightarrow> bool"
+(*codom tuple and dom tuple*)
+definition codom_tuple::"(endpt \<times> endpt)  \<Rightarrow> bool"
 where
 "codom_tuple x \<equiv> (type (fst x) = codomain)\<and>(type (snd x) = codomain)"
 
-value "ascending_list [(codom 1, codom 2),(dom 2, codom 3)]" 
-
-primrec exists::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow>(endpt \<times> endpt) list \<Rightarrow> bool"
+definition dom_tuple::"(endpt \<times> endpt)  \<Rightarrow> bool"
 where
-"exists xs ys [] = True"
-|"exists xs ys (z#zs) = (case (dom_tuple z) of 
-                       True \<Rightarrow> (if (zs = []) 
-                                    then (z \<in> xs)
-                                    else (z \<in> xs)
-                                         \<and>(hd zs) \<in> ys)
-                                         \<and>(codom_tuple (hd zs))
-                                         \<and>(exists xs ys zs)
-                                         \<and>(str_number (snd z) = str_number (fst (hd zs)))
-                      |False \<Rightarrow>(if (zs = []) 
-                                    then (z \<in> ys)\<and>(codom_tuple z) 
-                                    else (z \<in>  ys)\<and>(codom_tuple z)
-                                        \<and>((hd zs) \<in> xs)\<and>(dom_tuple (hd zs))
-                                        \<and>(exists xs ys zs)
-                                        \<and>(str_number (snd z) = str_number (fst (hd zs)))))" 
-
-lemma "ls \<noteq> [] \<Longrightarrow> ls = (hd ls)#(tl ls)"
-        unfolding hd_def tl_def  by (metis (lifting) list.exhaust list.simps(7))
-(*
-lemma "(fst (hd ls) = codom k)\<and>(hd ls \<in> S2)\<and>(exists S1 S2 ls) \<Longrightarrow> \<exists>l.(hd ls = (codom k, codom l))"
-     proof-
-    have "(ls \<noteq> []) \<Longrightarrow> (ls = (hd ls)#(tl ls))"
-                using hd.simps tl.simps by auto  
-     have "((fst (hd ls)) = codom k) \<Longrightarrow> (\<not>(dom_tuple (hd ls)))"
-              using dom_tuple_def type_def by auto
-    then have "(exists S1 S2 ls)\<and>(ls \<noteq> [])\<and>(\<not>(dom_tuple (hd ls))) \<Longrightarrow> (codom_tuple (hd ls))"
-                     using exists.simps sledgehammer *)
-value "exists {(codom 1, codom 3),(dom 1, dom 2)} {(codom 2, codom 5), (codom 6, codom 7),(dom 1, dom 3)} 
-                        [(codom 1,codom 3),(dom 1, dom 3)]"
+"dom_tuple x \<equiv> (type (fst x) = domain)\<and>(type (snd x) = domain)"
 
 (*defining maximum of codom elements and dom elements *)
 definition codom_set_filter::"(endpt \<times> endpt) set \<Rightarrow> nat set"
@@ -291,8 +263,7 @@ theorem max_codom_does_not_belong:
  assumes "finite S" and "i \<ge> 1"
  shows "\<forall>x.((( x,codom ((max_codom S)+i)) \<notin> S)\<and>(codom ((max_codom S) + i), x) \<notin> S)"
   using fst_max_codom_does_not_belong snd_max_codom_does_not_belong assms by auto
-     
-
+  
 (*max dom associated lemmas*)
 
 lemma finite_dom_set_filter:"finite S \<Longrightarrow> finite (dom_set_filter S)"
@@ -2581,370 +2552,257 @@ theorem nice_set_block_act:"nice_set (block_act xs)"
    unfolding nice_set_def using antireflexive_block_act linear_block_act symmetric_block_act
      injective_block_act by auto 
  
-(*theorem to prove - str_number is greater than or equal to 1 in block_act
+
+(*theorem to prove - str_number is greater than or equal to 1 in block_act 
 .ie. found_in (codom n) (block_act ys) \<equiv> n \<ge> 1*)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(*warning-over riders prohibited*)
-definition endpt_act::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set"
-where
-"endpt_act xs ys \<equiv> {(codom m, codom n) | m n.(codom m, codom n) \<in> xs} 
-                    \<union>{(dom m, dom n) | m n. (dom m, dom n) \<in> ys} 
-                    \<union>{(codom m, codom n) | m n k1 k2 ls. (((codom m, dom k1) \<in> xs)
-                                            \<and>(fst (hd ls) = (codom k1)) 
-                                            \<and>(snd (last ls) = (codom k2)) 
-                                            \<and>((dom k2, codom n) \<in> xs))
-                                            \<and>(exists xs ys ls)
-                                            \<and>(ascending_list ls)  }
-                    \<union>{(dom m, dom n) | m n k1 k2 ls. (((dom m, codom k1) \<in> ys)
-                                            \<and>(fst (hd ls) = (dom k1)) 
-                                            \<and>(snd (last ls) = (dom k2)) 
-                                            \<and>((codom k2, dom n) \<in> ys))
-                                            \<and>(exists xs ys ls)
-                                            \<and>(ascending_list ls)  }
-                    \<union>{(codom m, dom n) | m n k1 k2 ls. (((codom m, dom k1) \<in> xs)
-                                            \<and>(fst (hd ls) = (dom k1)) 
-                                            \<and>(snd (last ls) = (codom k2)) 
-                                            \<and>((codom k2, dom n) \<in> ys))
-                                            \<and>(exists xs ys ls)
-                                            \<and>(ascending_list ls)}
-                     \<union>{(dom m, codom n) | m n k1 k2 ls. (((codom n, dom k1) \<in> xs)
-                                            \<and>(fst (hd ls) = (dom k1)) 
-                                            \<and>(snd (last ls) = (codom k2)) 
-                                            \<and>((codom k2, dom m) \<in> ys))
-                                            \<and>(exists xs ys ls)
-                                            \<and>(ascending_list ls)}
-                       \<union>{(dom m, codom n) | m n k. (((codom n, dom k) \<in> xs)
-                                                          \<and>((codom k, dom m) \<in> ys)) }
-                      \<union>{(codom m, dom n) | m n k. (((codom m, dom k) \<in> xs)
-                                        \<and>((codom k, dom n) \<in> ys))}"
-
-lemma "A \<subset> B \<and>(finite B) \<Longrightarrow> (finite A)"
-       using  rev_finite_subset by auto
 (*
-lemma "finite xs \<Longrightarrow> finite ( {(codom m, codom n) | m n.(codom m, codom n) \<in> xs} )"
-           using rev_finite_subset by auto
-lemma "finite xs \<Longrightarrow> finite ( {(dom m, dom n) | m n.(dom m, dom n) \<in> xs} )"
-           using rev_finite_subset by auto
-
-lemma "finite S \<Longrightarrow> finite {x. ((x,y) \<in> S)\<or>((y,x)\<in>S)}"
-proof(induction rule:finite.induct) 
-    have "finite {}" by auto        
-    then show "finite {x. (x,y) \<in> {}\<or>((y,x)\<in>{})}" using finite.simps by auto       
-next 
-fix a and A
-
-assume IH:"finite A \<Longrightarrow> finite {x. ((x,y) \<in> A)\<or>((y,x)\<in>A)}"
- and prems:"finite A"
-then have " finite {x. ((x,y) \<in> (insert a A))\<or>((y,x)\<in>(insert a A))}"
-     proof-
-     have " {x. ((x,y) \<in> (insert a A))\<or>((y,x)\<in>(insert a A))} 
-                  =  {x. ((x,y) \<in> A)\<or>((y,x)\<in>A)} \<union> {fst a, snd a}"
-         proof-
-                using insert_def fst_conv snd_conv sledgehammer
-    
+lemma assumes "A \<subseteq> B"  and "finite A" and "finite B" shows "Max A \<le> Max B"
+      proof-
+      have "\<forall>x.(x \<in> A \<longrightarrow> x \<in> B)"
+          using assms by auto
+      moreover have "\<forall>x.(x \<in> B \<longrightarrow> x \<le> Max B)"
+         using Max_def assms by auto  
+      ultimately have "\<forall>x.(x \<in> A \<longrightarrow>  x \<le> Max B)"
+               by auto
+      then have "Max A \<le> Max B"
+               using Max_def assms sledgehammer
 *)
 
-
-
-
-definition assign_list::"(endpt \<times> endpt) \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set 
-                            \<Rightarrow> (endpt \<times> endpt) list "
-where
-"assign_list a xs ys \<equiv> 
- ( if ((codom_tuple a)\<and>(a \<in> (endpt_act xs ys))\<and>( a \<notin> xs)) 
-              then (SOME (ls::(endpt \<times> endpt) list).(\<exists>k1.\<exists>k2.((((fst a), dom k1) \<in> xs)
-                                            \<and>(fst (hd ls) = (codom k1)) 
-                                            \<and>(snd (last ls) = (codom k2)) 
-                                            \<and>((dom k2, (snd a)) \<in> xs)
-                                            \<and>(exists xs ys ls)
-                                            \<and>(ascending_list ls))))  else [])"
-
-definition assign_start_point::"(endpt \<times> endpt) \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set
-                 \<Rightarrow> (endpt \<times> endpt) list \<Rightarrow> (endpt \<times> endpt)"
-where
-"assign_start_point a xs ys ls  \<equiv> (SOME x.((((fst a), fst x) \<in> xs)
-                                            \<and>(dom_tuple x)
-                                            \<and>(fst (hd ls) = (codom (str_number (fst x)))) 
-                                            \<and>(snd (last ls) = (codom (str_number (snd x)))) 
-                                            \<and>(snd x, (snd a)) \<in> xs))"
-
-primrec endpt_identify::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set
-                 \<Rightarrow> (endpt \<times> endpt) list \<Rightarrow>  (endpt \<times> endpt) list"
-where
-"list_transfer   S1 S2 []= []"
-|"list_transfer  S1 S2 (x#xs) = (if (assign_list x S1 S2 \<noteq> [])
-                                  then (assign_list x S1 S2)@
-                                       (((assign_start_point x S1 S2 (assign_list x S1 S2)))
-                                        #(list_transfer S1 S2 xs))
-                                    else [])"
-
-
-
-primrec list_transfer::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set
-                 \<Rightarrow> (endpt \<times> endpt) list \<Rightarrow>  (endpt \<times> endpt) list"
-where
-"list_transfer   S1 S2 []= []"
-|"list_transfer  S1 S2 (x#xs) = (if (assign_list x S1 S2 \<noteq> [])
-                                  then (assign_list x S1 S2)@
-                                       (((assign_start_point x S1 S2 (assign_list x S1 S2)))
-                                        #(list_transfer S1 S2 xs))
-                                    else [])"
-
-definition list_to_list::"(endpt \<times> endpt) list \<times> endpt \<times> endpt 
-                           \<Rightarrow> (endpt \<times> endpt) list \<times> endpt \<times> endpt"
-where
-"list_to_list xs \<equiv> (fst xs,fst (snd xs),snd (snd xs))"                          
-
-lemma assumes "x \<in> {a| b. P(a,b)}"
-       shows "\<exists>y.(P(x,y))"
-      using assms by auto
-
-lemma "x \<in> {a. P(a)} \<union> {b. Q(b)} \<Longrightarrow> (P(x)\<or>Q(x))"
-           by auto
-
-lemma codom_tuple_condn:"(codom m, codom n) \<in> endpt_act S1 S2 \<Longrightarrow> (codom m, codom n) \<in> S1 \<or> 
-(\<exists>k1 k2 ls. (((codom m, dom k1) \<in> S1)\<and>(fst (hd ls) = (codom k1)) 
- \<and>(snd (last ls) = (codom k2))  \<and>((dom k2, codom n) \<in> S1))
-                                            \<and>(exists S1 S2 ls)
-                                            \<and>(ascending_list ls))"
- using endpt_act_def by auto
-
-theorem "endpt_act S1 (endpt_act S2 S3) = endpt_act (endpt_act S1 S2) S3"
-proof-
- have "(x,y) \<in> endpt_act S1 (endpt_act S2 S3) \<Longrightarrow> (x,y) \<in> endpt_act (endpt_act S1 S2) S3"
-   proof-   
-   assume 0:"(x,y) \<in> endpt_act S1 (endpt_act S2 S3)"
-   then have ?thesis  
-       proof
-       have "\<exists>m n.(((x,y) = (codom m, codom n))\<or> ((x,y) = (codom m, dom n)))\<or>((x,y) = (dom m, dom n))
-                       \<or>((x,y) = (dom m, codom n))"
-                           using 0 endpt.exhaust by metis
-       then obtain m n where "(((x,y) = (codom m, codom n))\<or> ((x,y) = (codom m, dom n)))
-                                         \<or>((x,y) = (dom m, dom n))
-                       \<or>((x,y) = (dom m, codom n))"
-                           by auto
-       have "(x,y) = (codom m, codom n) \<Longrightarrow>  (x, y) \<in> endpt_act (endpt_act S1 S2) S3"
-       proof-
-        assume 1: "(x,y) = (codom m, codom n)"
-        then have 11:"(codom m, codom n) \<in> (endpt_act S1 (endpt_act S2 S3))"
-                     using 0 by auto   
-        then have 12:" (codom m, codom n) \<in> S1 \<or> 
-            (\<exists>k1 k2 ls. (((codom m, dom k1) \<in> S1)\<and>(fst (hd ls) = (codom k1)) 
-           \<and>(snd (last ls) = (codom k2))  \<and>((dom k2, codom n) \<in> S1))
-                                            \<and>(exists S1 (endpt_act S2 S3) ls)
-                                            \<and>(ascending_list ls))"
-                            using codom_tuple_condn by auto 
-        then have ?thesis
-           proof(cases " (codom m, codom n) \<in> S1")
-           case True
-             have "(x,y) \<in> S1" 
-                     using True 1 by auto
-             then have "(x,y) \<in> (endpt_act S1 S2)"
-                           using 1 endpt_act_def by auto
-             then have "(x,y) \<in> (endpt_act (endpt_act S1 S2) S3)"
-                            using endpt_act_def 1 by auto
-             then show ?thesis using 1 by auto
-           next
-           case False
-           have "(\<exists>k1 k2 ls. (((codom m, dom k1) \<in> S1)\<and>(fst (hd ls) = (codom k1)) 
-                              \<and>(snd (last ls) = (codom k2))  \<and>((dom k2, codom n) \<in> S1))
-                                            \<and>(exists S1 (endpt_act S2 S3) ls)
-                                            \<and>(ascending_list ls))"
-                        using codom_tuple_condn 12 1 False by auto
-          then obtain k1 k2 ls where  " (((codom m, dom k1) \<in> S1)\<and>(fst (hd ls) = (codom k1)) 
-                              \<and>(snd (last ls) = (codom k2))  \<and>((dom k2, codom n) \<in> S1))
-                                            \<and>(exists S1 (endpt_act S2 S3) ls)
-                                            \<and>(ascending_list ls)"
-                              by metis
-          then have 111:"(((codom m, dom k1) \<in> S1)\<and>(fst (hd ls) = (codom k1)) 
-                              \<and>(snd (last ls) = (codom k2))  \<and>((dom k2, codom n) \<in> S1))
-                                            \<and>(exists S1 (endpt_act S2 S3) ls)
-                                            \<and>(ascending_list ls)"
-                            by auto
-     then have "(exists S1 (endpt_act S2 S3))"
-                     using exists_def 
-
-
-primrec set_assign_to_wall::"wall \<Rightarrow> (endpt \<times> endpt) set"
-where
-"set_assign_to_wall (basic b) = (block_act b)"
-|"set_assign_to_wall (b*bs) = endpt_act (block_act b) (set_assign_to_wall bs)"
-
-lemma finite_set_assign_to_wall: "finite (set_assign_to_wall w)"
-    apply(induct_tac w)
-    apply(auto)
-    apply(simp add:finite_block_act)
-    apply(simp add:endpt_act_def)
-    apply(auto)                  
-(*
-|(codom m , dom n)  \<Rightarrow> 
-          (if (belongs_to_list (codom n) (linearize xs))
-                  then (replace_in (codom n) (codom m) xs)
-                  else (codom m, dom n)#xs)
-|(dom m, codom n)  \<Rightarrow>  (if (belongs_to_list (codom m) (linearize xs))
-                  then (replace_in (codom m) (codom n) xs)
-                  else ((dom m, codom n)#xs))
-|(dom m, dom n)  \<Rightarrow>  if (find_both (codom m) (codom n) xs)
-                         then ((other_end_list (codom m) xs, other_end_list (codom n) xs)
-                              #(delete_containing (codom m) (delete_containing (codom n) xs)))
-                         else xs)"
-(* ((other_end (codom m) xs, other_end (codom n) xs)
-                              #(delete_containing (codom m) (delete_containing (codom n) xs)))
-                         else xs*)
-primrec endlist_act::"(endpt \<times> endpt) list \<Rightarrow> (endpt \<times> endpt) list \<Rightarrow> (endpt \<times> endpt) list"
-where
-"endlist_act [] ys = ys" 
-|"endlist_act (x#xs) ys = (endpt_act x (endlist_act xs ys))"
-(*
-lemma "endlist_act xs (endlist_act ys zs) = (endlist_act (endlist_act xs ys) zs)"       
-proof(induction xs)
-case Nil
- show ?case by auto
-next
-case (Cons x xs)
- have "endlist_act xs (endlist_act ys zs) = (endlist_act (endlist_act xs ys) zs)"
-                 using Cons by auto
- then have "endlist_act (x#xs) (endlist_act ys zs) 
-                      = endpt_act x (endlist_act xs (endlist_act ys zs))"
-                     using endlist_act.simps(2) by auto
- then have "endlist_act (x#xs) (endlist_act ys zs) 
-                            = endpt_act x (endlist_act (endlist_act xs ys) zs)"
-                          using Cons by auto
- then have "endlist_act (x#xs) (endlist_act ys zs)
-                            = endlist_act (x#(endlist_act xs ys)) zs"
-                           by auto
- then have ?case sledgehammer 
-          apply(induct_tac xs)
-          apply(auto)
-          sledgehammer
-           apply(simp add:endlist_act_def)
-           apply(auto) *)
-
-primrec wall_act::"wall \<Rightarrow> (endpt \<times> endpt) list"
-where
-"wall_act (basic bs) = (block_act bs)"
-|"wall_act (b*bs) = (endlist_act (block_act b) (wall_act bs))" 
-
-lemma "(wall_act (w1 \<circ> w2)) = (endlist_act (wall_act w1) (wall_act w2))"
-proof(induction w1)
-case (basic b)
- show ?case using basic by auto
-next
-case (prod b bs)
- have "wall_act (b*(bs \<circ> w2)) = (endlist_act (block_act b) (wall_act (bs \<circ> w2)))"
-         by auto      
- then have "(endlist_act (block_act b) (wall_act (bs \<circ> w2))
-                       = (endlist_act (block_act b) (endlist_act (wall_act bs) (wall_act w2))))"
-                          using prod by auto
- then have "(endlist_act (block_act b) (endlist_act (wall_act bs) (wall_act w2)))
-               = (endlist_act (wall_act (b*bs)) (wall_act w2))"
-                    using endlist_act.simps wall_act.simps sledgehammer
- then show ?case using prod  sledgehammer      
-
-value "endpt_act (dom 1, codom 1) [(dom 2, codom 3)]"
-
-value "Max {}"
-(*
-lemma "block_act [vert] = {(codom 1, dom 1)}"
-     proof-
- have "block_act [vert] = {(codom ((max_codom {})+1), dom (max_dom  {}+1)), 
-                                 (dom ((max_dom {})+1), codom (max_codom  {}+1))}
-                        \<union>{}"
-                  using block_act.simps by auto
- then have "block_act [vert] = {(codom ((max_codom {})+1), dom (max_dom  {}+1))}"
-                    by auto
- moreover have  "(codom_set_filter {}) ={}"
-                   using max_codom_def codom_set_filter_def by auto 
- moreover have  "(dom_set_filter {}) ={}"
-                     using dom_set_filter_def by auto
- ultimately have "(max_codom {} = 0)\<and>(max_dom {}) = 0 "
-                          using max_codom_def max_dom_def by auto
- then have "block_act [vert] = {(codom 1, dom 1)}" 
-                          by auto  
- then show ?thesis by simp
+lemma max_union:assumes "finite S1" and "finite S2" and "S2 \<noteq> {}" and "S1 \<noteq> {}" and "S1 \<union> S2 \<noteq> {}"
+    shows "Max (S1 \<union> S2) = Max {Max S1, Max S2}"
+    proof-
+    have "Max (S1 \<union> S2) \<in> S1 \<union> S2"
+          using assms by (metis Max_belongs_to_set finite_Un)
+   then have 1:"Max (S1 \<union> S2) \<in> S1 \<or> Max (S1 \<union> S2) \<in> S2"
+                   by auto
+   show ?thesis
+         proof(cases "Max (S1 \<union> S2) \<in> S1")
+         case True
+          have "Max (S1 \<union> S2) \<ge> Max S1"
+                 using assms unfolding Max_def by (metis Max_def Max_mono True Un_upper1 equals0D finite_Un)
+          moreover have "Max (S1 \<union> S2) \<le> Max S1"
+                     using True Max_def assms by auto
+          ultimately have "Max (S1 \<union> S2) = Max S1"
+                      by auto
+          moreover have "Max (S1 \<union> S2) \<ge> Max S2"
+                      using assms Max_def  by (metis Collect_mem_eq Diff_empty Max.union_idem True 
+                                             Un_empty_left `Max (S1 \<union> S2) = Max S1` equals0D max_def 
+                                              min_max.sup.commute min_max.sup.idem order_refl) 
+          ultimately have "Max (S1 \<union> S2) = Max {Max S1, Max S2}"
+                          using assms by (metis Max.insert_idem Max.union_idem Max_singleton True equals0D finite.emptyI finite_insert) 
+          then show ?thesis  by auto
+         next
+         case False
+           have F_1:"Max (S1 \<union> S2) \<in> S2"
+                 using False 1 by auto
+           have "Max (S1 \<union> S2) \<ge> Max S2"
+                 using assms unfolding Max_def by (metis Max_def Max_mono Un_upper2 finite_Un)
+           moreover have "Max (S1 \<union> S2) \<le> Max S2"
+                     using F_1 Max_def assms by auto 
+          ultimately have "Max (S1 \<union> S2) = Max S2"
+                      by auto
+          moreover have "Max (S1 \<union> S2) \<ge> Max S1"
+                      using assms Max_def by (metis Max.union_idem calculation max_def order_refl) 
+          ultimately have "Max (S1 \<union> S2) = Max {Max S1, Max S2}"
+                          using assms by (metis Collect_mem_eq Max.insert_idem Max.union_idem Max_singleton Min_singleton finite.emptyI finite_insert insert_commute insert_compr insert_not_empty sup_commute the_elem_eq) 
+           then show ?thesis  by auto     
+        qed
 qed
-*)
 
- *)
-        
-(*{(codom ((max_codom (block_act xs))+1), dom (max_dom (block_act xs)+1)),
-               (dom (max_dom (block_act xs)+1),codom ((max_codom (block_act xs))+1))}
-                        \<union>(block_act xs)     *)
+lemma codom_set_filter_union:  "codom_set_filter (S1 \<union> S2) = (codom_set_filter S1) \<union> (codom_set_filter S2)"
+      unfolding codom_set_filter_def by auto
+ 
+lemma "max_codom S \<ge> 0"
+           using max_codom_def by auto
 
-(*
-inductive_set
-  connect :: "(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set"  
-  for xs :: "(endpt \<times> endpt) set" and ys :: "(endpt \<times> endpt) set"
-where
-  intro1[intro]: "((dom n, dom m) \<in> xs)  
-                         \<Longrightarrow>(dom n, dom m) \<in> (connect xs ys)"
-  |intro2:"((codom n, codom m) \<in> ys)  
-                         \<Longrightarrow>(codom n, codom m) \<in> (connect xs ys)"
-  |"((dom m, dom n) \<in> (connect xs ys))\<and>((codom n, codom k) \<in> (connect xs ys)) 
-                         \<Longrightarrow> (dom m, codom k) \<in> (connect xs ys)"
-  |"((dom m, codom n) \<in> (connect xs ys))\<and>((dom n, dom k) \<in> (connect xs ys)) 
-                         \<Longrightarrow> (dom m, dom k) \<in> (connect xs ys)"
-  |"((codom n, dom m) \<in> (connect xs ys))\<and>((codom m, codom k) \<in> (connect xs ys)) 
-                         \<Longrightarrow> (codom n, codom k) \<in> (connect xs ys)"
-  |"((x,y) \<in> (connect xs ys)) \<Longrightarrow> (y,x) \<in> (connect xs ys)" 
+lemma Max_two_elements:"(a \<ge> b) \<Longrightarrow> Max {a, b} = a"
+   unfolding Max_def by (metis (hide_lams, no_types) finite.emptyI finite_insert
+                         min_max.Sup_fin.insert_idem min_max.Sup_fin.singleton min_max.Sup_fin_def 
+                         min_max.sup_absorb2 min_max.sup_commute)
 
-*)
-(*
-lemma "(dom 1, codom 3) \<in> connect {(dom 1, dom 2)} {(codom 2, codom 3)}"
+               (*codom_set_filter and then max_codom*)
+lemma assumes "finite S1" and "finite S2" 
+    shows"max_codom (S1 \<union> S2) = Max {max_codom S1, max_codom S2}"
+      using codom_set_filter_union max_union max_codom_def 
 proof-
-let ?X = "{(dom 1, dom 2)}"
-let ?Y = " {(codom 2, codom 3)}" 
-have "(codom 2, codom 3) \<in> connect ?X ?Y"
-            using intro2 by auto
-then have "(dom 1, dom 2) \<in> connect ?X ?Y"
-           using intro1 by auto
-then have "(dom 1, codom 3) \<in> connect ?X ?Y"
-              using connect.induct by (metis `(codom 2, codom 3) \<in> connect {(endpt.dom 1, endpt.dom 2)} {(codom 2, codom 3)}` connect.intros(3))
-then show ?thesis by auto
+ have 1:"codom_set_filter (S1 \<union> S2) = {} \<Longrightarrow> (codom_set_filter (S1) = {} )
+                                          \<and> (codom_set_filter (S2) = {} )"
+        using codom_set_filter_union by auto             
+ moreover have "codom_set_filter (S1 \<union> S2) = {} \<Longrightarrow> max_codom (S1 \<union> S2) = 0"
+            using max_codom_def by auto
+ moreover have "codom_set_filter (S1 \<union> S2) = {} \<Longrightarrow> (max_codom S1 = 0)\<and>(max_codom S2 = 0)"
+                  using 1 max_codom_def by auto
+ ultimately have 2:"codom_set_filter (S1 \<union> S2) = {} \<Longrightarrow> 
+                            max_codom (S1 \<union> S2) = Max {max_codom S1, max_codom S2}"
+                     by auto
+ have 3:"codom_set_filter (S1 \<union> S2) \<noteq> {} \<Longrightarrow> (codom_set_filter (S1) \<noteq> {} )
+                                          \<or> (codom_set_filter (S2) \<noteq> {} )"
+              using codom_set_filter_union by auto
+ then have 4:"  (codom_set_filter (S1) \<noteq> {} )
+                                          \<or> (codom_set_filter (S2) \<noteq> {} ) \<Longrightarrow>
+                      ((codom_set_filter (S1) \<noteq> {} ) \<and> (codom_set_filter (S2) \<noteq> {} ))
+                      \<or> ((codom_set_filter (S1) \<noteq> {} ) \<and> (codom_set_filter (S2) = {} ))
+                      \<or> ((codom_set_filter (S1) = {} ) \<and> (codom_set_filter (S2) \<noteq> {} )) "
+                         by auto
+ then have 5:"(codom_set_filter (S1) \<noteq> {} ) \<and> (codom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> max_codom S1 = Max (codom_set_filter S1)
+                   \<and> max_codom S2 = Max (codom_set_filter S2)"
+    using max_codom_def assms by auto 
+ then have "(codom_set_filter (S1) \<noteq> {} ) \<and> (codom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow>(codom_set_filter (S1 \<union> S2) \<noteq> {} )"
+                    using codom_set_filter_union by auto
+ then have "(codom_set_filter (S1) \<noteq> {} ) \<and> (codom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> max_codom (S1 \<union> S2) = Max (codom_set_filter (S1 \<union> S2))"
+                using max_codom_def by auto                                                                             
+ then have "(codom_set_filter (S1) \<noteq> {} ) \<and> (codom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> Max (codom_set_filter (S1 \<union> S2)) 
+                            = Max {Max (codom_set_filter S1), Max (codom_set_filter S2)}"               
+                          using finite_codom_set_filter codom_set_filter_union assms
+                                  by (metis Un_empty max_union)
+ then have 6:"(codom_set_filter (S1) \<noteq> {} ) \<and> (codom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> max_codom (S1 \<union> S2) = Max {max_codom S1, max_codom S2}"
+                 using max_codom_def by (metis `codom_set_filter S1 \<noteq> {} \<and> codom_set_filter S2 \<noteq> {} \<Longrightarrow> max_codom (S1 \<union> S2) = Max (codom_set_filter (S1 \<union> S2))`)      
+
+ have "(codom_set_filter (S1) =  {} ) \<and> (codom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> codom_set_filter (S1 \<union> S2) = codom_set_filter S2"
+             using codom_set_filter_union    by auto
+ then have "(codom_set_filter (S1) =  {} ) \<and> (codom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> Max (codom_set_filter (S1 \<union> S2)) = Max (codom_set_filter S2)"
+               by auto
+ moreover have "(codom_set_filter (S1) =  {} ) \<and> (codom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> Max {0, Max (codom_set_filter S2)} 
+                            =  Max (codom_set_filter S2)"
+                          using Max_two_elements by auto
+ moreover have "(codom_set_filter (S1) =  {} ) \<and> (codom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> Max {max_codom S1, max_codom S2} 
+                            = max_codom S2"
+                              using max_codom_def by auto
+ ultimately have "(codom_set_filter (S1) =  {} ) \<and> (codom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> Max (codom_set_filter (S1 \<union> S2)) = Max {max_codom S1, max_codom S2}"
+            using max_codom_def   by auto
+ then have 7:"(codom_set_filter (S1) =  {} ) \<and> (codom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> max_codom (S1 \<union> S2)= Max {max_codom S1, max_codom S2}"
+             using max_codom_def by (metis `codom_set_filter S1 = {} \<and> codom_set_filter S2 \<noteq> {} \<Longrightarrow> codom_set_filter (S1 \<union> S2) = codom_set_filter S2`)
+ 
+  have "(codom_set_filter (S2) =  {} ) \<and> (codom_set_filter (S1) \<noteq> {} )
+                \<Longrightarrow> codom_set_filter (S1 \<union> S2) = codom_set_filter S1"
+             using codom_set_filter_union    by auto
+ then have "(codom_set_filter (S2) =  {} ) \<and> (codom_set_filter (S1) \<noteq> {} )
+                \<Longrightarrow> Max (codom_set_filter (S1 \<union> S2)) = Max (codom_set_filter S1)"
+               by auto
+ moreover have "(codom_set_filter (S2) =  {} ) \<and> (codom_set_filter (S1) \<noteq> {} )
+                \<Longrightarrow> Max {0, Max (codom_set_filter S1)} 
+                            =  Max (codom_set_filter S1)"
+                          using Max_two_elements by auto
+ moreover have "(codom_set_filter (S2) =  {} ) \<and> (codom_set_filter (S1) \<noteq> {} )
+                \<Longrightarrow> Max {max_codom S1, max_codom S2} 
+                            = max_codom S1"
+                              using max_codom_def by auto
+ ultimately have "(codom_set_filter (S2) =  {} ) \<and> (codom_set_filter (S1) \<noteq> {} )
+                \<Longrightarrow> Max (codom_set_filter (S1 \<union> S2)) = Max {max_codom S1, max_codom S2}"
+            using max_codom_def   by auto
+ then have 8:"(codom_set_filter (S2) =  {} ) \<and> (codom_set_filter (S1) \<noteq> {} )
+                \<Longrightarrow> max_codom (S1 \<union> S2)= Max {max_codom S1, max_codom S2}"
+             using max_codom_def by (metis `codom_set_filter S2 = {} \<and> codom_set_filter S1 \<noteq> {} \<Longrightarrow> codom_set_filter (S1 \<union> S2) = codom_set_filter S1`)
+ from 2 3 6 7 8 show ?thesis by auto
 qed
-*)
 
-(*
-lemma "(codom 3, dom 1) 
-\<in> endpt_act {(codom 1, codom 2),(codom 3, dom 3),(dom 2, dom 1)}
-               {(dom 1, dom 2),(codom 3, codom 2),(codom 1, dom 1)}"
+
+lemma dom_set_filter_union:  "dom_set_filter (S1 \<union> S2) = (dom_set_filter S1) \<union> (dom_set_filter S2)"
+      unfolding dom_set_filter_def by auto
+ 
+lemma "max_dom S \<ge> 0"
+           using max_dom_def by auto
+               (*dom_set_filter and then max_dom*)
+lemma assumes "finite S1" and "finite S2" 
+    shows"max_dom (S1 \<union> S2) = Max {max_dom S1, max_dom S2}"
+      using dom_set_filter_union max_union max_dom_def 
 proof-
-let ?xs = "{(codom 1, codom 2),(codom 3, dom 3),(dom 2, dom 1)}"
-let ?ys = "{(dom 1, dom 2),(codom 3, codom 2),(codom 1, dom 1)}"
-have "(codom 3, dom 3) \<in> ?xs"
-             by auto
-moreover have "exists ?xs ?ys [(codom 3, codom 2), (dom 2, dom 1)]" 
-           using exists.simps by eval
-moreover have "ascending_list [(codom 3, codom 2), (dom 2, dom 1)]"
-            using ascending_list.simps by eval
-moreover have "(codom 1, dom 1) \<in> ?ys"
-            by auto
-ultimately have "\<exists>m n k1 k2 ls. (((codom m, dom k1) \<in> ?xs)
-                                            \<and>(fst (hd ls) = (dom k1)) 
-                                            \<and>(snd (last ls) = (codom k2)) 
-                                            \<and>((codom k2, dom n) \<in> ?ys))
-                                            \<and>(exists ?xs ?ys ls)
-                                            \<and>(ascending_list ls)"
-                        using exI
+ have 1:"dom_set_filter (S1 \<union> S2) = {} \<Longrightarrow> (dom_set_filter (S1) = {} )
+                                          \<and> (dom_set_filter (S2) = {} )"
+        using dom_set_filter_union by auto             
+ moreover have "dom_set_filter (S1 \<union> S2) = {} \<Longrightarrow> max_dom (S1 \<union> S2) = 0"
+            using max_dom_def by auto
+ moreover have "dom_set_filter (S1 \<union> S2) = {} \<Longrightarrow> (max_dom S1 = 0)\<and>(max_dom S2 = 0)"
+                  using 1 max_dom_def by auto
+ ultimately have 2:"dom_set_filter (S1 \<union> S2) = {} \<Longrightarrow> 
+                            max_dom (S1 \<union> S2) = Max {max_dom S1, max_dom S2}"
+                     by auto
+ have 3:"dom_set_filter (S1 \<union> S2) \<noteq> {} \<Longrightarrow> (dom_set_filter (S1) \<noteq> {} )
+                                          \<or> (dom_set_filter (S2) \<noteq> {} )"
+              using dom_set_filter_union by auto
+ then have 4:"  (dom_set_filter (S1) \<noteq> {} )
+                                          \<or> (dom_set_filter (S2) \<noteq> {} ) \<Longrightarrow>
+                      ((dom_set_filter (S1) \<noteq> {} ) \<and> (dom_set_filter (S2) \<noteq> {} ))
+                      \<or> ((dom_set_filter (S1) \<noteq> {} ) \<and> (dom_set_filter (S2) = {} ))
+                      \<or> ((dom_set_filter (S1) = {} ) \<and> (dom_set_filter (S2) \<noteq> {} )) "
+                         by auto
+ then have 5:"(dom_set_filter (S1) \<noteq> {} ) \<and> (dom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> max_dom S1 = Max (dom_set_filter S1)
+                   \<and> max_dom S2 = Max (dom_set_filter S2)"
+    using max_dom_def assms by auto 
+ then have "(dom_set_filter (S1) \<noteq> {} ) \<and> (dom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow>(dom_set_filter (S1 \<union> S2) \<noteq> {} )"
+                    using dom_set_filter_union by auto
+ then have "(dom_set_filter (S1) \<noteq> {} ) \<and> (dom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> max_dom (S1 \<union> S2) = Max (dom_set_filter (S1 \<union> S2))"
+                using max_dom_def by auto                                                                             
+ then have "(dom_set_filter (S1) \<noteq> {} ) \<and> (dom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> Max (dom_set_filter (S1 \<union> S2)) 
+                            = Max {Max (dom_set_filter S1), Max (dom_set_filter S2)}"               
+                          using finite_dom_set_filter dom_set_filter_union assms
+                                  by (metis Un_empty max_union)
+ then have 6:"(dom_set_filter (S1) \<noteq> {} ) \<and> (dom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> max_dom (S1 \<union> S2) = Max {max_dom S1, max_dom S2}"
+                 using max_dom_def by (metis `dom_set_filter S1 \<noteq> {} \<and> dom_set_filter S2 \<noteq> {} \<Longrightarrow> max_dom (S1 \<union> S2) = Max (dom_set_filter (S1 \<union> S2))`)      
 
-*)
+ have "(dom_set_filter (S1) =  {} ) \<and> (dom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> dom_set_filter (S1 \<union> S2) = dom_set_filter S2"
+             using dom_set_filter_union    by auto
+ then have "(dom_set_filter (S1) =  {} ) \<and> (dom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> Max (dom_set_filter (S1 \<union> S2)) = Max (dom_set_filter S2)"
+               by auto
+ moreover have "(dom_set_filter (S1) =  {} ) \<and> (dom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> Max {0, Max (dom_set_filter S2)} 
+                            =  Max (dom_set_filter S2)"
+                          using Max_two_elements by auto
+ moreover have "(dom_set_filter (S1) =  {} ) \<and> (dom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> Max {max_dom S1, max_dom S2} 
+                            = max_dom S2"
+                              using max_dom_def by auto
+ ultimately have "(dom_set_filter (S1) =  {} ) \<and> (dom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> Max (dom_set_filter (S1 \<union> S2)) = Max {max_dom S1, max_dom S2}"
+            using max_dom_def   by auto
+ then have 7:"(dom_set_filter (S1) =  {} ) \<and> (dom_set_filter (S2) \<noteq> {} )
+                \<Longrightarrow> max_dom (S1 \<union> S2)= Max {max_dom S1, max_dom S2}"
+             using max_dom_def by (metis `dom_set_filter S1 = {} \<and> dom_set_filter S2 \<noteq> {} \<Longrightarrow> dom_set_filter (S1 \<union> S2) = dom_set_filter S2`)
+ 
+  have "(dom_set_filter (S2) =  {} ) \<and> (dom_set_filter (S1) \<noteq> {} )
+                \<Longrightarrow> dom_set_filter (S1 \<union> S2) = dom_set_filter S1"
+             using dom_set_filter_union    by auto
+ then have "(dom_set_filter (S2) =  {} ) \<and> (dom_set_filter (S1) \<noteq> {} )
+                \<Longrightarrow> Max (dom_set_filter (S1 \<union> S2)) = Max (dom_set_filter S1)"
+               by auto
+ moreover have "(dom_set_filter (S2) =  {} ) \<and> (dom_set_filter (S1) \<noteq> {} )
+                \<Longrightarrow> Max {0, Max (dom_set_filter S1)} 
+                            =  Max (dom_set_filter S1)"
+                          using Max_two_elements by auto
+ moreover have "(dom_set_filter (S2) =  {} ) \<and> (dom_set_filter (S1) \<noteq> {} )
+                \<Longrightarrow> Max {max_dom S1, max_dom S2} 
+                            = max_dom S1"
+                              using max_dom_def by auto
+ ultimately have "(dom_set_filter (S2) =  {} ) \<and> (dom_set_filter (S1) \<noteq> {} )
+                \<Longrightarrow> Max (dom_set_filter (S1 \<union> S2)) = Max {max_dom S1, max_dom S2}"
+            using max_dom_def   by auto
+ then have 8:"(dom_set_filter (S2) =  {} ) \<and> (dom_set_filter (S1) \<noteq> {} )
+                \<Longrightarrow> max_dom (S1 \<union> S2)= Max {max_dom S1, max_dom S2}"
+             using max_dom_def by (metis `dom_set_filter S2 = {} \<and> dom_set_filter S1 \<noteq> {} \<Longrightarrow> dom_set_filter (S1 \<union> S2) = dom_set_filter S1`)
+ from 2 3 6 7 8 show ?thesis by auto
+qed
+
+
+
+(*codom_max_set equals codomain_block - To be proved in a bit*)
+ 
+
 end 

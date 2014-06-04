@@ -140,7 +140,7 @@ proof(induct rule:finite_induct)
                   proof(cases "codom_tuple x")
                   case True
                    have "\<exists>m1 m2.(x = (codom m1, codom m2))"
-                              using codom_tuple_def type_def by (metis True endpt_reconstruction endtype.distinct(1) pair_collapse)      using finite_def sledgehammer
+                              using codom_tuple_def type_def by (metis True endpt_reconstruction endtype.distinct(1) pair_collapse)    
                    then obtain m1 m2 where "(x = (codom m1, codom m2))"
                           by auto     
                    then have "{n.(\<exists>y.((codom n, y) = x) \<or> (y, codom n) = x)} = {m1,m2}"
@@ -310,7 +310,8 @@ next
                   proof(cases "dom_tuple x")
                   case True
                    have "\<exists>m1 m2.(x = (dom m1, dom m2))"
-                              using dom_tuple_def type_def by (metis True endpt_reconstruction endtype.distinct(1) pair_collapse)      using finite_def sledgehammer
+                              using dom_tuple_def type_def 
+            by (metis True endpt_reconstruction endtype.distinct(1) pair_collapse)     
                    then obtain m1 m2 where "(x = (dom m1, dom m2))"
                           by auto     
                    then have "{n.(\<exists>y.((dom n, y) = x) \<or> (y, dom n) = x)} = {m1,m2}"

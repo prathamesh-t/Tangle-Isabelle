@@ -32,16 +32,6 @@ where
                            then True 
                            else (str_number (snd x)=str_number (fst (hd xs)))\<and>(ascending_list xs))"
 
-lemma ascending_list_append:
- "(ascending_list xs)\<and>(ascending_list ys)\<and>(str_number (snd (last xs)) = str_number (fst (hd ys)))
-                     \<longrightarrow> ascending_list (xs@ys)"
-    apply(induct_tac xs)
-    apply(auto)
-    done  
-
-value "ascending_list [(codom 1, codom 2),(dom 2, codom 3)]" 
-
-value "codom_tuple (hd [])"
 
 primrec alt_list::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow>(endpt \<times> endpt) list \<Rightarrow> bool"
 where
@@ -60,21 +50,7 @@ where
                                         \<and>(alt_list xs ys zs)
                                       ))" 
 
-lemma "ls \<noteq> [] \<Longrightarrow> ls = (hd ls)#(tl ls)"
-        unfolding hd_def tl_def  by (metis (lifting) list.exhaust list.simps(7))
-(*
-lemma "(fst (hd ls) = codom k)\<and>(hd ls \<in> S2)\<and>(alt_list S1 S2 ls) \<Longrightarrow> \<exists>l.(hd ls = (codom k, codom l))"
-     proof-
-    have "(ls \<noteq> []) \<Longrightarrow> (ls = (hd ls)#(tl ls))"
-                using hd.simps tl.simps by auto  
-     have "((fst (hd ls)) = codom k) \<Longrightarrow> (\<not>(dom_tuple (hd ls)))"
-              using dom_tuple_def type_def by auto
-    then have "(alt_list S1 S2 ls)\<and>(ls \<noteq> [])\<and>(\<not>(dom_tuple (hd ls))) \<Longrightarrow> (codom_tuple (hd ls))"
-                     using alt_list.simps sledgehammer *)
-value "alt_list {(codom 1, codom 3),(dom 1, dom 2)} {(codom 2, codom 5), (codom 6, codom 7),(dom 1, dom 3)} 
-                        [(codom 1,codom 3),(dom 1, dom 3)]"
 
-(*warning-over riders prohibited*)
 definition endpt_act::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set"
 where
 "endpt_act xs ys \<equiv> {(codom m, codom n) | m n.(codom m, codom n) \<in> xs} 
@@ -107,6 +83,34 @@ where
                                                           \<and>((codom k, dom m) \<in> ys)) }
                       \<union>{(codom m, dom n) | m n k. (((codom m, dom k) \<in> xs)
                                         \<and>((codom k, dom n) \<in> ys))}"
+
+lemma ascending_list_append:
+ "(ascending_list xs)\<and>(ascending_list ys)\<and>(str_number (snd (last xs)) = str_number (fst (hd ys)))
+                     \<longrightarrow> ascending_list (xs@ys)"
+    apply(induct_tac xs)
+    apply(auto)
+    done  
+
+value "ascending_list [(codom 1, codom 2),(dom 2, codom 3)]" 
+
+value "codom_tuple (hd [])"
+
+
+lemma "ls \<noteq> [] \<Longrightarrow> ls = (hd ls)#(tl ls)"
+        unfolding hd_def tl_def  by (metis (lifting) list.exhaust list.simps(7))
+(*
+lemma "(fst (hd ls) = codom k)\<and>(hd ls \<in> S2)\<and>(alt_list S1 S2 ls) \<Longrightarrow> \<exists>l.(hd ls = (codom k, codom l))"
+     proof-
+    have "(ls \<noteq> []) \<Longrightarrow> (ls = (hd ls)#(tl ls))"
+                using hd.simps tl.simps by auto  
+     have "((fst (hd ls)) = codom k) \<Longrightarrow> (\<not>(dom_tuple (hd ls)))"
+              using dom_tuple_def type_def by auto
+    then have "(alt_list S1 S2 ls)\<and>(ls \<noteq> [])\<and>(\<not>(dom_tuple (hd ls))) \<Longrightarrow> (codom_tuple (hd ls))"
+                     using alt_list.simps sledgehammer *)
+value "alt_list {(codom 1, codom 3),(dom 1, dom 2)} {(codom 2, codom 5), (codom 6, codom 7),(dom 1, dom 3)} 
+                        [(codom 1,codom 3),(dom 1, dom 3)]"
+
+(*warning-over riders prohibited*)
 
 function endact::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set "
 where

@@ -5,113 +5,489 @@ begin
 
 (*new definitions*)
 
-
-definition codom_tuple_filter::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set"
+inductive valid::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) list \<Rightarrow> bool"
 where
-"codom_tuple_filter xs \<equiv> {(codom m, codom n) |m n. ((codom m, codom n) \<in> xs)}"
+Nil:"valid S1 S2 []"
+|dom_tuple:"((dom m, dom n) \<in> S1) \<Longrightarrow> (valid S1 S2 [(dom m, dom n)])"
+|codom_tuple:"((codom m, codom n) \<in> S2) \<Longrightarrow>(valid S1 S2 [(codom m, codom n)])  "
+|dom_first:"((dom m, dom n) \<in> S1)\<and>((codom n, codom k) \<in> S2)\<and>(valid S1 S2 ((codom n, codom k)#xs)) 
+              \<Longrightarrow> (valid S1 S2 ((dom m, dom n)#((codom n, codom k)#xs)))"
+|codom_first:"((dom n, dom k) \<in> S1)\<and>((codom m, codom n) \<in> S2)\<and>(valid S1 S2 ((dom n, dom k)#xs)) 
+              \<Longrightarrow> (valid S1 S2 ((codom m, codom n)#((dom n, dom k)#xs)))"
 
 
-lemma "codom_tuple_filter {(codom 1, codom 3), (codom 4, dom 5)}
-                  = {(codom 1, codom 3)}"
-      using codom_tuple_filter_def by auto
+lemma "valid {(dom (1::nat), dom 2),(dom 3, dom 4)} {(codom 2, codom 3)}  
+[(dom (1::nat), dom 2),(codom (2::nat), codom 3),(dom 3, dom 4)]"
+        apply(rule dom_first)
+        apply(auto)
+        apply(rule codom_first)
+        apply(auto)
+        apply(rule dom_tuple)
+        apply(auto)
+        done
+
+inductive_cases codom_list[elim!]: "(valid S1 S2 [(codom m, codom n)]) "
+inductive_cases dom_list[elim!]:  "(valid S1 S2 [(dom m, dom n)]) " 
+inductive_cases codom_dom[elim!]: "valid S1 S2 ((codom m,codom n)#x#xs)"
+inductive_cases dom_codom[elim!]: "valid S1 S2 ((dom m,dom n)#x#xs)"
+inductive_cases one_element[elim!]: "valid S1 S2 (x#xs)"
+inductive_cases more_than_one_element[elim!]: "valid S1 S2 (x#y#xs)"        
 
 
-definition dom_tuple_filter::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set"
+lemma codom_tuple_invert: "valid S1 S2 [(codom m, codom n)] \<Longrightarrow>(codom m, codom n) \<in> S2"
+   apply clarify
+   done
+
+        
+lemma dom_tuple_invert: "valid S1 S2 [(dom m, dom n)] \<Longrightarrow>(dom m, dom n) \<in> S1"
+   apply clarify
+   done 
+
+lemma codom_dom_tuple_invert: "valid S1 S2 ([x])\<and> ((str_number (fst x) = m)\<and>(str_number (snd x) = n)) 
+                                  \<Longrightarrow> ((x = (codom m, codom n))\<and>(x \<in> S2))
+                                       \<or>((x = (dom m, dom n))\<and>(x \<in> S1))"
+ apply clarify
+ apply (rule one_element)
+ apply simp
+ apply auto
+ apply (metis endpt.distinct(1) endpt.inject(1) endpt_reconstruction)  
+ apply (metis endpt.distinct(1) endpt.inject(1) endpt_reconstruction)
+ apply (metis endpt.distinct(1) endpt.inject(2) endpt_reconstruction)
+ apply (metis endpt.distinct(1) endpt.inject(2) endpt_reconstruction)
+ done
+
+lemma codom_dom_list: "valid S1 S2 (x#y#xs)\<and> ((str_number (fst x) = m)\<and>(str_number (snd x) = n)) 
+                                  \<Longrightarrow> ((x = (codom m, codom n))\<and>(x \<in> S2))
+                                       \<or>((x = (dom m, dom n))\<and>(x \<in> S1))"
+   apply clarify
+   apply (rule more_than_one_element)
+   apply simp
+   apply (metis Diff_iff codom_dom_tuple_invert dom_tuple)
+   by (metis codom_dom_tuple_invert codom_tuple)
+
+
+lemma hd_valid_list:"valid S1 S2 (x#xs)\<and> ((str_number (fst x) = m)\<and>(str_number (snd x) = n)) 
+                                  \<Longrightarrow> ((x = (codom m, codom n))\<and>(x \<in> S2))
+                                       \<or>((x = (dom m, dom n))\<and>(x \<in> S1))"
+          apply(case_tac xs)
+          apply(simp add:codom_dom_tuple_invert)  
+          apply clarify  
+          by (metis codom_dom_list)
+
+lemma codom_tuple_list_invert: "valid S1 S2 ((codom m, codom n)#xs) \<longrightarrow>(codom m, codom n) \<in> S2 "
+   apply (induct_tac xs)
+   apply (auto)
+   done    
+
+lemma dom_tuple_list_invert:"valid S1 S2 ((dom m, dom n)#xs) \<longrightarrow>(dom m, dom n) \<in> S1 "         
+   apply (induct_tac xs)
+   apply (auto)
+   done  
+
+lemma dom_invert:"valid S1 S2 ((dom m, dom n)#y#xs) \<longrightarrow>(dom m, dom n) \<in> S1 
+                    \<and> (y = (codom n,codom (str_number (snd y))))\<and>(y \<in> S2)"         
+   apply (induct_tac xs)
+   apply clarify
+    apply (simp)
+   apply (metis endpt.distinct(1) endpt.inject(2) endpt_reconstruction)
+    by (metis dom_codom endpt.distinct(1) fst_eqD hd_valid_list)
+
+
+lemma codom_invert:"valid S1 S2 ((codom m, codom n)#y#xs) \<longrightarrow>(codom m, codom n) \<in> S2 
+                    \<and> (y = (dom n,dom (str_number (snd y)))) \<and> (y \<in> S1)"         
+   apply (induct_tac xs)
+   apply clarify
+   apply (simp)
+   apply (metis endpt.distinct(1) endpt.inject(1) endpt_reconstruction)
+   by (metis codom_dom endpt.distinct(1) fst_eqD hd_valid_list)
+
+lemma valid_reduce_list:"valid S1 S2 (x#xs) \<longrightarrow> (valid S1 S2 xs)"
+  apply(case_tac xs) 
+  apply (simp add: valid.Nil)  
+  apply clarify
+  apply (auto simp add:codom_dom_list)
+  done
+
+
+lemma valid_append_list:"valid S1 S2 (xs@ys) \<longrightarrow> (valid S1 S2 ys)"
+  apply(induct_tac xs) 
+  apply (simp add: valid.Nil)  
+  apply clarify
+  apply (auto simp add: valid_reduce_list)
+  done
+
+
+lemma codom_first_append:
+ "(valid S1 S2 (xs@[(codom m, codom n)])) \<and> (valid S1 S2 ((dom n, dom k)#ys)) 
+           \<Longrightarrow> (valid S1 S2 ((xs@[(codom m, codom n)])@((dom n, dom k)#ys)))"
+proof(induction xs)            
+ case Nil
+     have "valid S1 S2 [(codom m, codom n)]"                                        
+                 using Nil valid_append_list by auto
+     then have "(codom m, codom n) \<in> S2"
+                 by auto
+     moreover have "(dom n, dom k) \<in> S1"
+                 using Nil dom_tuple_list_invert by auto
+     moreover have "valid S1 S2 ((dom n,dom k)#ys)"
+                 using Nil by auto 
+     ultimately show ?case using valid.codom_first by auto
+ next
+ case (Cons x xs)
+     have Con_1:"valid S1 S2 ((x#xs)@[(codom m, codom n)])"
+               using Cons by auto
+     then have "valid S1 S2 ([x]@(xs@[(codom m, codom n)]))"
+                    using append_Cons by auto
+     then have "valid S1 S2 (xs@[(codom m, codom n)])"
+                     using Cons valid_append_list by metis
+     moreover  have Cons_2:"valid S1 S2 ((xs@[(codom m, codom n)])@((dom n,dom k)#ys))"
+                           using Cons  by (metis calculation)
+    then  show ?case
+           proof(cases "xs")
+           case Nil
+             have 01:"valid S1 S2 (x#[(codom m, codom n)])"
+                        using Nil Con_1 by auto
+             then have "(x = (dom (str_number (fst x)), dom (str_number (snd x))))
+                                  \<or>(x = (codom (str_number (fst x)), codom (str_number (snd x))))"
+                       using hd_valid_list by metis
+             then have "x = (dom (str_number (fst x)), dom m)"
+                          using 01 by auto
+             moreover have "x \<in> S1"
+                              using 01 by auto
+             moreover have "(codom m, codom n) \<in> S2"
+                              using 01 by auto
+             ultimately have "valid S1 S2 (x#((codom m, codom n)#((dom n, dom k)#ys)))"
+                       using Cons_2 append_Cons  by (metis Nil append_Nil dom_first)   
+             then  show ?thesis by (metis Cons_eq_appendI Nil eq_Nil_appendI)
+           next
+           case (Cons a xs)
+             let ?j = "str_number (fst x)"
+             let ?l = "str_number (snd x)"
+             have a_1:"valid S1 S2 ((x#a#xs)@[(codom m, codom n)])" 
+                              using Cons by (metis Con_1)
+             then have a_2:"(x = (dom ?j, dom ?l))\<or>(x = (codom ?j, codom ?l))"
+                          using hd_valid_list by (metis Cons_eq_appendI)
+             then show ?thesis
+                    proof(cases "x =  (dom ?j, dom ?l) ")
+                      case True
+                      have T_1:"valid S1 S2 ((dom ?j, dom ?l)#a#(xs@[(codom m, codom n)]))"
+                                   using a_1 True by auto
+                      then have T_2:"((dom ?j, dom ?l) \<in> S1)
+                                 \<and>(a = (codom ?l, codom (str_number (snd a))))
+                                 \<and>(a \<in> S2)  "
+                           using dom_invert by auto     
+                      then have T_3: " (codom ?l, codom (str_number (snd a))) \<in> S2"
+                                            by auto
+                      moreover have T_4:"valid S1 S2 ((codom ?l, codom (str_number (snd a)))#(xs@[(codom m, codom n)]@((dom n, dom k)#ys)))"
+                                 using Cons_2 Cons T_2 by auto
+                      ultimately have "valid S1 S2 ((dom ?j, dom ?l)#(codom ?l, codom (str_number (snd a)))
+                                  #(xs@[(codom m, codom n)]@((dom n, dom k)#ys)))"
+                                   using dom_first by (metis T_2)  
+                      then have "valid S1 S2 (x#(a#(xs@[(codom m, codom n)]@((dom n, dom k)#ys))))"
+                                            using T_2 True by auto
+                      then show ?thesis using append_Cons by (metis (mono_tags) Cons append_assoc)                          
+                    next
+                    case False
+                      have F_1:"x= (codom ?j, codom ?l)"
+                                using False a_2 by auto
+                      then have F_2:"valid S1 S2 ((codom  ?j, codom  ?l)#a#(xs@[(codom   m, codom   n)]))"
+                                   using a_1 by auto
+                      then have T_2:"((codom  ?j, codom  ?l) \<in> S2)
+                                 \<and>(a = (dom   ?l, dom   (str_number (snd a))))
+                                 \<and>(a \<in> S1)  "
+                           using codom_invert by auto     
+                      then have T_3: " (dom ?l, dom (str_number (snd a))) \<in> S1"
+                                            by auto
+                      moreover have T_4:"valid S1 S2 ((dom   ?l, dom   (str_number (snd a)))
+                                #(xs@[(codom m,codom n)]@((dom  n, dom  k)#ys)))"
+                                 using Cons_2 Cons T_2 by auto
+                      ultimately have "valid S1 S2 ((codom  ?j, codom  ?l)#(dom ?l, dom (str_number (snd a)))
+                                  #(xs@[(codom m,codom n)]@((dom n,dom k)#ys)))"
+                                   using codom_first by (metis T_2)  
+                      then have "valid S1 S2 (x#(a#(xs@[(codom m, codom n)]@((dom n, dom k)#ys))))"
+                                         by (metis F_1 T_2)
+                      then show ?thesis using append_Cons by (metis (mono_tags) Cons append_assoc)  
+                    qed
+            qed
+ qed
+
+
+lemma dom_first_append:
+ "(valid S1 S2 (xs@[(dom m, dom n)])) \<and> (valid S1 S2 ((codom n, codom k)#ys)) 
+           \<Longrightarrow> (valid S1 S2 ((xs@[(dom m, dom n)])@((codom n, codom k)#ys)))"
+proof(induction xs)            
+ case Nil
+     have "valid S1 S2 [(dom m, dom n)]"                                        
+                 using Nil valid_append_list by auto
+     then have "(dom m, dom n) \<in> S1"
+                 by auto
+     moreover have "(codom n, codom k) \<in> S2"
+                 using Nil codom_tuple_list_invert by auto
+     moreover have "valid S1 S2 ((codom n,codom k)#ys)"
+                 using Nil by auto 
+     ultimately show ?case using valid.dom_first by auto
+ next
+ case (Cons x xs)
+     have Con_1:"valid S1 S2 ((x#xs)@[(dom m, dom n)])"
+               using Cons by auto
+     then have "valid S1 S2 ([x]@(xs@[(dom m, dom n)]))"
+                    using append_Cons by auto
+     then have "valid S1 S2 (xs@[(dom m, dom n)])"
+                     using Cons valid_append_list by metis
+     moreover  have Cons_2:"valid S1 S2 ((xs@[(dom m, dom n)])@((codom n,codom k)#ys))"
+                           using Cons  by (metis calculation)
+    then  show ?case
+           proof(cases "xs")
+           case Nil
+             have 01:"valid S1 S2 (x#[(dom m, dom n)])"
+                        using Nil Con_1 by auto
+             then have "(x = (codom (str_number (fst x)), codom (str_number (snd x))))
+                                  \<or>(x = (dom (str_number (fst x)), dom (str_number (snd x))))"
+                       using hd_valid_list by metis
+             then have "x = (codom (str_number (fst x)), codom m)"
+                          using 01 by auto
+             moreover have "x \<in> S2"
+                              using 01 by auto
+             moreover have "(dom m, dom n) \<in> S1"
+                              using 01 by auto
+             ultimately have "valid S1 S2 (x#((dom m, dom n)#((codom n, codom k)#ys)))"
+                       using Cons_2 append_Cons  by (metis Nil append_Nil codom_first)   
+             then  show ?thesis by (metis Cons_eq_appendI Nil eq_Nil_appendI)
+           next
+           case (Cons a xs)
+             let ?j = "str_number (fst x)"
+             let ?l = "str_number (snd x)"
+             have a_1:"valid S1 S2 ((x#a#xs)@[(dom m, dom n)])" 
+                              using Cons by (metis Con_1)
+             then have a_2:"(x = (codom ?j, codom ?l))\<or>(x = (dom ?j, dom ?l))"
+                          using hd_valid_list by (metis Cons_eq_appendI)
+             then show ?thesis
+                    proof(cases "x =  (codom ?j, codom ?l) ")
+                      case True
+                      have T_1:"valid S1 S2 ((codom ?j, codom ?l)#a#(xs@[(dom m, dom n)]))"
+                                   using a_1 True by auto
+                      then have T_2:"((codom ?j, codom ?l) \<in> S2)
+                                 \<and>(a = (dom ?l, dom (str_number (snd a))))
+                                 \<and>(a \<in> S1)  "
+                           using codom_invert by auto     
+                      then have T_3: " (dom ?l, dom (str_number (snd a))) \<in> S1"
+                                            by auto
+                      moreover have T_4:"valid S1 S2 ((dom ?l, dom (str_number (snd a)))#(xs@[(dom m, dom n)]@((codom n, codom k)#ys)))"
+                                 using Cons_2 Cons T_2 by auto
+                      ultimately have "valid S1 S2 ((codom ?j, codom ?l)#(dom ?l, dom (str_number (snd a)))
+                                  #(xs@[(dom m, dom n)]@((codom n, codom k)#ys)))"
+                                   using codom_first by (metis T_2)  
+                      then have "valid S1 S2 (x#(a#(xs@[(dom m, dom n)]@((codom n, codom k)#ys))))"
+                                            using T_2 True by auto
+                      then show ?thesis using append_Cons by (metis (mono_tags) Cons append_assoc)                          
+                    next
+                    case False
+                      have F_1:"x= (dom ?j, dom ?l)"
+                                using False a_2 by auto
+                      then have F_2:"valid S1 S2 ((dom  ?j, dom  ?l)#a#(xs@[(dom   m, dom   n)]))"
+                                   using a_1 by auto
+                      then have T_2:"((dom  ?j, dom  ?l) \<in> S1)
+                                 \<and>(a = (codom   ?l, codom   (str_number (snd a))))
+                                 \<and>(a \<in> S2)  "
+                           using dom_invert by auto     
+                      then have T_3: " (codom ?l, codom (str_number (snd a))) \<in> S2"
+                                            by auto
+                      moreover have T_4:"valid S1 S2 ((codom   ?l, codom   (str_number (snd a)))
+                                #(xs@[(dom m,dom n)]@((codom  n, codom  k)#ys)))"
+                                 using Cons_2 Cons T_2 by auto
+                      ultimately have "valid S1 S2 ((dom  ?j, dom  ?l)#(codom ?l, codom (str_number (snd a)))
+                                  #(xs@[(dom m,dom n)]@((codom n,codom k)#ys)))"
+                                   using dom_first by (metis T_2)  
+                      then have "valid S1 S2 (x#(a#(xs@[(dom m, dom n)]@((codom n, codom k)#ys))))"
+                                         by (metis F_1 T_2)
+                      then show ?thesis using append_Cons by (metis (mono_tags) Cons append_assoc)  
+                    qed
+            qed
+ qed
+
+
+primrec rev_tuple::"(endpt \<times> endpt) list  \<Rightarrow> (endpt \<times> endpt) list"
 where
-"dom_tuple_filter xs \<equiv> {(dom m, dom n) |m n. ((dom m, dom n) \<in> xs)}"
+"rev_tuple [] = []"
+|"rev_tuple (x#xs) = (snd x, fst x)#(rev_tuple xs)"
 
 
-lemma "dom_tuple_filter {(codom 1, codom 3), (dom 4, dom 5)}
-                  = {(dom 4, dom 5)}"
-      using dom_tuple_filter_def by auto
 
-primrec ascending_list::"(endpt \<times> endpt) list \<Rightarrow> bool"
+definition rev_list::"(endpt \<times> endpt) list \<Rightarrow> (endpt \<times> endpt) list"
 where
-"ascending_list [] = True"
-|"ascending_list (x#xs) = (if (xs = []) 
-                           then True 
-                           else (str_number (snd x)=str_number (fst (hd xs)))\<and>(ascending_list xs))"
+"rev_list ls = (rev (rev_tuple ls))" 
 
 
-primrec alt_list::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow>(endpt \<times> endpt) list \<Rightarrow> bool"
-where
-"alt_list xs ys [] = True"
-|"alt_list xs ys (z#zs) = (case (dom_tuple z) of 
-                       True \<Rightarrow> (if (zs = []) 
-                                    then (z \<in> xs)
-                                    else (z \<in> xs)
-                                         \<and>(hd zs) \<in> ys)
-                                         \<and>(codom_tuple (hd zs))
-                                         \<and>(alt_list xs ys zs)
-             |False \<Rightarrow>(if (zs = []) 
-                                    then (z \<in> ys)\<and>(codom_tuple z) 
-                                    else (z \<in>  ys)\<and>(codom_tuple z)
-                                        \<and>((hd zs) \<in> xs)\<and>(dom_tuple (hd zs))
-                                        \<and>(alt_list xs ys zs)
-                                      ))" 
+lemma rev_tuple_append:"rev_tuple (xs@ys) \<equiv> (rev_tuple xs)@(rev_tuple ys)"
+       apply(induction  xs)
+       apply(auto simp add:rev_tuple_def)
+       done   
 
+lemma rev_append:"rev (xs@ys) = (rev ys)@(rev xs)"
+            by (metis rev_append) 
+
+lemma rev_list_append:"rev_list (xs@ys) = (rev_list ys)@(rev_list xs)"
+          apply (simp add:rev_list_def rev_tuple_append)
+          done
+
+lemma valid_rev_list: assumes "symmetric S1" and "symmetric S2"
+shows "valid S1 S2 ls \<Longrightarrow> valid S1 S2 (rev_list ls)"
+proof(induction ls)
+ case Nil
+      show ?case using Nil rev_list_def rev_def valid.Nil by auto
+ next
+ case (Cons l ls)
+  let ?m = "str_number (fst l)"
+  let ?n = "str_number (snd l)"
+  have Cons_1:"valid S1 S2 (l#ls)"
+           using Cons by auto
+  then have Cons_2:"((l = (codom ?m, codom ?n))\<and>(l \<in> S2))\<or>((l = (dom ?m, dom ?n))\<and>(l \<in> S1)) "
+          using hd_valid_list by metis
+  also have Cons_3:"valid S1 S2 ls"
+                    using Cons_1 valid_reduce_list by auto 
+  then have Cons_4:"valid S1 S2 (rev_list ls)"
+                   using  Cons.IH by auto 
+  then show ?case
+       proof(cases ls)
+        case Nil
+            have "rev_list [l] = [(snd l, fst l)]"
+                     using rev_list_def rev_tuple.simps by auto
+            then have "(l = (codom ?m, codom ?n)) \<Longrightarrow> (snd l, fst l) \<in> S2"
+                          using Cons_2 assms(2) symmetric_def 
+                   by (metis endpt.distinct(1) fst_conv pair_collapse)             
+            moreover then  have "l = (dom ?m, dom ?n) \<Longrightarrow> (snd l, fst l) \<in> S1"
+                                        using Cons_2 assms(2) symmetric_def
+                  by (metis assms(1) endpt.distinct(1) fst_conv pair_collapse)
+            ultimately show ?thesis using Nil  codom_tuple dom_tuple Cons_2  by (metis `rev_list [l] = [(snd l, fst l)]` fst_eqD snd_eqD)
+        next
+        case (Cons l1 ls1)
+           show ?thesis
+             proof(cases "l =  (codom ?m, codom ?n)")
+             case True
+                 have T_1:"l \<in> S2"
+                       using Cons_2 True by (metis endpt.distinct(1) fst_conv) 
+                 moreover have T_2:"valid S1 S2 (l#l1#ls1)"
+                                using Cons_1  Cons by auto 
+                 then have T_3:"valid S1 S2 ((codom ?m, codom ?n)#l1#ls1)"
+                                  using True by auto
+                 then have T_4:"l1 = (dom ?n, dom (str_number (snd l1)))\<and> l1 \<in> S1"
+                       using  codom_invert True by metis      
+                 then have T_5:"(l1#ls1) = [l1]@ls1 "
+                                     using rev.simps by auto 
+                 then have T_6:"rev_list ([l1]@ls1) = (rev_list ls1)@(rev_list [l1])"
+                                 using rev_list_append by metis
+                 moreover have "rev_tuple [l1] =[(dom (str_number (snd l1)) ,dom ?n)]"
+                                       using rev_tuple.simps snd_conv fst_conv 
+                                        T_4 by metis
+                 moreover have "rev_list [l1] = [(dom (str_number (snd l1)) ,dom ?n)]"
+                                        using rev_list_def rev.simps  singleton_rev_conv
+                                        by (metis calculation(3))
+                 then have "rev_list ([l1]@ls1) = 
+                              (rev_list ls1)@[(dom (str_number (snd l1)) ,dom ?n)] "
+                                 using T_6 by auto  
+                 then have T_7:"rev_list (l1#ls1) = (rev_list ls1)@[(dom (str_number (snd l1)) ,dom ?n)]"
+                                       by auto
+                 have "valid S1 S2 (rev_list (l1#ls1))"
+                                       using Cons_4 Cons by auto
+                 then have T_8:"valid S1 S2 ((rev_list ls1)@[(dom (str_number (snd l1)) ,dom ?n)])" 
+                                 using T_7 by auto
+                  have "(codom ?n, codom ?m) \<in> S2"
+                               using symmetric_def assms(2) by (metis T_1 True)   
+                  moreover have "valid S1 S2 ((codom ?n, codom ?m)#[])"
+                                          using codom_tuple by (metis calculation(4))
+                  then have T_9:"valid S1 S2
+                               (((rev_list ls1)@[(dom (str_number (snd l1)) ,dom ?n)])
+                                   @[(codom ?n, codom ?m)])"
+                                        using dom_first_append T_8 by auto 
+                  have "rev_list [(codom ?m, codom ?n)] =  [(codom ?n, codom ?m)]"
+                             using rev_list_def rev_tuple.simps by auto
+                  moreover have "l#l1#ls1 = [l]@[l1]@ls1"
+                                    using append_Cons by auto
+                  moreover have "rev_list ([l]@[l1]@ls1) = (rev_list ([l1]@ls1))@(rev_list [l])"
+                                     using rev_list_append by metis
+                  ultimately have "rev_list (l#l1#ls1) = (((rev_list ls1)@[(dom (str_number (snd l1)) ,dom ?n)])
+                                   @[(codom ?n, codom ?m)])" 
+                                     using T_7 by (metis True `rev_list [l1] = [(endpt.dom (str_number (snd l1)), endpt.dom (str_number (snd l)))]`)
+                  then have "valid S1 S2 (rev_list (l#l1#ls1))"
+                                  using T_9 by auto
+                  then show ?thesis using Cons by auto
+                 next
+                 case False
+                      have F_1:"l = (dom ?m, dom ?n) \<and> l \<in> S1"
+                              using False Cons_2 by auto 
+                       moreover have F_2:"valid S1 S2 (l#l1#ls1)"
+                                using Cons_1  Cons by auto 
+                 then have F_3:"valid S1 S2 ((dom ?m, dom ?n)#l1#ls1)"
+                                  using F_1 by auto
+                 then have F_4:"l1 = (codom ?n, codom (str_number (snd l1)))\<and> l1 \<in> S2"
+                       using  dom_invert F_1 by metis      
+                 then have F_5:"(l1#ls1) = [l1]@ls1 "
+                                     using rev.simps by auto 
+                 then have F_6:"rev_list ([l1]@ls1) = (rev_list ls1)@(rev_list [l1])"
+                                 using rev_list_append by metis
+                 moreover have "rev_tuple [l1] =[(codom (str_number (snd l1)) ,codom ?n)]"
+                                       using rev_tuple.simps snd_conv fst_conv 
+                                        F_4 by metis
+                 moreover have "rev_list [l1] = [(codom (str_number (snd l1)) ,codom ?n)]"
+                                        using rev_list_def rev.simps  singleton_rev_conv
+                                        by (metis calculation(3))
+                 then have "rev_list ([l1]@ls1) = 
+                              (rev_list ls1)@[(codom (str_number (snd l1)) ,codom ?n)] "
+                                 using F_6 by auto  
+                 then have F_7:"rev_list (l1#ls1) = (rev_list ls1)@[(codom (str_number (snd l1)) ,codom ?n)]"
+                                       by auto
+                 have "valid S1 S2 (rev_list (l1#ls1))"
+                                       using Cons_4 Cons by auto
+                 then have F_8:"valid S1 S2 ((rev_list ls1)@[(codom (str_number (snd l1)) ,codom ?n)])" 
+                                 using F_7 by auto
+                  have "(dom ?n, dom ?m) \<in> S1"
+                               using symmetric_def assms(2) by (metis F_1 assms(1))   
+                  moreover have "valid S1 S2 ((dom ?n, dom ?m)#[])"
+                                          using dom_tuple by (metis calculation(4))
+                  then have F_9:"valid S1 S2
+                               (((rev_list ls1)@[(codom (str_number (snd l1)) ,codom ?n)])
+                                   @[(dom ?n, dom ?m)])"
+                                        using codom_first_append F_8 by auto 
+                  have "rev_list [(dom ?m, dom ?n)] =  [(dom ?n, dom ?m)]"
+                             using rev_list_def rev_tuple.simps by auto
+                  moreover have "l#l1#ls1 = [l]@[l1]@ls1"
+                                    using append_Cons by auto
+                  moreover have "rev_list ([l]@[l1]@ls1) = (rev_list ([l1]@ls1))@(rev_list [l])"
+                                     using rev_list_append by metis
+                  ultimately have "rev_list (l#l1#ls1) = (((rev_list ls1)@[(codom (str_number (snd l1)) ,codom ?n)])
+                                   @[(dom ?n, dom ?m)])" 
+                                     using F_7 by (metis F_1 `rev_list [l1] = [(endpt.codom (str_number (snd l1)), endpt.codom (str_number (snd l)))]`)
+                  then have "valid S1 S2 (rev_list (l#l1#ls1))"
+                                  using F_9 by auto
+                  then show ?thesis using Cons by auto     
+                qed
+             qed     
+ qed
 
 definition endpt_act::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set"
 where
-"endpt_act xs ys \<equiv> {(codom m, codom n) | m n.(codom m, codom n) \<in> xs} 
-                    \<union>{(dom m, dom n) | m n. (dom m, dom n) \<in> ys} 
-                    \<union>{(codom m, codom n) | m n k1 k2 ls. (((codom m, dom k1) \<in> xs)
-                                            \<and>(fst (hd ls) = (codom k1)) 
-                                            \<and>(snd (last ls) = (codom k2)) 
-                                            \<and>((dom k2, codom n) \<in> xs))
-                                            \<and>(alt_list xs ys ls)
-                                            \<and>(ascending_list ls)\<and>(ls \<noteq> [])  }
-                    \<union>{(dom m, dom n) | m n k1 k2 ls. (((dom m, codom k1) \<in> ys)
-                                            \<and>(fst (hd ls) = (dom k1)) 
-                                            \<and>(snd (last ls) = (dom k2)) 
-                                            \<and>((codom k2, dom n) \<in> ys))
-                                            \<and>(alt_list xs ys ls)
-                                            \<and>(ascending_list ls)  }
-                    \<union>{(codom m, dom n) | m n k1 k2 ls. (((codom m, dom k1) \<in> xs)
-                                            \<and>(fst (hd ls) = (dom k1)) 
-                                            \<and>(snd (last ls) = (codom k2)) 
-                                            \<and>((codom k2, dom n) \<in> ys))
-                                            \<and>(alt_list xs ys ls)
-                                            \<and>(ascending_list ls)}
-                     \<union>{(dom m, codom n) | m n k1 k2 ls. (((codom n, dom k1) \<in> xs)
-                                            \<and>(fst (hd ls) = (dom k1)) 
-                                            \<and>(snd (last ls) = (codom k2)) 
-                                            \<and>((codom k2, dom m) \<in> ys))
-                                            \<and>(alt_list xs ys ls)
-                                            \<and>(ascending_list ls)}
-                      \<union>{(dom m, codom n) | m n k. (((codom n, dom k) \<in> xs)
-                                                          \<and>((codom k, dom m) \<in> ys)) }
-                      \<union>{(codom m, dom n) | m n k. (((codom m, dom k) \<in> xs)
-                                        \<and>((codom k, dom n) \<in> ys))}"
-
-lemma ascending_list_append:
- "(ascending_list xs)\<and>(ascending_list ys)\<and>(str_number (snd (last xs)) = str_number (fst (hd ys)))
-                     \<longrightarrow> ascending_list (xs@ys)"
-    apply(induct_tac xs)
-    apply(auto)
-    done  
-
-value "ascending_list [(codom 1, codom 2),(dom 2, codom 3)]" 
-
-value "codom_tuple (hd [])"
-
-
-lemma "ls \<noteq> [] \<Longrightarrow> ls = (hd ls)#(tl ls)"
-        unfolding hd_def tl_def  by (metis (lifting) list.exhaust list.simps(7))
-(*
-lemma "(fst (hd ls) = codom k)\<and>(hd ls \<in> S2)\<and>(alt_list S1 S2 ls) \<Longrightarrow> \<exists>l.(hd ls = (codom k, codom l))"
-     proof-
-    have "(ls \<noteq> []) \<Longrightarrow> (ls = (hd ls)#(tl ls))"
-                using hd.simps tl.simps by auto  
-     have "((fst (hd ls)) = codom k) \<Longrightarrow> (\<not>(dom_tuple (hd ls)))"
-              using dom_tuple_def type_def by auto
-    then have "(alt_list S1 S2 ls)\<and>(ls \<noteq> [])\<and>(\<not>(dom_tuple (hd ls))) \<Longrightarrow> (codom_tuple (hd ls))"
-                     using alt_list.simps sledgehammer *)
-value "alt_list {(codom 1, codom 3),(dom 1, dom 2)} {(codom 2, codom 5), (codom 6, codom 7),(dom 1, dom 3)} 
-                        [(codom 1,codom 3),(dom 1, dom 3)]"
-
-(*warning-over riders prohibited*)
-
+"endpt_act S1 S2 \<equiv> {(codom m, codom n) | m n.(codom m, codom n) \<in> S1} 
+                    \<union>{(dom m, dom n) | m n. (dom m, dom n) \<in> S2} 
+                    \<union>{(codom m, codom n) | m n k1 k2 k3 k4 ls. 
+                                  (((codom m, dom k1) \<in> S1)
+                                  \<and>((dom k4, codom n) \<in> S1))
+                                  \<and>(valid S1 S2 ((codom k1,codom k2)#ls@[(codom k3, codom k4)]))}
+                    \<union>{(dom m, dom n) | m n k1 k2 k3 k4 ls. 
+                                   (((dom m, codom k1) \<in> S2)
+                                   \<and>((codom k4, dom n) \<in> S2))
+                                   \<and>(valid S1 S2 ((codom k1, codom k2)#ls@[(codom k3, codom k4)]))}
+                    \<union>{(codom m, dom n) | m n k1 k2 k3 k4 ls. 
+                                        (((codom m, dom k1) \<in> S1)
+                                        \<and>((codom k4, dom n) \<in> S2))
+                                        \<and>(valid S1 S2 ((dom k1,dom k2)#ls@[(codom k3, codom k4)]))}
+                     \<union>{(dom m, codom n) | m n k1 k2 k3 k4 ls. 
+                                         (((codom n, dom k1) \<in> S1)
+                                         \<and>((codom k4, dom m) \<in> S2))
+                                         \<and>(valid S1 S2 ((dom k1,dom k2)#ls@[(codom k3, codom k4)]))}
+                      \<union>{(dom m, codom n) | m n k. (((codom n, dom k) \<in> S1)
+                                                          \<and>((codom k, dom m) \<in> S2)) }
+                      \<union>{(codom m, dom n) | m n k. (((codom m, dom k) \<in> S1)
+                                        \<and>((codom k, dom n) \<in> S2))}"
+                  
 function endact::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set "
 where
 "endact {} S = S"
@@ -126,6 +502,60 @@ where
    apply (auto)
    done
 
+inductive compose_strands::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) \<Rightarrow> bool"
+where
+"(codom m, codom n) \<in> S1 \<Longrightarrow>(compose_strands S1 S2  (codom m, codom n))"
+|"(dom m, dom n) \<in> S2  \<Longrightarrow>  (compose_strands S1 S2 (dom m, dom n) )"
+|" ((codom m, dom k1) \<in> S1) \<and>((dom k4, codom n) \<in> S1)
+                                  \<and>(valid S1 S2 ((codom k1,codom k2)#ls@[(codom k3, codom k4)]))
+                          \<Longrightarrow> (compose_strands S1 S2 (codom m, codom n))"
+|" ((dom m, codom k1) \<in> S2) \<and>((codom k4, dom n) \<in> S2)
+                                  \<and>(valid S1 S2 ((dom k1,dom k2)#ls@[(dom k3, dom k4)]))
+                          \<Longrightarrow> (compose_strands S1 S2 (dom m, dom n))"
+|" ((codom m, dom k1) \<in> S1) \<and>((codom k4, dom n) \<in> S2)
+                                  \<and>(valid S1 S2 ((dom k1,dom k2)#ls@[(codom k3, codom k4)]))
+                          \<Longrightarrow> (compose_strands S1 S2 (codom m, dom n))"
+|" ((codom n, dom k1) \<in> S1)\<and>((codom k4, dom m) \<in> S2)
+                      \<and>(valid S1 S2 ((dom k1,dom k2)#ls@[(codom k3, codom k4)]))
+                          \<Longrightarrow> (compose_strands S1 S2 (dom m, codom n))"
+   
+definition strand_composition::"(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set"
+where
+"strand_composition S1 S2 \<equiv> {x. (compose_strands S1 S2 x)}"
+
+
+(*
+"compose_strands S1 S2 \<equiv> {(codom m, codom n) | m n.(co dom m, codom n) \<in> S1} 
+                    \<union>{(dom m, dom n) | m n. (dom m, dom n) \<in> S2} 
+                    \<union>{(codom m, codom n) | m n k1 k2 k3 k4 ls. 
+                                  (((codom m, dom k1) \<in> S1)
+                                  \<and>((dom k4, codom n) \<in> S1))
+                                  \<and>(valid S1 S2 ((codom k1,codom k2)#ls@[(codom k3, codom k4)]))}
+                    \<union>{(dom m, dom n) | m n k1 k2 k3 k4 ls. 
+                                   (((dom m, codom k1) \<in> S2)
+                                   \<and>((codom k4, dom n) \<in> S2))
+                                   \<and>(valid S1 S2 ((codom k1, codom k2)#ls@[(codom k3, codom k4)]))}
+                    \<union>{(codom m, dom n) | m n k1 k2 k3 k4 ls. 
+                                        (((codom m, dom k1) \<in> S1)
+                                        \<and>((codom k4, dom n) \<in> S2))
+                                        \<and>(valid S1 S2 ((dom k1,dom k2)#ls@[(codom k3, codom k4)]))}
+                     \<union>{(dom m, codom n) | m n k1 k2 k3 k4 ls. 
+                                         (((codom n, dom k1) \<in> S1)
+                                         \<and>((codom k4, dom m) \<in> S2))
+                                         \<and>(valid S1 S2 ((dom k1,dom k2)#ls@[(codom k3, codom k4)]))}
+                      \<union>{(dom m, codom n) | m n k. (((codom n, dom k) \<in> S1)
+                                                          \<and>((codom k, dom m) \<in> S2)) }
+                      \<union>{(codom m, dom n) | m n k. (((codom m, dom k) \<in> S1)
+                                        \<and>((codom k, dom n) \<in> S2))}"
+
+*)
+theorem assumes "symmetric S1" and "symmetric S2"
+          shows "symmetric (endpt_act S1 S2)"
+
+
+
+
+(*
 lemma codom_tuple_endpt_act:"(codom m , codom n) \<in> endpt_act xs ys \<and> (codom m, codom n) \<notin> xs 
                        \<Longrightarrow> (\<exists>k1 k2 ls. (((codom m, dom k1) \<in> xs)
                                             \<and>(fst (hd ls) = (codom k1)) 
@@ -134,7 +564,7 @@ lemma codom_tuple_endpt_act:"(codom m , codom n) \<in> endpt_act xs ys \<and> (c
                                             \<and>(alt_list xs ys ls)
                                             \<and>(ascending_list ls))"
                  using endpt_act_def by auto
-
+*)
 lemma "A \<subset> B \<and>(finite B) \<Longrightarrow> (finite A)"
        using  rev_finite_subset by auto
 (*
@@ -163,6 +593,8 @@ then have " finite {x. ((x,y) \<in> (insert a A))\<or>((y,x)\<in>(insert a A))}"
 
 
 (*this will be used to prove properties of the ls obtained by choice operator*)
+(*
+
 definition connecting_list::"(endpt \<times> endpt) \<Rightarrow>(endpt \<times> endpt) set \<Rightarrow> (endpt \<times> endpt) set 
                                             \<Rightarrow>(endpt \<times> endpt) list \<Rightarrow> bool"
 where
@@ -363,7 +795,7 @@ lemma assumes "x \<in> {a| b. P(a,b)}"
 lemma "x \<in> {a. P(a)} \<union> {b. Q(b)} \<Longrightarrow> (P(x)\<or>Q(x))"
            by auto
 
-
+*)
 primrec set_assign_to_wall::"wall \<Rightarrow> (endpt \<times> endpt) set"
 where
 "set_assign_to_wall (basic b) = (block_act b)"

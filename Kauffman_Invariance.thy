@@ -1,4 +1,4 @@
-theory Tangle_Invariance
+theory Kauffman_Invariance
 imports  Link_Algebra Linkrel_kauffman
 begin
 

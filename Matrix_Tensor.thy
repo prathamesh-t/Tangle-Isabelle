@@ -3849,7 +3849,9 @@ proof-
           by (metis assms effective_tensor_compose_distribution1)
  moreover have "mat ?nr ?nc ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))"
             using assms by (metis effective_tensor_compose_distribution2)
- moreover have "\<forall>j<?nc.\<forall>i<?nr.(((A1 \<circ> A2)\<otimes>(B1 \<circ>B2))!j!i  = ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))!j!i)" 
+ moreover have "\<forall>j<?nc.\<forall>i<?nr.
+                   (((A1 \<circ> A2)\<otimes>(B1 \<circ>B2))!j!i 
+                                = ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))!j!i)" 
          using element_match assms by auto
  ultimately show ?thesis using tensor_compose_condn by auto
 qed   

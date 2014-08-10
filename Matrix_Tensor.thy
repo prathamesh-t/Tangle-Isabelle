@@ -2270,25 +2270,33 @@ lemma  row_formula:
         have Cons_Cons_1:" mat (row_length M) (length M) M"
                      using assms reduct_matrix by auto
         then have "row_length (w#N) = row_length (v#M)"
-                        using assms Cons unfolding mat_def Ball_def vec_def  by (metis append_Cons hd.simps hd_in_set list.distinct(1) rotate1.simps(2) set_rotate1)
+                        using assms Cons unfolding mat_def Ball_def vec_def  
+                        using append_Cons hd.simps hd_in_set list.distinct(1) 
+                        rotate1.simps(2) set_rotate1
+                        by metis
         then have Cons_Cons_2:"i < (row_length M)*(row_length M2)"
                         using assms Cons by auto
         then have Cons_Cons_3:"(row (M \<otimes> M2) i) =  vec_vec_Tensor 
                                           (row M (i div row_length M2)) 
                                            (row M2 (i mod row_length M2))"
                        using Cons.hyps Cons_Cons_1 assms by auto
-         moreover have "row (vec_mat_Tensor v M2) i =  times 
-                                                (v!(i div row_length M2)) 
-                                                (row M2 (i mod row_length M2))"
+         moreover have "row (vec_mat_Tensor v M2) i   
+                                            =  times 
+                                               (v!(i div row_length M2)) 
+                                               (row M2 (i mod row_length M2))"
                         using row_vec_mat_Tensor_prelim assms 0 by auto
         then have "row ((v#M)\<otimes>M2) i = 
-                           (times (v!(i div row_length M2)) (row M2 (i mod row_length M2)))
+                           (times 
+                                   (v!(i div row_length M2)) 
+                                    (row M2 (i mod row_length M2)))
                                       @(vec_vec_Tensor 
                                           (row M (i div row_length M2)) 
                                            (row M2 (i mod row_length M2)))"   
                             using 2 Cons_Cons_3 by auto
-        moreover have "... = (vec_vec_Tensor ((v!(i div row_length M2))#(row M (i div row_length M2)))
-                                           (row M2 (i mod row_length M2)))"
+        moreover have "... = (vec_vec_Tensor 
+                                        ((v!(i div row_length M2))
+                                             #(row M (i div row_length M2)))
+                                        (row M2 (i mod row_length M2)))"
                              using vec_vec_Tensor.simps(2) by auto
         moreover have "... = (vec_vec_Tensor (row (v#M) (i div row_length M2))
                                            (row M2 (i mod row_length M2)))" 
@@ -2317,55 +2325,20 @@ lemma alt_effective_matrix_tensor_elements:
 
 lemma trans_impl:"(\<forall> i j.(P i j \<longrightarrow> Q i j))\<and>(\<forall> i j. (Q i j \<longrightarrow> R i j)) \<Longrightarrow> (\<forall> i j. (P i j \<longrightarrow> R i j))"
           by auto
-value "(5::nat) div 1"
-(*
-"\<forall>i.\<forall>j.(((i<((row_length M1)*(row_length M2)))\<and>(j < (length M1)*(length M2)))
-\<and>(mat (row_length M1) (length M1) M1)\<and>(mat (row_length M2) (length M2) M2)
-\<longrightarrow> ((M1 \<otimes> M2)!j!i) = f (M1!(j div (length M2))!(i div (row_length M2))) 
-(M2!(j mod length M2)!(i mod (row_length M2))))"*)
 
-(*
-(((M1 \<otimes> M2) \<otimes> M3!j!i) = f ((M1 \<otimes> M2)!(j div (length M3))!(i div (row_length M3))) 
-(M3!(j mod length M3)!(i mod (row_length M3))))"
-(M1 \<otimes> M2)!(j div (length M3))!(i div (row_length M3)
- =  f ((M1)!(j div (length M3) div (length M2))!(i div (row_length M3) div (row_length M2))) 
-1(M2!(j mod length M3 mod length M2)!(i mod (row_length M3) mod (row_length M2))))"
-
-(((M1 \<otimes> (M2 \<otimes> M3)!j!i) = f ((M1)!(j div (length (M2 \<otimes>M3))!(i div (row_length (M2\<otimes>M3)))) 
-((M2 \<otimes> M3)!(j mod length (M2 \<otimes> M3))!(i mod (row_length (M2 \<otimes>M3)))))"
-(M2 \<otimes> M3)!(j mod (length (M2 \<otimes>M3)))!(i mod (row_length (M2 \<otimes>M3))
- =  f ((M2)!(j mod (length M3 \<otimes> M3) div (length M3))!(i mod (row_length M3) div (row_length M2))) 
-(M2!(j mod length M3 mod length M2)!(i mod (row_length M3) mod (row_length M2))))"
-
-*)
-find_theorems 
 lemma "((x::nat) div y) div z = (x div (y*z))"
       using div_mult2_eq by auto
-(*
-lemma "((x::nat) mod y) mod z = (x mod (y*z))"
-     sledghammer
-*)
 
-(*
-lemma "(a <b) \<or> (a \<ge> b)"
-         apply(auto)
-          sledgehammer
-*)
 lemma "(\<not>((a::nat) < b)) \<Longrightarrow> (a \<ge> b)"
         by auto
-
-
 
 lemma not_null: "xs \<noteq> [] \<Longrightarrow> \<exists>y ys. xs = y#ys"
       by (metis neq_Nil_conv)
 
 lemma "(y::nat) \<noteq> 0 \<Longrightarrow> (x mod y) < y"
     using mod_less_divisor by auto
-value "(x::nat) mod 0"
-value "((13::nat) mod 18) mod 0"
 
-(*assumes "c>0"
- shows*)
+
 lemma mod_prop1:"((a::nat) mod (b*c)) mod c = (a mod c)"
  proof(cases "c = 0")
  case True
@@ -2472,34 +2445,42 @@ lemma mod_div_relation:"((a::nat) mod (b*c)) div c = (a div c) mod b"
           have "b*c > (a mod (b*c))"
                           by (metis False mod_less_divisor neq0_conv)
           moreover then have "(b*c) div c > (a mod (b*c)) div c"
-                            by (metis F_1 div_left_ineq div_mult_self2_is_id neq0_conv)
+                            by (metis F_1 div_left_ineq 
+                                       div_mult_self2_is_id neq0_conv)
           then have "b > (a mod (b*c)) div c"
-                                by (metis calculation div_right_ineq nat_mult_commute)
-          with F_4 F_5 have F_6:"((a div c) mod b) - ((a mod (b*c)) div c) = 0"
-                              by (metis less_imp_diff_less less_nat_zero_code nat_dvd_not_less 
-                             nat_less_cases)      
-          from F_3 have "(y * b) - (x*b) =  ((a mod (b*c)) div c) - ((a div c) mod b) "
+                                by (metis calculation 
+                                       div_right_ineq nat_mult_commute)
+          with F_4 F_5 have F_6:"((a div c) mod b)-((a mod (b*c)) div c) = 0"
+                              by (metis less_imp_diff_less less_nat_zero_code 
+                                        nat_dvd_not_less nat_less_cases)      
+          from F_3 have "(y * b) - (x*b) 
+                               = ((a mod (b*c)) div c) - ((a div c) mod b) "
                           by auto
           then have "(y - x) * b = ((a mod (b*c)) div c) - ((a div c) mod b)"
                            by (metis diff_mult_distrib2 nat_mult_commute)
           then have F_7:"b dvd (((a mod (b*c)) div c) - ((a div c) mod b))"
-                       by (metis dvd_eq_mod_eq_0 mod_mult_self1_is_0 nat_mult_commute)
+                       by (metis dvd_eq_mod_eq_0 mod_mult_self1_is_0 
+                                 nat_mult_commute)
           have F_8:"b >  ((a div c) mod b)"
                         by (metis F_1 mod_less_divisor)
           have "b*c > (a mod (b*c))"
                           by (metis False mod_less_divisor neq0_conv)
           moreover then have "(b*c) div c > (a mod (b*c)) div c"
-                            by (metis F_1 div_left_ineq div_mult_self2_is_id neq0_conv)
+                            by (metis F_1 div_left_ineq 
+                                     div_mult_self2_is_id neq0_conv)
           then have "b > (a mod (b*c)) div c"
-                                by (metis calculation div_right_ineq nat_mult_commute)
+                                by (metis calculation div_right_ineq 
+                                     nat_mult_commute)
           with F_7 F_8 have "((a mod (b*c)) div c) - ((a div c) mod b) = 0"
-                              by (metis less_imp_diff_less less_nat_zero_code nat_dvd_not_less nat_less_cases)      
+                              by (metis less_imp_diff_less less_nat_zero_code 
+                                  nat_dvd_not_less nat_less_cases)      
           with F_6 have "((a mod (b*c)) div c) = ((a div c) mod b)"
                              by auto         
           then show ?thesis using False by auto 
 qed
 
-(* Associativity of Matrix Tensor Operation*)
+text{*The following lemma proves that the tensor product of matrices
+is associative*}
 lemma associativity:fixes M1 M2 M3
 shows
 "(mat (row_length M1) (length M1) M1) \<and> (mat (row_length M2) (length M2) M2)
@@ -2507,6 +2488,7 @@ shows
  \<Longrightarrow>
            M1 \<otimes> (M2 \<otimes> M3) = (M1 \<otimes> M2) \<otimes> M3" (is "?x \<Longrightarrow>?l = ?r")
  proof-
+ fix j
  assume 0:"  (mat (row_length M1) (length M1) M1) 
            \<and> (mat (row_length M2) (length M2) M2)
            \<and> (mat (row_length M3) (length M3) M3)" 
@@ -2530,7 +2512,8 @@ shows
             then have "row_length (M1 \<otimes> (M2 \<otimes> M3)) 
                    = (row_length M1)*(row_length M2)* (row_length M3)"
               using row_length_mat assoc by auto
-            moreover have " row_length (M1 \<otimes> M2) = (row_length M1)* (row_length M2)"
+            moreover have " row_length (M1 \<otimes> M2) 
+                                   = (row_length M1)* (row_length M2)"
                using row_length_mat  by auto
             ultimately show ?thesis  using row_length_mat assoc by auto
           qed
@@ -2552,16 +2535,16 @@ shows
               apply(simp add:div_left_ineq)
               done
  moreover have "\<forall>i.(i < (row_length M1)*(row_length M2)*(row_length M3)) 
-                       \<longrightarrow> (i div (row_length M3)) < (row_length M1)*(row_length M2)"
+                       \<longrightarrow> (i div (row_length M3)) 
+                                         < (row_length M1)*(row_length M2)"
                apply(rule allI)
                apply(simp add:div_left_ineq)
                done
  ultimately have 4:"\<forall>i.\<forall>j.(((i<((row_length M1)*(row_length M2)*(row_length M3)))
        \<and>(j < (length M1)*(length M2)*(length M3)))
           \<longrightarrow> 
-         ((i div (row_length M3)) < (row_length M1)*(row_length M2))
-         \<and> ((j div (length M3)) < (length M1)*(length M2)))
-         "
+                ((i div (row_length M3)) < (row_length M1)*(row_length M2))
+                \<and> ((j div (length M3)) < (length M1)*(length M2)))"
          using allI 0  by auto
  have " (mat (row_length M1) (length M1) M1) 
            \<and> (mat (row_length M2) (length M2) M2)"
@@ -2571,15 +2554,19 @@ shows
           \<longrightarrow>
        (((M1 \<otimes> M2))!(j div (length M3))!(i div row_length M3)) 
                 = f 
-       ((M1)!((j div (length M3)) div (length M2))!((i div (row_length M3)) div (row_length M2))) 
-          (M2!((j div (length M3)) mod (length M2))!((i div (row_length M3)) mod (row_length M2))))"
+          ((M1)!((j div (length M3)) div (length M2))
+               !((i div (row_length M3)) div (row_length M2))) 
+          (M2!((j div (length M3)) mod (length M2))
+             !((i div (row_length M3)) mod (row_length M2))))"
             using  effective_matrix_tensor_elements by auto            
  with 4 have 5:"\<forall>i j.(((i<((row_length M1)*(row_length M2)*(row_length M3)))
        \<and>(j < (length M1)*(length M2)*(length M3)))
           \<longrightarrow>  (((M1 \<otimes> M2))!(j div (length M3))!(i div row_length M3)) 
                 = f 
-       ((M1)!((j div (length M3)) div (length M2))!((i div (row_length M3)) div (row_length M2))) 
-          (M2!((j div (length M3)) mod (length M2))!((i div (row_length M3)) mod (row_length M2))))"
+       ((M1)!((j div (length M3)) div (length M2))
+            !((i div (row_length M3)) div (row_length M2))) 
+        (M2!((j div (length M3)) mod (length M2))
+            !((i div (row_length M3)) mod (row_length M2))))"
                 by auto
  with 3 have 6:
       "\<forall>i.\<forall>j.(((i<((row_length M1)*(row_length M2)*(row_length M3)))
@@ -2588,8 +2575,10 @@ shows
             (((M1 \<otimes> M2) \<otimes> M3)!j!i) 
                 = f 
                    (f 
-       ((M1)!((j div (length M3)) div (length M2))!((i div (row_length M3)) div (row_length M2))) 
-          (M2!((j div (length M3)) mod (length M2))!((i div (row_length M3)) mod (row_length M2)))) 
+                     ((M1)!((j div (length M3)) div (length M2))
+                             !((i div (row_length M3)) div (row_length M2))) 
+                     (M2!((j div (length M3)) mod (length M2))
+                           !((i div (row_length M3)) mod (row_length M2)))) 
                    (M3!(j mod length M3)!(i mod (row_length M3))))"
                        by auto
 
@@ -2644,10 +2633,11 @@ shows
                 \<longrightarrow> 
             ((M1 \<otimes> (M2 \<otimes> M3))!j!i) 
                 = f 
-                   ((M1)!(j div ((length M3)*(length M2)))!(i div ((row_length M3)*(row_length M2)))) 
-                   ((M2 \<otimes> M3)!(j mod length (M2 \<otimes>M3))!(i mod (row_length (M2 \<otimes> M3)))))"
+                   ((M1)!(j div ((length M3)*(length M2)))
+                        !(i div ((row_length M3)*(row_length M2)))) 
+                   ((M2 \<otimes> M3)!(j mod length (M2 \<otimes>M3))
+                             !(i mod (row_length (M2 \<otimes> M3)))))"
             using nat_mult_commute by (metis)
- 
    have 8:
        "\<forall>j.((j < (length M1)*(length M2)*(length M3)))
                 \<longrightarrow> (j mod (length (M2 \<otimes> M3))) < (length (M2 \<otimes> M3))"
@@ -2690,40 +2680,46 @@ shows
  then have 11:"\<forall> i j.(((i<((row_length M1)*(row_length M2)*(row_length M3)))
        \<and>(j < (length M1)*(length M2)*(length M3)))
              \<longrightarrow> 
-                (i mod (row_length (M2 \<otimes> M3))) < (row_length M2)*(row_length M3)
-              \<and> (j mod (length (M2 \<otimes> M3))) < (length M2)*(length  M3))"
+                (i mod (row_length (M2 \<otimes> M3))) 
+                              < (row_length M2)*(row_length M3)
+                \<and>(j mod (length (M2 \<otimes> M3))) < (length M2)*(length  M3))"
            using length_Tensor row_length_mat by auto
  have "(mat (row_length M2) (length M2) M2) 
            \<and> (mat (row_length M3) (length M3) M3)"
-             using 0 by auto
- then have "\<forall> i j.(((i mod (row_length (M2 \<otimes> M3))) < (row_length M2)*(row_length M3))
-         \<and> ((j mod (length (M2\<otimes>M3))) < (length M2)*(length M3))
-          \<longrightarrow>
+           using 0 by auto
+ then have "\<forall> i j.(((i mod (row_length (M2 \<otimes> M3))) 
+                                 < (row_length M2)*(row_length M3))
+                  \<and>((j mod (length (M2\<otimes>M3))) < (length M2)*(length M3))
+       \<longrightarrow>
        (((M2 \<otimes> M3))!(j mod (length (M2 \<otimes> M3)))!(i mod row_length (M2 \<otimes> M3))) 
                 = f 
-       ((M2)!((j mod (length (M2 \<otimes> M3))) div (length M3))!((i mod (row_length (M2 \<otimes> M3))) 
-                                 div (row_length M3))) 
-       (M3!((j mod (length (M2 \<otimes> M3))) mod (length M3))
-           !((i mod (row_length (M2 \<otimes> M3))) mod (row_length M3))))"
-          using matrix_Tensor_elements by auto
- 
- 
- then have "\<forall> i j.((i < (row_length M1)*(row_length M2)*(row_length M3))
+                  ((M2)!((j mod (length (M2 \<otimes> M3))) div (length M3))
+                        !((i mod (row_length (M2 \<otimes> M3))) div (row_length M3))) 
+                  (M3!((j mod (length (M2 \<otimes> M3))) mod (length M3))
+                     !((i mod (row_length (M2 \<otimes> M3))) mod (row_length M3))))"
+           using matrix_Tensor_elements by auto 
+ then have "\<forall> i j.
+         ((i < (row_length M1)*(row_length M2)*(row_length M3))
        \<and>(j < (length M1)*(length M2)*(length M3) )
              \<longrightarrow> 
-      (((M2 \<otimes> M3))!(j mod (length (M2 \<otimes> M3)))!(i mod row_length (M2 \<otimes> M3))) 
-                = f 
-       ((M2)!((j mod (length (M2 \<otimes> M3))) div (length M3))!((i mod (row_length (M2 \<otimes> M3))) 
-                                 div (row_length M3))) 
-       (M3!((j mod (length (M2 \<otimes> M3))) mod (length M3))
+           (((M2 \<otimes> M3))!(j mod (length (M2 \<otimes> M3)))
+                       !(i mod row_length (M2 \<otimes> M3))) 
+                = 
+       f 
+       ((M2)!((j mod (length (M2 \<otimes> M3))) div (length M3))
+            !((i mod (row_length (M2 \<otimes> M3))) div (row_length M3))) 
+        (M3!((j mod (length (M2 \<otimes> M3))) mod (length M3))
            !((i mod (row_length (M2 \<otimes> M3))) mod (row_length M3))))"   
                      using 11 by auto 
  moreover then have "\<forall>j.(j mod (length (M2 \<otimes> M3))) mod (length M3)
                          = j mod (length M3)"
                 proof                  
-                 have "\<forall>j.((j mod (length (M2 \<otimes> M3))) = (j mod ((length M2) *(length M3))))"
+                 have "\<forall>j.((j mod (length (M2 \<otimes> M3))) 
+                         = (j mod ((length M2) *(length M3))))"
                                       using length_Tensor by auto
-                 moreover have "\<forall>j.((j mod ((length M2) *(length M3))) mod (length M3)
+                 moreover have 
+                       "\<forall>j.
+                        ((j mod ((length M2) *(length M3))) mod (length M3)
                                  = (j mod (length M3)))"   
                        using mod_prop1 by auto 
                  ultimately show ?thesis by auto
@@ -2731,45 +2727,54 @@ shows
  moreover then have "\<forall>i.(i mod (row_length (M2 \<otimes> M3))) mod (row_length M3)
                          = i mod (row_length M3)"
                 proof                  
-                 have "\<forall>i.((i mod (row_length (M2 \<otimes> M3))) = (i mod ((row_length M2) *(row_length M3))))"
+                 have "\<forall>i.((i mod (row_length (M2 \<otimes> M3))) 
+                         = (i mod ((row_length M2) *(row_length M3))))"
                                       using row_length_mat by auto
-                 moreover have "\<forall>i.((i mod ((row_length M2) *(row_length M3))) mod (row_length M3)
+                 moreover have 
+                               "\<forall>i.((i mod ((row_length M2)*(row_length M3))) 
+                                       mod (row_length M3)
                                  = (i mod (row_length M3)))"   
                        using mod_prop1 by auto 
                  ultimately show ?thesis by auto
                 qed
- ultimately have 12:"\<forall> i j.((i < (row_length M1)*(row_length M2)*(row_length M3))
-       \<and>(j < (length M1)*(length M2)*(length M3) )
-             \<longrightarrow> 
-      (((M2 \<otimes> M3))!(j mod (length (M2 \<otimes> M3)))!(i mod row_length (M2 \<otimes> M3))) 
+ ultimately have 12:"\<forall> i j.((i < (row_length M1)
+                            *(row_length M2)
+                            *(row_length M3))
+                            \<and>(j < (length M1)*(length M2)*(length M3) )
+                       \<longrightarrow> 
+                          (((M2 \<otimes> M3))!(j mod (length (M2 \<otimes> M3)))
+                                       !(i mod row_length (M2 \<otimes> M3))) 
                 = f 
-       ((M2)!((j mod (length (M2 \<otimes> M3))) div (length M3))!((i mod (row_length (M2 \<otimes> M3))) 
-                                 div (row_length M3))) 
-       (M3!(j mod  (length M3))
-           !(i mod (row_length M3))))"   
+                   ((M2)!((j mod (length (M2 \<otimes> M3))) div (length M3))
+                        !((i mod (row_length (M2 \<otimes> M3))) div (row_length M3))) 
+                   (M3!(j mod  (length M3))!(i mod (row_length M3))))"   
                      by auto 
  moreover have "\<forall>j.(j mod (length (M2 \<otimes> M3))) div (length M3)
                     = (j div (length M3)) mod (length M2)"
            proof-
-            have "\<forall>j.((j mod (length (M2 \<otimes> M3))) = (j mod ((length M2)*(length M3))))"
+            have "\<forall>j.((j mod (length (M2 \<otimes> M3))) 
+                    = (j mod ((length M2)*(length M3))))"
                     using length_Tensor by auto
             then show ?thesis using mod_div_relation by auto
            qed
  moreover have "\<forall>i.(i mod (row_length (M2 \<otimes> M3))) div (row_length M3)
                     = (i div (row_length M3)) mod (row_length M2)"
            proof-
-            have "\<forall>i.((i mod (row_length (M2 \<otimes> M3))) = (i mod ((row_length M2)*(row_length M3))))"
+            have "\<forall>i.((i mod (row_length (M2 \<otimes> M3))) 
+                    = (i mod ((row_length M2)*(row_length M3))))"
                     using row_length_mat by auto
             then show ?thesis using mod_div_relation by auto
            qed
- ultimately have "\<forall> i j.((i < (row_length M1)*(row_length M2)*(row_length M3))
-       \<and>(j < (length M1)*(length M2)*(length M3) )
+ ultimately have "\<forall> i j.
+                      ((i < (row_length M1)*(row_length M2)*(row_length M3))
+                      \<and>(j < (length M1)*(length M2)*(length M3) )
              \<longrightarrow> 
-      (((M2 \<otimes> M3))!(j mod (length (M2 \<otimes> M3)))!(i mod row_length (M2 \<otimes> M3))) 
-                = f 
-       ((M2)!((j div (length M3)) mod (length M2))!((i div (row_length M3)) mod (row_length M2)))
-       (M3!(j mod  (length M3))
-           !(i mod (row_length M3))))"   
+                 (((M2 \<otimes> M3))!(j mod (length (M2 \<otimes> M3)))
+                             !(i mod row_length (M2 \<otimes> M3))) 
+                       = f 
+                          ((M2)!((j div (length M3)) mod (length M2))
+                               !((i div (row_length M3)) mod (row_length M2)))
+                           (M3!(j mod  (length M3))!(i mod (row_length M3))))"   
                      by auto 
  with 7 have 13:"\<forall>i j.(((i<((row_length M1)*(row_length M2)*(row_length M3)))
        \<and>(j < (length M1)*(length M2)*(length M3)))
@@ -2894,21 +2899,19 @@ lemma "((a::'a)+b)*(c+d) = a*c + a*d + b*c + b*d"
 
 lemma fixes M1 M2 M3
 shows
-"(mat (row_length M1) (length M1) M1) \<and> (mat (row_length M2) (length M2) M2)
-\<and> (mat (row_length M3) (length M3) M3)
- \<Longrightarrow>
-           (M1 \<otimes> (M2 \<otimes> M3)) = ((M1 \<otimes> M2) \<otimes> M3)"
+ "(mat (row_length M1) (length M1) M1) 
+ \<and>(mat (row_length M2) (length M2) M2)
+ \<and>(mat (row_length M3) (length M3) M3)
+   \<Longrightarrow> (M1 \<otimes> (M2 \<otimes> M3)) = ((M1 \<otimes> M2) \<otimes> M3)"
        using associativity by auto
 
+
+text{*matrix_mult refers to multiplication of matrices in the locale 
+plus_mult *}
 
 abbreviation matrix_mult::"'a mat \<Rightarrow> 'a mat \<Rightarrow> 'a mat" (infixl "\<circ>" 65)
  where
 "matrix_mult M1 M2 \<equiv> (mat_multI zer g f (row_length M1) M1 M2)"
-
-(*
- foldr (\<lambda> (x,y) s. pl (ti x y) s) (zip v w) ze"
-
-*)
 
 definition scalar_product :: "'a vec \<Rightarrow> 'a vec \<Rightarrow> 'a" where
  "scalar_product v w = scalar_prodI zer g f v w"
@@ -2918,7 +2921,8 @@ lemma ma :
   and wf2: "mat n nc m2"
   and i: "i < nr"
   and j: "j < nc"
-  shows "mat_multI zer g f nr m1 m2 ! j ! i = scalar_prodI zer g f (row m1 i) (col m2 j)"
+  shows "mat_multI zer g f nr m1 m2 ! j ! i 
+                  = scalar_prodI zer g f (row m1 i) (col m2 j)"
           using mat_mult_index i j wf1 wf2 by metis
 
 lemma matrix_index:
@@ -2926,7 +2930,8 @@ lemma matrix_index:
   and wf2: "mat n nc m2"
   and i: "i < (row_length m1)"
   and j: "j < nc"
-  shows  "matrix_mult  m1 m2 ! j ! i = scalar_product  (row m1 i) (col m2 j)"
+  shows  "matrix_mult  m1 m2 ! j ! i 
+                 = scalar_product  (row m1 i) (col m2 j)"
          using wf1 wf2 i j ma scalar_product_def by auto
 
 
@@ -2963,6 +2968,10 @@ and  wf1: "mat nr n m1"
   shows  "matrix_mult  m1 m2 ! j ! i = scalar_product  (row m1 i) (col m2 j)"
          using matrix_index unique_row_col assms by (metis matrix_row_length)
 
+text{* the following definition checks if the given four matrices
+ are such that the compositions in the distributive relation which
+ will be proved, hold true. It further checks that the matrices are 
+ non empty and valid*}
 definition matrix_match::"'a mat \<Rightarrow> 'a mat \<Rightarrow>'a mat \<Rightarrow> 'a mat  \<Rightarrow> bool"
 where 
 "matrix_match A1 A2 B1 B2 \<equiv> 
@@ -3047,11 +3056,18 @@ assumes wf1:"mat (row_length A1) (length A1) A1"
             ((length A2)*(length B2)) 
                     ((A1 \<otimes> B1) \<circ>(A2 \<otimes>B2))"
  proof-
- have "mat ((row_length A1)*(row_length B1))  ((length A1)*(length B1)) (A1 \<otimes> B1)"
+ have "mat 
+           ((row_length A1)*(row_length B1))  
+           ((length A1)*(length B1)) 
+             (A1 \<otimes> B1)"
           using wf1 wf3 well_defined_Tensor by auto
- moreover have "mat ((row_length A2)*(row_length B2))  ((length A2)*(length B2)) (A2\<otimes> B2)"
+ moreover have "mat 
+                   ((row_length A2)*(row_length B2))  
+                   ((length A2)*(length B2)) 
+                      (A2\<otimes> B2)"
           using wf2 wf4 well_defined_Tensor by auto
- moreover have "((length A1)*(length B1)) = ((row_length A2)*(row_length B2))"
+ moreover have "((length A1)*(length B1)) 
+                        = ((row_length A2)*(row_length B2))"
                  using matchAA matchBB by auto
  ultimately show ?thesis using mat_mult row_length_mat by simp
 qed    
@@ -3061,8 +3077,11 @@ theorem tensor_non_empty: assumes "A \<noteq> []" and "B \<noteq> []"
  using  assms(1) assms(2) length_0_conv length_Tensor mult_is_0 by metis
 
 theorem non_empty_distribution:
- assumes "mat nr1 n1 A1" and "mat n1 nc1 A2" and "mat nr2 n2 B1" and "mat n2 nc2 B2" 
-             and "A1 \<noteq> []" and "B1 \<noteq> []" and "A2 \<noteq> []" and "B2 \<noteq> []" 
+ assumes "mat nr1 n1 A1" 
+     and "mat n1 nc1 A2" 
+     and "mat nr2 n2 B1" 
+     and "mat n2 nc2 B2" 
+     and "A1 \<noteq> []" and "B1 \<noteq> []" and "A2 \<noteq> []" and "B2 \<noteq> []" 
  shows "((A1\<circ>A2)\<otimes>(B1\<circ>B2)) \<noteq> []"
 proof-
  have "A1 \<circ> A2 \<noteq> []"
@@ -3141,14 +3160,17 @@ proof-
             (length  ((A1\<circ>A2)\<otimes>(B1\<circ>B2))) 
                     ((A1\<circ>A2)\<otimes>(B1\<circ>B2))"
                by (metis matrix_row_length)
- then have 3:"((row_length A1)*(row_length B1)) = (row_length  ((A1\<circ>A2)\<otimes>(B1\<circ>B2))) "
+ then have 3:"((row_length A1)*(row_length B1)) 
+                         = (row_length  ((A1\<circ>A2)\<otimes>(B1\<circ>B2))) "
         and "((length A2)*(length B2)) = (length  ((A1\<circ>A2)\<otimes>(B1\<circ>B2)))"
       using 0 1 unique_row_col 
             apply metis
             using 0 1 2 unique_row_col by metis  
- then have i:"(i < ((row_length A1)*(row_length B1))) = (i < (row_length  ((A1\<circ>A2)\<otimes>(B1\<circ>B2))))"
+ then have i:"(i < ((row_length A1)*(row_length B1))) 
+                             = (i < (row_length  ((A1\<circ>A2)\<otimes>(B1\<circ>B2))))"
                 by auto
- moreover have j:"(j < ((length A2)*(length B2))) = (j < (length  ((A1\<circ>A2)\<otimes>(B1\<circ>B2))))"
+ moreover have j:"(j < ((length A2)*(length B2))) 
+                         = (j < (length  ((A1\<circ>A2)\<otimes>(B1\<circ>B2))))"
            using 3 `length A2 * length B2 = length (A1 \<circ> A2 \<otimes> B1 \<circ> B2)` 
            by (metis)
  have 4:"mat (row_length A1) (length A2) (A1 \<circ> A2)"
@@ -3180,8 +3202,10 @@ proof-
  then have 15:"(j < (length  (A1\<circ>A2))*(length (B1\<circ>B2)))"
               using assms by auto
  then have step_1:"((A1\<circ>A2)\<otimes>(B1\<circ>B2))!j!i
-            =  f ((A1\<circ>A2)!(j div (length (B1\<circ>B2)))!(i div (row_length (B1\<circ>B2)))) 
-                 ((B1\<circ>B2)!(j mod length (B1\<circ>B2))!(i mod (row_length (B1\<circ>B2))))"
+            =  f ((A1\<circ>A2)!(j div (length (B1\<circ>B2)))
+                         !(i div (row_length (B1\<circ>B2)))) 
+                 ((B1\<circ>B2)!(j mod length (B1\<circ>B2))
+                         !(i mod (row_length (B1\<circ>B2))))"
                 using 5 9 13 15 effective_matrix_Tensor_elements by auto 
  then have "((A1\<circ>A2)\<otimes>(B1\<circ>B2))!j!i
             =  f ((A1\<circ>A2)!(j div (length B2))!(i div (row_length B1))) 
@@ -3199,17 +3223,22 @@ proof-
            ultimately show ?thesis   using wf1  non_Nil matrix_mult_index  by auto
           qed
  moreover have " ((B1\<circ>B2)!(j mod (length B2))!(i mod (row_length B1))) 
-               = (scalar_product (row B1 (i mod (row_length B1)) ) (col B2 (j mod (length B2))))"
+               = (scalar_product 
+                                 (row B1 (i mod (row_length B1)) ) 
+                                 (col B2 (j mod (length B2))))"
            proof-
            have "j <(length A2)*(length B2)"
                     using assms by auto
            then have "j mod (length B2) < (length B2)"
-                        by (metis calculation less_nat_zero_code mod_less_divisor mult_is_0 neq0_conv)
+                        by (metis calculation less_nat_zero_code 
+                                  mod_less_divisor mult_is_0 neq0_conv)
            moreover have "i mod (row_length B1) < (row_length B1)"
-                       by (metis assms(8) less_nat_zero_code mod_less_divisor mult_is_0 neq0_conv)
+                       by (metis assms(8) less_nat_zero_code mod_less_divisor 
+                                 mult_is_0 neq0_conv)
            moreover have "mat (length B1) (length B2) B2"
                    using wf4 matchBB by auto
-           ultimately show ?thesis  using wf3 non_Nil matrix_mult_index by auto
+           ultimately show ?thesis  
+                    using wf3 non_Nil matrix_mult_index by auto
          qed
  ultimately show ?thesis by auto
 qed
@@ -3222,17 +3251,31 @@ lemma effective_elements_matrix_distribution1:
       using  elements_matrix_distribution_1 matrix_compose_cond_def by auto      
 
 lemma matrix_match_condn_1:
-"matrix_match A1 A2 B1 B2 \<and> ((i<(row_length A1)*(row_length B1))\<and>(j<(length A2)*(length B2)))
+"matrix_match A1 A2 B1 B2 
+      \<and>((i<(row_length A1)*(row_length B1))
+      \<and>(j<(length A2)*(length B2)))
        \<Longrightarrow>  ((matrix_mult A1  A2)\<otimes>(matrix_mult B1  B2))!j!i
-  =  f (scalar_product (row A1 (i div (row_length B1))) (col A2  (j div (length B2))))
-       (scalar_product (row B1 (i mod (row_length B1))) (col B2 (j mod (length B2))))"
+  =  f
+       (scalar_product 
+                 (row A1 (i div (row_length B1))) 
+                 (col A2  (j div (length B2))))
+       (scalar_product 
+                 (row B1 (i mod (row_length B1))) 
+                 (col B2 (j mod (length B2))))"
    using elements_matrix_distribution_1 unfolding matrix_match_def by auto
 
-lemma effective_matrix_match_condn_1: assumes "(matrix_match A1 A2 B1 B2) "
-shows "\<forall>i j.((i<(row_length A1)*(row_length B1))\<and>(j<(length A2)*(length B2))
-       \<longrightarrow>   ((A1 \<circ>  A2)\<otimes>(B1 \<circ> B2))!j!i
-  =  f (scalar_product (row A1 (i div (row_length B1))) (col A2  (j div (length B2))))
-       (scalar_product (row B1 (i mod (row_length B1))) (col B2 (j mod (length B2)))))"
+lemma effective_matrix_match_condn_1: 
+ assumes "(matrix_match A1 A2 B1 B2) "
+ shows "\<forall>i j.((i<(row_length A1)*(row_length B1))
+             \<and>(j<(length A2)*(length B2))
+              \<longrightarrow>   ((A1 \<circ>  A2)\<otimes>(B1 \<circ> B2))!j!i
+                        =  f 
+                            (scalar_product 
+                                  (row A1 (i div (row_length B1))) 
+                                  (col A2  (j div (length B2))))
+                            (scalar_product 
+                                  (row B1 (i mod (row_length B1))) 
+                                  (col B2 (j mod (length B2)))))"
    using assms matrix_match_condn_1 unfolding matrix_match_def 
        by auto 
 
@@ -3249,21 +3292,35 @@ and i:"i<(row_length A1)*(row_length B1)" and j:"j< (length A2)*(length B2)"
 shows
 "((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))!j!i
   =  scalar_product 
-          (vec_vec_Tensor (row A1 (i div row_length B1)) (row B1 (i mod row_length B1))) 
-          (vec_vec_Tensor (col A2 (j div length B2)) (col B2 (j mod length B2)))" 
+          (vec_vec_Tensor 
+                    (row A1 (i div row_length B1)) 
+                    (row B1 (i mod row_length B1))) 
+          (vec_vec_Tensor 
+                    (col A2 (j div length B2)) 
+                    (col B2 (j mod length B2)))" 
 proof-
- have 1:"mat ((row_length A1)*(row_length B1)) ((length A1)*(length B1)) (A1 \<otimes> B1)"
+ have 1:"mat 
+              ((row_length A1)*(row_length B1)) 
+              ((length A1)*(length B1)) 
+                                   (A1 \<otimes> B1)"
               using wf1 wf3 well_defined_Tensor by auto
- moreover have 2:"mat ((row_length A2)*(row_length B2)) ((length A2)*(length B2)) (A2 \<otimes> B2)"
+ moreover have 2:"mat 
+                   ((row_length A2)*(row_length B2)) 
+                   ((length A2)*(length B2)) 
+                                   (A2 \<otimes> B2)"
               using wf2 wf4 well_defined_Tensor by auto
- moreover have 3:"((length A1)*(length B1)) = ((row_length A2)*(row_length B2))"
+ moreover have 3:"((length A1)*(length B1)) 
+                           = ((row_length A2)*(row_length B2))"
               using matchAA matchBB by auto
  ultimately have 4:"((A1\<otimes>B1)\<circ>(A2\<otimes>B2))!j!i 
-                             = scalar_product (row (A1 \<otimes> B1) i) (col (A2 \<otimes> B2) j)"
-              using i j matrix_mult_index non_Nil mat_mult_index row_length_mat scalar_product_def
+                        = scalar_product (row (A1 \<otimes> B1) i) (col (A2 \<otimes> B2) j)"
+              using i j matrix_mult_index non_Nil mat_mult_index 
+                    row_length_mat scalar_product_def
               by auto
  moreover have "(row (A1 \<otimes> B1) i)
-                  =  vec_vec_Tensor (row A1 (i div row_length B1)) (row B1 (i mod row_length B1))"
+                  =  vec_vec_Tensor 
+                           (row A1 (i div row_length B1)) 
+                           (row B1 (i mod row_length B1))"
               using  wf1 wf3 i effective_row_formula by auto
  moreover have " col (A2 \<otimes> B2) j =  vec_vec_Tensor (col A2 (j div length B2)) (col B2 (j mod length B2))"
               using wf2 wf4 j col_formula by auto
@@ -3271,20 +3328,32 @@ proof-
  qed
 
 lemma matrix_match_condn_2:
-"matrix_match A1 A2 B1 B2 \<and> ((i<(row_length A1)*(row_length B1))\<and>(j<(length A2)*(length B2)))
-       \<Longrightarrow> ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))!j!i
-  =  scalar_product 
-          (vec_vec_Tensor (row A1 (i div row_length B1)) (row B1 (i mod row_length B1))) 
-          (vec_vec_Tensor (col A2 (j div length B2)) (col B2 (j mod length B2)))" 
+"matrix_match A1 A2 B1 B2 
+ \<and>((i<(row_length A1)*(row_length B1))
+ \<and>(j<(length A2)*(length B2)))
+  \<Longrightarrow> ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))!j!i
+          =  scalar_product 
+                (vec_vec_Tensor 
+                        (row A1 (i div row_length B1)) 
+                        (row B1 (i mod row_length B1))) 
+                (vec_vec_Tensor 
+                        (col A2 (j div length B2)) 
+                        (col B2 (j mod length B2)))" 
    using elements_matrix_distribution2 unfolding matrix_match_def by auto
 
 
-lemma effective_matrix_match_condn_2: assumes "(matrix_match A1 A2 B1 B2) "
-shows "\<forall>i j.((i<(row_length A1)*(row_length B1))\<and>(j<(length A2)*(length B2))
-       \<longrightarrow> ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))!j!i
-  =  scalar_product 
-          (vec_vec_Tensor (row A1 (i div row_length B1)) (row B1 (i mod row_length B1))) 
-          (vec_vec_Tensor (col A2 (j div length B2)) (col B2 (j mod length B2))))" 
+lemma effective_matrix_match_condn_2: 
+ assumes "(matrix_match A1 A2 B1 B2) "
+   shows "\<forall>i j.((i<(row_length A1)*(row_length B1))
+         \<and>(j<(length A2)*(length B2))
+            \<longrightarrow> ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))!j!i
+           =  scalar_product 
+                  (vec_vec_Tensor 
+                           (row A1 (i div row_length B1)) 
+                           (row B1 (i mod row_length B1))) 
+                  (vec_vec_Tensor 
+                           (col A2 (j div length B2)) 
+                           (col B2 (j mod length B2))))" 
    using assms matrix_match_condn_2 unfolding matrix_match_def 
        by auto
 
@@ -3292,9 +3361,6 @@ shows "\<forall>i j.((i<(row_length A1)*(row_length B1))\<and>(j<(length A2)*(le
 lemma zip_Nil:"zip [] [] = []"
        using zip_def by auto
 
-(*lemma "(x::'a) + y = z \<Longrightarrow> (x + y) + w = z + w"
-     by auto
-*)
 lemma zer_left_mult:"f zer x = zer"
   proof-
   have "g zer zer = zer"
@@ -3313,13 +3379,13 @@ qed
 
 lemma zip_Cons:"(length v = length w) \<Longrightarrow> zip (a#v) (b#w) = (a,b)#(zip v w)"
       unfolding zip_def by auto 
-(*
-lemma "((x::'a) + y)*a = (x*a) + (y*a)"
-      using plus_right_distributivity by auto
-*)
+
 lemma scalar_product_times:
  "\<forall>w1 w2.(length w1 = length w2) \<and>(length w1 = n) \<longrightarrow> 
-           (f (x*y) (scalar_product w1 w2)) = (scalar_product (times x w1) ( times y w2))"
+           (f (x*y) (scalar_product w1 w2)) 
+                      = (scalar_product 
+                               (times x w1) 
+                               (times y w2))"
  apply(rule allI)
  apply (rule allI)
  proof(induct n)
@@ -3331,9 +3397,11 @@ lemma scalar_product_times:
           using assms by auto
    moreover have 2:"(length w1 = length w2) \<and>(length w1 = 0) \<longrightarrow> w2 = []"
      by auto
-   ultimately have "(length w1 = length w2) \<and>(length w1 = 0) \<longrightarrow> scalar_product w1 w2 = zer"
+   ultimately have "(length w1 = length w2) \<and>(length w1 = 0) 
+                                   \<longrightarrow> scalar_product w1 w2 = zer"
      unfolding scalar_product_def scalar_prodI_def by auto
-   then have 3:"(length w1 = length w2) \<and>(length w1 = 0) \<longrightarrow> (f (x*y) (scalar_product w1 w2)) = zer"
+   then have 3:"(length w1 = length w2) \<and>(length w1 = 0) 
+                                   \<longrightarrow> (f (x*y) (scalar_product w1 w2)) = zer"
                   using comm zer_left_mult  by metis
    then have "times x w1 = []"
                using 1 by auto
@@ -3365,25 +3433,32 @@ lemma scalar_product_times:
              by auto 
      then have "(length u1 = length u2)\<and>(length u1 = k)"
              using Cons_1 by auto
-     then have Cons_3:" x * y * scalar_product u1 u2 = scalar_product (times x u1) (times y u2)"
+     then have Cons_3:"x * y * scalar_product u1 u2 
+                        = scalar_product (times x u1) (times y u2)"
              using Suc assms by auto
      have "scalar_product (a1#u1) (a2#u2) = (a1*a2) + (scalar_product u1 u2)"
                  unfolding scalar_product_def scalar_prodI_def zip_def by auto
      then have "scalar_product w1 w2 = (a1*a2) + (scalar_product u1 u2)"
                               using Cons_1 Cons_2 by auto
-     then have "(x*y)*(scalar_product w1 w2) = ((x*y)*(a1*a2)) + ((x*y)*(scalar_product u1 u2))" 
+     then have "(x*y)*(scalar_product w1 w2) 
+                       = ((x*y)*(a1*a2)) + ((x*y)*(scalar_product u1 u2))" 
                          using plus_right_distributivity by (metis plus_left_distributivity)
-     then have Cons_4:"(x*y)*(scalar_product w1 w2) = (x*a1*y*a2)+ ((x*y)*(scalar_product u1 u2))"  
+     then have Cons_4:"(x*y)*(scalar_product w1 w2) 
+                       = (x*a1*y*a2)+ ((x*y)*(scalar_product u1 u2))"  
                          using comm assoc by metis
      have "(times x w1) = (x*a1)#(times x u1)"
                using times.simps Cons_1 by auto
      moreover have "(times y w2) = (y*a2)#(times y u2)"
                using times.simps Cons_2 by auto
      ultimately have Cons_5:"scalar_product (times x w1) (times y w2) 
-                            = scalar_product ((x*a1)#(times x u1)) ((y*a2)#(times y u2))"
+                            = scalar_product 
+                                  ((x*a1)#(times x u1)) 
+                                  ((y*a2)#(times y u2))"
                        by auto  
-     then have "... = ((x*a1)*(y*a2)) + scalar_product (times x u1) (times y u2)"
-                       unfolding scalar_product_def scalar_prodI_def zip_def by auto
+     then have "... = ((x*a1)*(y*a2)) 
+                             + scalar_product (times x u1) (times y u2)"
+                       unfolding scalar_product_def scalar_prodI_def zip_def 
+                       by auto
      with Cons_3 Cons_4 Cons_5 show ?thesis using assoc by auto
     qed
   then show ?case by auto
@@ -3392,7 +3467,8 @@ qed
 
 lemma effective_scalar_product_times:
  assumes "(length w1 = length w2)"  
- shows "(f (x*y) (scalar_product w1 w2)) = (scalar_product (times x w1) ( times y w2))"
+ shows "(f (x*y) (scalar_product w1 w2)) 
+                       = (scalar_product (times x w1) ( times y w2))"
       using scalar_product_times assms by auto 
 
 
@@ -3404,27 +3480,34 @@ find_theorems foldr
 value "foldr (\<lambda>z. op + z) [(1::nat),2,3,4] 0"
 
 lemma scalar_product_append:
-"\<forall>xs ys zs ws.(length zs = length ws) \<and>(length xs = length ys) \<and>(length xs = n)  \<longrightarrow> 
-        (scalar_product (xs@zs) (ys@ws))
-                                   = (scalar_product xs ys)+(scalar_product zs ws)"
+"\<forall>xs ys zs ws.(length zs = length ws)
+               \<and>(length xs = length ys) 
+               \<and>(length xs = n)  \<longrightarrow> 
+                     (scalar_product (xs@zs) (ys@ws))
+                                   = (scalar_product xs ys)
+                                         +(scalar_product zs ws)"
  apply(rule allI)
  apply(rule allI)
  apply(rule allI)
  apply(rule allI)
 proof(induct n)
-case 0
-   have "(length zs = length ws) \<and>(length xs = length ys) \<and>(length xs = 0)  \<Longrightarrow>
-        (scalar_product (xs@zs) (ys@ws))
-                                   = (scalar_product xs ys)+(scalar_product zs ws)"
+ case 0
+   have "(length zs = length ws) \<and>(length xs = length ys) \<and>(length xs = 0)
+          \<Longrightarrow>
+           (scalar_product (xs@zs) (ys@ws))
+                                   = (scalar_product xs ys)
+                                          +(scalar_product zs ws)"
    proof-
-   assume assms:"(length zs = length ws) \<and>(length xs = length ys) \<and>(length xs = 0)"
+   assume assms:"(length zs = length ws)\<and>(length xs = length ys)
+                                        \<and>(length xs = 0)"
    have 1:"xs = []"
        using assms by auto
    moreover have 2:"ys = []"
        using assms by auto
    ultimately have "scalar_product xs ys = zer"
                unfolding scalar_product_def scalar_prodI_def zip_def by auto
-   then have "(scalar_product xs ys)+(scalar_product zs ws) = (scalar_product zs ws)"
+   then have "(scalar_product xs ys)+(scalar_product zs ws) 
+                                       = (scalar_product zs ws)"
              using plus_left_id by auto 
    moreover have "(scalar_product (xs@zs) (ys@ws)) = (scalar_product zs ws)"
               using 1 2 by auto
@@ -3433,11 +3516,14 @@ case 0
   then show ?case by auto
  next
  case (Suc k)
-  have "(length zs = length ws) \<and>(length xs = length ys) \<and>(length xs = (Suc k))  \<Longrightarrow>
+  have "(length zs = length ws)\<and>(length xs = length ys)\<and>(length xs = (Suc k))  \<Longrightarrow>
         (scalar_product (xs@zs) (ys@ws))
-                                   = (scalar_product xs ys)+(scalar_product zs ws)" 
+                                   = (scalar_product xs ys)
+                                      +(scalar_product zs ws)" 
      proof-
-     assume assms:"(length zs = length ws) \<and>(length xs = length ys) \<and>(length xs = (Suc k))"
+     assume assms:"(length zs = length ws)
+                   \<and>(length xs = length ys)
+                   \<and>(length xs = (Suc k))"
      have "\<exists>x xss.(xs = x#xss)\<and>(length xss = k)"
            using assms by (metis Suc_length_conv)         
      then obtain x xss where "(xs = x#xss)\<and>(length xss = k)"
@@ -3453,22 +3539,28 @@ case 0
       with 1 have "length xss = length yss \<and> length xss = k"
               by auto
        then have 3:"(scalar_product (xss@zs) (yss@ws))
-                                   = (scalar_product xss yss)+(scalar_product zs ws)" 
+                                   = (scalar_product xss yss)
+                                    +(scalar_product zs ws)" 
                 using 1 2 assms Suc by auto  
        then have 4:"(scalar_product ((x#xss)@zs) ((y#yss)@ws)) = 
                         (scalar_product (x#(xss@zs)) (y#(yss@ws)))"
                             by auto
         then have "... =  (x*y) + (scalar_product (xss@zs) (yss@ws))"
-                               unfolding scalar_product_def scalar_prodI_def using zip_Cons 
-                          by (metis scalar_prodI_def scalar_prod_cons)
+                            unfolding scalar_product_def scalar_prodI_def 
+                            using zip_Cons  scalar_prodI_def scalar_prod_cons 
+                            by (metis)
         with 4 have 5:"(scalar_product (xs@zs) ((ys)@ws))
                        =  (x*y) + (scalar_product (xss@zs) (yss@ws))"
-                      using 1 2  by auto
+                            using 1 2  by auto
         moreover have "(scalar_product xs ys) = (x*y) + (scalar_product xss yss)"
-                  unfolding scalar_product_def scalar_prodI_def using zip_Cons
-                  by (metis "1" "2" scalar_prodI_def scalar_prod_cons)
+                           unfolding scalar_product_def scalar_prodI_def 
+                           using zip_Cons
+                           by (metis "1" "2" scalar_prodI_def 
+                                                    scalar_prod_cons)
         moreover then have "(scalar_product xs ys)+(scalar_product zs ws)
-                               =  (x*y) + (scalar_product xss yss) + (scalar_product zs ws)"
+                               =  (x*y) 
+                                       + (scalar_product xss yss) 
+                                       + (scalar_product zs ws)"
                               by auto
         ultimately show ?thesis using 3 plus_assoc by auto 
       qed
@@ -3493,29 +3585,44 @@ lemma scalar_product_distributivity:
     have "((length v1 = length v2)\<and>(length v1 = 0)\<and> (length w1 = length w2))
            \<longrightarrow>length v1 = 0"
             using 0 by auto
-    then have 1:"((length v1 = length v2)\<and>(length v1 = 0)\<and> (length w1 = length w2))
-           \<longrightarrow>v1 = []"
+    then have 1:"((length v1 = length v2)
+                 \<and>(length v1 = 0)
+                 \<and>(length w1 = length w2))
+                        \<longrightarrow>v1 = []"
                by auto
-    moreover have "((length v1 = length v2)\<and>(length v1 = 0)\<and> (length w1 = length w2))
+    moreover have "((length v1 = length v2)
+                   \<and>(length v1 = 0)
+                   \<and>(length w1 = length w2))
            \<longrightarrow>length v2 = 0"
              using 0 by auto
-    moreover then have 2:"((length v1 = length v2)\<and>(length v1 = 0)\<and> (length w1 = length w2))
-           \<longrightarrow>v2 = []"
+    moreover then have 2:"((length v1 = length v2)
+                          \<and>(length v1 = 0)
+                          \<and>(length w1 = length w2))
+                                    \<longrightarrow>v2 = []"
              by auto  
-    ultimately have 3:"((length v1 = length v2)\<and>(length v1 = 0)\<and> (length w1 = length w2))
+    ultimately have 3:
+         "((length v1 = length v2)\<and>(length v1 = 0)\<and> (length w1 = length w2))
            \<longrightarrow>scalar_product v1 v2 = zer"
-                 unfolding scalar_product_def scalar_prodI_def using zip_Nil by auto 
+                 unfolding scalar_product_def scalar_prodI_def 
+                 using zip_Nil by auto 
     then have 4:"f zer (scalar_product w1 w2) = zer"
               using zer_left_mult by auto
     have "((length v1 = length v2)\<and>(length v1 = 0)\<and> (length w1 = length w2))
            \<longrightarrow>vec_vec_Tensor v1 w1 = []"
             using 1 by auto
-    moreover have "((length v1 = length v2)\<and>(length v1 = 0)\<and> (length w1 = length w2))
-           \<longrightarrow>vec_vec_Tensor v2 w2 = []"
+    moreover have "((length v1 = length v2)
+                   \<and>(length v1 = 0)
+                   \<and>(length w1 = length w2))
+                    \<longrightarrow>vec_vec_Tensor v2 w2 = []"
             using 2 by auto
-    ultimately have "((length v1 = length v2)\<and>(length v1 = 0)\<and> (length w1 = length w2))
-           \<longrightarrow>scalar_product (vec_vec_Tensor v1 w1) (vec_vec_Tensor v2 w2)  = zer"
-                unfolding scalar_product_def scalar_prodI_def using zip_Nil by auto
+    ultimately have "((length v1 = length v2)
+                      \<and>(length v1 = 0)
+                      \<and>(length w1 = length w2))
+                         \<longrightarrow> scalar_product 
+                                 (vec_vec_Tensor v1 w1) 
+                                 (vec_vec_Tensor v2 w2)  = zer"
+                unfolding scalar_product_def scalar_prodI_def 
+                using zip_Nil by auto
     with 3 4 show ?case by auto   
  next
  case (Suc k)
@@ -3635,8 +3742,10 @@ assumes wf1:"mat (row_length A1) (length A1) A1"
    and matchBB:"length B1 = row_length B2"
    and non_Nil:"(A1 \<noteq> [])\<and>(A2 \<noteq> [])\<and>(B1 \<noteq> [])\<and>(B2 \<noteq> [])"
 and i:"i<(row_length A1)*(row_length B1)" and j:"j< (length A2)*(length B2)"
-shows "length (row A1 (i div (row_length B1))) = length (col A2  (j div (length B2)))"
- and "length (row B1 (i mod (row_length B1))) = length (col B2 (j mod (length B2)))"
+shows "length (row A1 (i div (row_length B1))) 
+                 = length (col A2  (j div (length B2)))"
+ and "length (row B1 (i mod (row_length B1))) 
+                 = length (col B2 (j mod (length B2)))"
 proof-
  have "i div (row_length B1) < row_length  A1" 
             using i by (metis div_left_ineq)
@@ -3727,7 +3836,9 @@ assumes wf1:"mat nr nc ((A1\<circ>A2)\<otimes>(B1\<circ>B2))"
  apply(simp add:wf3)
  done
 
-(*The theorem that matrix tensor commutes with composition*)
+text{*The following theorem gives us the distributivity relation of tensor
+product with matrix multiplication *}
+
 theorem distributivity: 
 assumes  "matrix_match A1 A2 B1 B2"
 shows "((A1 \<circ> A2)\<otimes>(B1\<circ>B2)) = ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))" 

@@ -45,11 +45,12 @@ apply(induct_tac y)
 apply(auto)
 done
 
-text{* vec_vec_Tensor is the tensor product of two vectors. It is 
+text{* vec$\_$vec$\_$Tensor is the tensor product of two vectors. It is 
 illustrated by the following relation
  
-vec_vec_Tensor (v_1,v_2,...v_n) (w_1,w_2,...w_m) 
-                 = (v_1 \<cdot> w_1,...,v_1 \<cdot> w_m,..., v_n\<cdot> w_1 , ..., v_n \<cdot> w_m) *}
+vec$\_$vec$\_$Tensor (v$\_$1,v$\_$2,...v$\_$n) (w$\_$1,w$\_$2,...w$\_$m) 
+                 = (v$\_$1 \<cdot> w$\_$1,...,v$\_$1 \<cdot> w$\_$m,...
+                          , v$\_$n\<cdot> w$\_$1 , ..., v$\_$n \<cdot> w_$\_$m) *}
 
 primrec vec_vec_Tensor:: "'a vec \<Rightarrow> 'a vec \<Rightarrow> 'a vec"
 where
@@ -85,11 +86,12 @@ apply (metis assms(1) assms(2) vec_def)
 done
 
 
-text{* vec_mat_Tensor is the tensor product of two vectors. It is 
+text{* vec$\_$mat$\_$Tensor is the tensor product of two vectors. It is 
 illusstrated by the following relation
  
-vec_mat_Tensor (v_1,v_2,...v_n) (C_1,C_2,...C_m) 
-                 = (v_1 \<cdot> C_1,...,v_n \<cdot>C_1,..., v_1\<cdot> C_m , ..., v_n \<cdot> C_m) *}
+vec_mat_Tensor (v$\_$1,v$\_$2,...v$\_$n) (C$\_$1,C$\_$2,...C$\_$m) 
+                 = (v$\_$1\<cdot>C$\_$1,...,v$\_$n \<cdot>C$\_$1,
+                               ...,v$\_$1\<cdot> C$\_$m , ..., v$\_$n \<cdot> C$\_$m) *}
 
 
 primrec vec_mat_Tensor::"'a vec \<Rightarrow> 'a mat \<Rightarrow>'a mat"
@@ -278,7 +280,7 @@ lemma hd_append:
          apply(auto)
          by (metis assms hd_append2)
 
-text{*row_length of tensor product of matrice is the product of 
+text{*row$\_$length of tensor product of matrice is the product of 
 their respective row lengths*}
 lemma row_length_mat: 
     "(row_length (m1\<otimes>m2)) = (row_length m1)*(row_length m2)"
@@ -432,7 +434,11 @@ proof(cases M)
 
 
 theorem well_defined_vec_mat_Tensor:
-"(mat (row_length M) (length M) M) \<Longrightarrow>(mat ((row_length M)*(length v)) (length M) (vec_mat_Tensor v M))"
+"(mat (row_length M) (length M) M) \<Longrightarrow>
+                  (mat 
+                    ((row_length M)*(length v)) 
+                    (length M) 
+                           (vec_mat_Tensor v M))"
  proof(induct M) 
  case Nil
   have "(vec_mat_Tensor v []) = []" 
@@ -461,7 +467,10 @@ theorem well_defined_vec_mat_Tensor:
     "mat (row_length M * length v) (length M) (vec_mat_Tensor v M)" 
           using hyp(1) by auto 
   have 
-   "mat (row_length (a#M) * length v) (length (a#M)) (vec_mat_Tensor v (a#M))" 
+   "mat 
+        (row_length (a#M) * length v) 
+        (length (a#M)) 
+             (vec_mat_Tensor v (a#M))" 
     proof (cases M)
     case Nil 
      fix x
@@ -1858,8 +1867,9 @@ lemma div_right_ineq:
            using assms div_left_ineq nat_mult_commute  
                by (metis)
 
-text{* In the following theorem, we obtain columns of vec_mat_Tensor of a
-vector v and a matrix M in terms of the vector v and columns of the matrix M*}
+text{* In the following theorem, we obtain columns of vec$\_$mat$\_$Tensor of 
+a vector v and a matrix M in terms of the vector v and columns of the 
+matrix M*}
 
 lemma col_vec_mat_Tensor_prelim:" \<forall>j.(j < (length M) \<longrightarrow>
 col (vec_mat_Tensor v M) j = vec_vec_Tensor v (col M j))"
@@ -2867,27 +2877,7 @@ locale plus_mult =
  assumes plus_left_inverse:"(g x  (inv x)) = zer"
  assumes plus_right_inverse:"(g (inv x) x) = zer"
  
-(*
 
-lemma "nat.times (1::nat) [2] = [2]"
-          by auto
-
-lemma "nat.vec_vec_Tensor [(1::nat), 2] [(3::nat),4] = [3,4,6,8]" 
-       by auto
-
-lemma "nat.Tensor [[(1::nat), 2],[4,5]] [[(3::nat),4],[1,1]] = [[3,4,6,8],[1,1,2,2],[12,16,15,20]
-                 ,[4,4,5,5]]"
-              by auto
-
-by unfold_locales auto
-
-*)
-
-(*
-sublocale comm_ring_1 < plus_mult 0 plus 1 times
-  using add_commute add_left_commute mult_commute mult_left_commute 
-    sledgehammer
-*)
 context plus_mult
 begin
 (*
@@ -2906,7 +2896,7 @@ shows
        using associativity by auto
 
 
-text{*matrix_mult refers to multiplication of matrices in the locale 
+text{*matrix$\_$mult refers to multiplication of matrices in the locale 
 plus_mult *}
 
 abbreviation matrix_mult::"'a mat \<Rightarrow> 'a mat \<Rightarrow> 'a mat" (infixl "\<circ>" 65)
@@ -3822,16 +3812,20 @@ theorem element_match:
        using prelim_element_match by auto
 
 lemma application: fixes m1 m2 
-shows "\<forall>m1 m2.(mat nr nc m1)\<and>(mat nr nc m2)\<and>(\<forall> j < nc. \<forall> i < nr. m1 ! j ! i = m2 ! j ! i)
- \<longrightarrow> (m1 = m2)"
+shows "\<forall>m1 m2.(mat nr nc m1)
+              \<and>(mat nr nc m2)
+              \<and>(\<forall> j < nc. \<forall> i < nr. m1 ! j ! i = m2 ! j ! i)
+                  \<longrightarrow> (m1 = m2)"
       using mat_eq_index assms by auto
 
 
 theorem tensor_compose_condn: 
 assumes wf1:"mat nr nc ((A1\<circ>A2)\<otimes>(B1\<circ>B2))"
  and wf2:"mat nr nc ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))"
- and wf3:"\<forall>j<nc.\<forall>i<nr.(((A1 \<circ> A2)\<otimes>(B1 \<circ>B2))!j!i  = ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))!j!i)" 
- shows "((A1 \<circ> A2) \<otimes> (B1 \<circ> B2)) =  ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))" 
+ and wf3:"\<forall>j<nc.\<forall>i<nr.(((A1 \<circ> A2)\<otimes>(B1 \<circ>B2))!j!i  
+                              = ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))!j!i)" 
+ shows "((A1 \<circ> A2) \<otimes> (B1 \<circ> B2))  
+                              = ((A1 \<otimes> B1)\<circ>(A2 \<otimes> B2))" 
  apply(simp add:mat_eq_index[OF wf1, OF wf2])
  apply(simp add:wf3)
  done

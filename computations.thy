@@ -2,6 +2,25 @@ theory computations
 imports Kauffman_Matrix
 begin
 
+
+lemma unlink_computation:
+ "rat_poly_plus (rat_poly_times (rat_poly_times A A) (rat_poly_times A A))
+     (rat_poly_plus
+       (rat_poly_times 2 (rat_poly_times A (rat_poly_times A (rat_poly_times B B))))
+       (rat_poly_times (rat_poly_times B B) (rat_poly_times B B))) =
+             ((A^4)+(B^4)+2)"
+  proof-
+  have "(rat_poly_times (rat_poly_times A A) (rat_poly_times A A)) = A^4"
+             by (metis comm_semiring_1_class.normalizing_semiring_rules(18) comm_semiring_1_class.normalizing_semiring_rules(31) numeral_times_numeral power2_eq_square semiring_norm(12) semiring_norm(13))
+  moreover have "(rat_poly_times (rat_poly_times B B) (rat_poly_times B B))
+             = B^4"
+             by (metis comm_semiring_1_class.normalizing_semiring_rules(18) comm_semiring_1_class.normalizing_semiring_rules(31) numeral_times_numeral power2_eq_square semiring_norm(12) semiring_norm(13))
+  moreover have "(rat_poly_times 2 (rat_poly_times A (rat_poly_times A (rat_poly_times B B))))
+               = 2"
+       using inverse1  by (metis mult_2_right one_add_one rat_poly.assoc rat_poly.comm)
+   ultimately show ?thesis by auto
+qed
+
 lemma computation_swingpos:
 " rat_poly_plus (rat_poly_times B (rat_poly_times (A - rat_poly_times (rat_poly_times B B) B) B))
      (rat_poly_times (A - rat_poly_times (rat_poly_times B B) B)
